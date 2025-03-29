@@ -1,0 +1,17 @@
+{
+  "name": "e-comm",
+  "version": "1.0.0",
+  "description": "Starter project for e-commerce site",
+  "main": "src/App.js",
+  "scripts": {
+    "start": "node App.js",
+    "dev": "nodemon App.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^8.13.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
