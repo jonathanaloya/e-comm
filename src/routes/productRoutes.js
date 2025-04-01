@@ -1,32 +1,9 @@
-const express = require('express');
-const Product = require('../models/product');
-const router = express.Router();
+import express from 'express';
+import { getProducts, addProduct} from '../controllers/productController.js';
+import { Router } from 'express';
+ const productRouter = Router()
+// Route to get all products (product listing)
+  // This will call the getProducts function
+productRouter.post('/products', addProduct);
 
-// Get all products
-router.get('/', async (req, res) => {
-    try {
-        const products = await Product.find();
-        res.json(products);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// Create a new product (for testing)
-router.post('/', async (req, res) => {
-    const product = new Product({
-        name: req.body.name,
-        price: req.body.price,
-        description: req.body.description,
-        imageUrl: req.body.imageUrl
-    });
-
-    try {
-        const newProduct = await product.save();
-        res.status(201).json(newProduct);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-});
-
-module.exports = router;
+export default productRouter

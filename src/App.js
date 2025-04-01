@@ -1,22 +1,27 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const productRoutes = require('./routes/productRoutes');
-const authRoutes = require('./routes/authRoutes');
+import React, { useState } from 'react';
+import ProductList from './components/ProductList';
+import LoginForm from './components/LoginForm';
 
-dotenv.config();
+function App() {
+  const [user, setUser] = useState(null);
 
-const app = express();
-app.use(express.json());
-app.use(cors());
+  const handleLogin = (userData) => {
+    setUser(userData);
+  };
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+  return (
+    <div className="App">
+      <h1>Welcome to the E-Commerce Platform</h1>
+      {user ? (
+        <div>
+          <p>Welcome, {user.username}</p>
+          <ProductList />
+        </div>
+      ) : (
+        <LoginForm onLogin={handleLogin} />
+      )}
+    </div>
+  );
+}
 
-app.use('/api/products', productRoutes);
-app.use('/api/auth', authRoutes);
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+export default App;

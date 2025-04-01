@@ -2,16 +2,40 @@
   "name": "e-comm",
   "version": "1.0.0",
   "description": "Starter project for e-commerce site",
-  "main": "src/App.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node App.js",
-    "dev": "nodemon App.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
+    "axios": "^1.8.4",
     "express": "^4.17.1",
-    "mongoose": "^8.13.1"
+    "helmet": "^8.1.0",
+    "https-browserify": "^1.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.15.0",
+    "mongoose": "^8.13.1",
+    "morgan": "^1.10.0",
+    "react-scripts": "^5.0.1",
+    "resend": "^4.2.0",
+    "stream-http": "^3.2.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.27.0",
+    "@babel/core": "^7.26.10",
+    "@babel/preset-react": "^7.26.3",
     "nodemon": "^3.1.9"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
