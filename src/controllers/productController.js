@@ -71,4 +71,43 @@ export async function addProduct(req, res) {
   }
 }
 
-export default { getProducts, addProduct };
+export async function deleteProduct(req, res) {
+  try {
+    const { _id } = req.params;
+
+    // Check if ID is provided
+    if (!_id) {
+      return res.status(400).json({
+        message: 'Product ID is required',
+        error: true,
+        success: false
+      });
+    }
+
+    // Find and delete the product
+    const deletedProduct = await Product.findByIdAndDelete({_id});
+
+    if (!deletedProduct) {
+      return res.status(404).json({
+        message: 'Product not found',
+        error: true,
+        success: false
+      });
+    }
+
+    return res.status(200).json({
+      message: 'Product deleted successfully',
+      success: true,
+      product: deletedProduct
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+export default { getProducts, addProduct, deleteProduct };

@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import connectDB from './src/config/database.js';
 import userRouter from './src/routes/userRoutes.js';
+import cookieParser from 'cookie-parser';
 import productRouter from './src/routes/productRoutes.js';
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(cors(
     origin: process.env.FRONTEND_URL
   }
 ));
+app.use(cookieParser());
 app.use(express.json());
 app.use(morgan());
 app.use(helmet({
@@ -34,6 +36,8 @@ app.get('/', (req, res) => {
 app.use('/api/product', productRouter);  // This will route to /src/routes/productRoutes.js
 
 app.use('/api/user', userRouter);
+
+app.use('/api/delete', productRouter);
 
 const PORT = process.env.PORT || 5000;
 

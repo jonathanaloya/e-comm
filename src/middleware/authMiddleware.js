@@ -1,17 +1,35 @@
-const jwt = require('jsonwebtoken');
-
+import jwt from 'jsonwebtoken'
 const authMiddleware = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-
-  if (!token) return res.status(401).send('Access denied');
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
+    const token = req.cookies.accessToken || req?.headers?.authorization?.split(' ')[1]
+    
+    if(!token){
+      return res.status(401).json({
+        message : 'Unauthorized. Provide token'
+      })
+    }
+
+    const decoded = jwt.verify(token, process.env.SECRET_KEY_ACCESS_TOKEN)
+
+    if(!decoded){ 
+      return res.status(401).json({
+        message : 'Unauthorized. Invalid token',
+        error : true,
+        success: false
+      })
+    }
+
+    req.userId = decoded.id
+
+    next()
+
   } catch (error) {
-    res.status(400).send('Invalid token');
+    return res.status(500).json({
+      message : error.message || error,
+      error : true,
+      success: false
+    })
   }
 };
 
-module.exports = authMiddleware;
+export default authMiddleware
