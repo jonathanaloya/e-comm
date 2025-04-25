@@ -1,8 +1,8 @@
-const forgotPasswordTemplate = ({ username, otp}) => {
+const forgotPasswordTemplate = ({ name, otp}) => {
     return `
     <div style="background-color: #f5f5f5; padding: 20px; font-family: Arial, sans-serif; text-align: center;):</h1>
       <div style="background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
-        <h1 style="color: #007BFF; margin-bottom: 20px;">Hello ${username}</h1>
+        <h1 style="color: #007BFF; margin-bottom: 20px;">Hello ${name}</h1>
         <p>Thank You for Contacting Fresh Katale</p>
         <h2 style="color: #333; margin-bottom: 20px;">Verify Your Email Address</h2>
         <p style="background-color:rgb(7, 84, 31); color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 4px; display: inline-block; text-align: center; font-size: 20px;">OTP: ${otp}</p>

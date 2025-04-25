@@ -1,0 +1,16 @@
+
+import SummaryApi from "../common/summaryApi"
+import Axios from "./Axios"
+
+const fetchUserDetails = async() => {
+    try {
+        const response = await Axios({
+            ...SummaryApi.getUserLoginDetails
+        })
+        return response.data
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export default fetchUserDetails

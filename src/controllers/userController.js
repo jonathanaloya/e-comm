@@ -14,8 +14,8 @@ import forgotPasswordTemplate from '../utilities/forgotPasswordTemplate.js';
 // Register user
 export async function registerUser(req, res) {
   try {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
       return res.status(400).json({ 
         message: 'All fields are required',
         error: true,
@@ -37,7 +37,7 @@ export async function registerUser(req, res) {
     const hashedPassword = await bcrypt.hash(password, salt); 
 
     const payload = {
-      username,
+      name,
       email,
       password: hashedPassword
     }
@@ -50,7 +50,7 @@ export async function registerUser(req, res) {
       sendTo: email,
       subject: 'Verify your email address',
       html: verifyEmailTemplate({ 
-        username: username, 
+        name: name, 
         url: verifyEmailUrl
       })
     })
@@ -149,6 +149,10 @@ export async function loginUser(req, res) {
       const accesstoken = await generateAccessToken(user._id)
       const refreshToken = await generateRefreshToken(user._id)
 
+      const updateUserDetails = await User.findByIdAndUpdate(user?._id , {
+        last_login_date : Date.now(),
+      })
+
       const cookiesOption = {
         httpOnly : true,
         secure : true,
@@ -191,10 +195,11 @@ export async function logoutUser(req, res){
     res.clearCookie("accessToken", cookiesOption)
     res.clearCookie("refreshToken", cookiesOption)
 
-    const removeRefreshToken = await User.findOneAndUpdate(userid,{
-       refresh_token : ""
+    const removeRefreshToken = await User.findOneAndUpdate(
+      { _id: userid }, // wrap the ID in an object
+      { refresh_token: "" }
+    );
     
-    })
 
     return res.json({
       message : "Logout Successfully",
@@ -223,6 +228,8 @@ export async function uploadAvatar(req, res){
 
     return res.json({
       message : "Image uploaded successfully",
+      error : false,
+      success : true,
       data : {
         _id : userId,
         avatar : upload.url
@@ -241,7 +248,7 @@ export async function uploadAvatar(req, res){
 export async function updateUserDetails(req, res){
   try {
     const userId = req.userId //auth middleware
-    const { username, email, mobile, password } = req.body
+    const { name, email, mobile, password } = req.body
 
     let hashedPassword = ""
 
@@ -251,7 +258,7 @@ export async function updateUserDetails(req, res){
     }
 
     const updateUser = await User.updateOne({ _id : userId}, {
-      ...(username && { username : username }),
+      ...(name && { name : name }),
       ...(email && { email : email }),
       ...(mobile && { mobile : mobile }),
       ...(password && { password : password })
@@ -300,7 +307,7 @@ export async function forgotPassword(req, res){
       sendTo : email,
       subject : "Forgot password from freshkatale",
       html : forgotPasswordTemplate({
-        username : user.username, 
+        name : user.name, 
         otp : otp
       })
     })
@@ -360,6 +367,11 @@ export async function verifyForgotPasswordOtp(req, res){
         success : false
       })
     }
+
+    const updateUserDetails = await User.findByIdAndUpdate(user._id, {
+      forgot_password_otp : "",
+      forgot_password_expiry : ""
+    })
 
     return res.json({
       message : "OTP verified successfully",
@@ -476,6 +488,29 @@ export async function refreshToken(req, res){
   } catch (error) {
     return res.status(500).json({
       message: error.message || error,
+      error: true,
+      success: false
+    })
+  }
+}
+
+// get user login details
+export async function getUserLoginDetails(req, res){
+  try {
+    const userId = req.userId //Middleware
+
+    const user = await User.findById(userId).select('-password -refresh_token')
+
+    return res.json({
+      message : "User details",
+      error : false,
+      success : true,
+      data : user
+    })
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Something went wrong",
       error: true,
       success: false
     })
