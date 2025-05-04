@@ -2,9 +2,9 @@ import React, { useState } from 'react'
 import { FaRegEye, FaRegEyeSlash } from 'react-icons/fa6'
 import toast from 'react-hot-toast'
 import Axios from '../utils/Axios'
-import SummaryApi from '../common/summaryApi'
 import AxiosToastError from '../utils/AxiosToastError'
 import { Link, useNavigate } from 'react-router-dom'
+import SummaryApi from '../common/SummaryApi'
 
 function Register() {
     const [ data, setData ] = useState({
@@ -41,6 +41,7 @@ function Register() {
                 ...SummaryApi.register,
                 data : data
             })
+            
             if(response.data.error){
                 toast.error(response.data.message)    
             }

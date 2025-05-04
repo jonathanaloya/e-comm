@@ -1,12 +1,14 @@
-import express from 'express';
-import { getProducts, addProduct, deleteProduct} from '../controllers/productController.js';
-import { Router } from 'express';
- const productRouter = Router()
-// Route to get all products (product listing)
-  // This will call the getProducts function
-productRouter.post('/products', addProduct);
+import { Router } from "express"
+import { createProduct, deleteProductDetails, getProduct } from "../controllers/productController.js"
+import authMiddleware from "../middleware/authMiddleware.js"
+import { p } from "framer-motion/client"
 
-productRouter.delete('/products/:_id', deleteProduct);
+const productRouter = Router()
 
+productRouter.post('/create', authMiddleware, createProduct)
+
+productRouter.post('/get', getProduct)
+
+productRouter.delete('/delete', authMiddleware, deleteProductDetails)
 
 export default productRouter

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { FaRegUserCircle } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
 import UserProfileAvatar from '../components/UserProfileAvatar'
-import SummaryApi from '../common/summaryApi'
+import SummaryApi from '../common/SummaryApi'
 import Axios from '../utils/Axios'
 import AxiosToastError from '../utils/AxiosToastError'
 import toast from 'react-hot-toast'
@@ -56,7 +56,7 @@ const Profile = () => {
             if(responseData.success){
                 toast.success(responseData.message)
                 const userData = await fetchUserDetails()
-                    dispatch(setUserDetails(userData.data))
+                dispatch(setUserDetails(userData.data))
             }
 
         } catch (error) {
@@ -67,7 +67,7 @@ const Profile = () => {
     }
 
   return (
-    <div>
+    <div className='p-4'>
         {/** Profile Upload and display image */}
         <div className='w-20 h-20 bg-red-500 flex justify-center items-center rounded-full'>
             {
@@ -89,7 +89,7 @@ const Profile = () => {
             <div className='grid'>
                 <label>Name</label>
                 <input type="text" placeholder='Enter your name' className='p-2 bg-green-50 outline-none border focus-within:border-primary-200 rounded' 
-                value={userData.name}
+                value={userData.name || ""}
                 name='name'
                 onChange={handleOnChange}
                 required/>

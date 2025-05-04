@@ -15,7 +15,7 @@ const subCategorySchema = new mongoose.Schema({
     category : [
         {
         type: mongoose.Schema.ObjectId,
-        default: 'category'
+        ref: 'category'
         }
     ]
 }, {

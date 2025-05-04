@@ -33,6 +33,7 @@ export async function registerUser(req, res) {
       })
     }
 
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt); 
 
@@ -41,7 +42,6 @@ export async function registerUser(req, res) {
       email,
       password: hashedPassword
     }
-
     const newUser = new User(payload);
     const save =await newUser.save();
     const verifyEmailUrl = `${process.env.FRONTEND_URL}/verify-email?code=${save?._id}`

@@ -50,6 +50,14 @@ function Search() {
                             'Search for your "bananas"',
                             1000,
                             'Search for all your "groceries"',
+                            1000,
+                            'Search for all your "dairy products"',
+                            1000,
+                            'search for your "breads and pastries"',
+                            1000,
+                            'Search for your "grains and cereals"',
+                            1000,
+                            'Search for your "Poultry products"',
                             1000
                         ]}
                         wrapper="span"

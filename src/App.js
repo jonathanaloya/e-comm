@@ -14,7 +14,7 @@ function App() {
       <h1>Welcome to the E-Commerce Platform</h1>
       {user ? (
         <div>
-          <p>Welcome, {user.username}</p>
+          <p>Welcome, {user.name}</p>
           <ProductList />
         </div>
       ) : (

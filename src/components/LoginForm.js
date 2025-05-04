@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const LoginForm = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
+  const [name, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -10,7 +10,7 @@ const LoginForm = ({ onLogin }) => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:5000/api/users/login', {
-        username,
+        name,
         password,
       });
       localStorage.setItem('authToken', response.data.token);

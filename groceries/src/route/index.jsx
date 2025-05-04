@@ -5,10 +5,10 @@ import SearchPage from "../pages/SearchPage";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPassword";
-import OtpVerification from "../pages/otpVerification";
+import OtpVerification from "../pages/OtpVerification";
 import ResetPassword from "../pages/ResetPassword";
 import MobileUserMenu from "../pages/MobileUserMenu";
-import Dashboard from "../layout.js/Dashboard";
+import Dashboard from "../layouts/Dashboard";
 import Profile from "../pages/Profile";
 import MyOrder from "../pages/MyOrder";
 import Address from "../pages/Address";
@@ -16,6 +16,8 @@ import ProductAdmin from "../pages/ProductAdmin";
 import UploadProduct from "../pages/UploadProduct";
 import SubCategory from "../pages/SubCategory";
 import Category from "../pages/Category";
+import AdminPermission from "../layouts/AdminPermission";
+
 
 
 const router = createBrowserRouter([
@@ -73,19 +75,19 @@ const router = createBrowserRouter([
                     },
                     {
                         path: "category",
-                        element: <Category />
+                        element: <AdminPermission ><Category /></AdminPermission>
                     },
                     {
                         path: "subcategory",
-                        element: <SubCategory />
+                        element: <AdminPermission ><SubCategory /></AdminPermission>
                     },
                     {
                         path: "upload-product",
-                        element: <UploadProduct />
+                        element: <AdminPermission ><UploadProduct /></AdminPermission>
                     },
                     {
                         path: "product",
-                        element: <ProductAdmin />
+                        element: <AdminPermission ><ProductAdmin /></AdminPermission>
                     }
                 ]
             }
