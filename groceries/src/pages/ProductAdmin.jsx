@@ -5,14 +5,13 @@ import Axios from '../utils/Axios'
 import Loading from '../components/loading'
 import ProductCardAdmin from '../components/ProductCardAdmin'
 import { IoSearchOutline } from "react-icons/io5";
-import EditProductAdmin from '../components/EditProductAdmin'
 
 const ProductAdmin = () => {
   const [productData,setProductData] = useState([])
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [totalPageCount,setTotalPageCount] = useState(1)
-  const [search,setSearch] = useState("")
+  const [search, setSearch] = useState("")
   
   const fetchProductData = async()=>{
     try {

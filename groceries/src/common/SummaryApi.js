@@ -1,5 +1,4 @@
-import { create } from "framer-motion/client"
-import { getProduct } from "../../../src/controllers/productController"
+
 
 export const baseURL = "http://localhost:5000"
 
@@ -88,12 +87,44 @@ const SummaryApi = {
         url : '/api/product/get',
         method : 'post'
     },
+    getProductByCategory : {
+        url : '/api/product/get-product-by-category',
+        method : 'post'
+    },
+    getProductByCategoryAndSubCategory : {
+        url : '/api/product/get-pruduct-by-category-and-subcategory',
+        method : 'post'
+    },
+    getProductDetails : {
+        url : '/api/product/get-product-details',
+        method : 'post'
+    },
     updateProduct : {
         url : '/api/product/update',
         method : 'put'
     },
     deleteProduct : {
         url : '/api/product/delete',
+        method : 'delete'
+    },
+    searchProduct : {
+        url : '/api/product/search',
+        method : 'post'
+    },
+    addTocart : {
+        url : "/api/cart/create",
+        method : 'post'
+    },
+    getCartItem : {
+        url : '/api/cart/get',
+        method : 'get'
+    },
+    updateCartItemQty : {
+        url : '/api/cart/update-qty',
+        method : 'put'
+    },
+    deleteCartItem : {
+        url : '/api/cart/delete-cart-item',
         method : 'delete'
     }
 }

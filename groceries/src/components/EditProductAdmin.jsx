@@ -117,7 +117,7 @@ const EditProductAdmin = ({ close ,data : propsData,fetchProductData}) => {
 
     try {
       const response = await Axios({
-        ...SummaryApi.updateProductDetails,
+        ...SummaryApi.updateProduct,
         data: data
       })
       const { data: responseData } = response

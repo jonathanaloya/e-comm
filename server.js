@@ -10,6 +10,7 @@ import categoryRouter from './src/routes/category.js';
 import uploadRouter from './src/routes/upload.js';
 import subCategoryRouter from './src/routes/subCategory.js';
 import productRouter from './src/routes/productRoutes.js';
+import cartRouter from './src/routes/cartRoutes.js';
 dotenv.config();
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/file', uploadRouter)
 app.use('/api/subcategory', subCategoryRouter)
 
 app.use('/api/product', productRouter)
+app.use('/api/cart', cartRouter)
 
 
 

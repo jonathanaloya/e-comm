@@ -1,5 +1,5 @@
 
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import './App.css'
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -11,9 +11,12 @@ import { setUserDetails } from './store/userSlice';
 import { setAllCategory, setAllSubCategory } from './store/productSlice';
 import Axios from './utils/Axios';
 import SummaryApi from './common/SummaryApi';
+import  GlobalProvider  from './provider/GlobalProvider';
+import CartMobileLink from './components/CartMobile';
 
 function App() {
   const dispatch = useDispatch()
+  const location = useLocation()
 
   const fetchUser = async() =>{
     const userData = await fetchUserDetails()
@@ -60,18 +63,24 @@ function App() {
     fetchUser()
     fetchCategory()
     fetchSubCategory()
+    // fetchCartItem()
   },[])
 
   return (
-    <>
-      <Header />
+    <GlobalProvider> 
+      <Header/>
       <main className='min-h-[78vh]'>
-        <Outlet />
+          <Outlet/>
       </main>
-      <Footer />
-      <Toaster />
-    </>
-  );
+      <Footer/>
+      <Toaster/>
+      {
+        location.pathname !== '/checkout' && (
+          <CartMobileLink/>
+        )
+      }
+    </GlobalProvider>
+  )
 }
 
 export default App;
