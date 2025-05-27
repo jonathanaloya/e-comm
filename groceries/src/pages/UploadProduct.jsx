@@ -10,7 +10,7 @@ import SummaryApi from '../common/SummaryApi';
 import AxiosToastError from '../utils/AxiosToastError';
 import successAlert from '../utils/SuccessAlert';
 import uploadImage from '../utils/uploadImage';
-import Loading from '../components/loading';
+import Loading from '../components/Loading';
 
 
 const UploadProduct = () => {
