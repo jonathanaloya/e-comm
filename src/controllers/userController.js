@@ -7,7 +7,6 @@ import jwt from 'jsonwebtoken';
 import generateAccessToken from '../utilities/generateAccessToken.js';
 import generateRefreshToken from '../utilities/generateRefreshToken.js';
 import uploadImageCloudinary from '../utilities/updateImageCloudinary.js';
-import { g, u } from 'framer-motion/client';
 import generateOtp from '../utilities/generateOtp.js';
 import forgotPasswordTemplate from '../utilities/forgotPasswordTemplate.js';
 
