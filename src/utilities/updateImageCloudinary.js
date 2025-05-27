@@ -1,4 +1,3 @@
-import { image } from "framer-motion/client";
 import { v2 as cloudinary } from "cloudinary";
 
 
