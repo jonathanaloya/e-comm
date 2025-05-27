@@ -1,6 +1,6 @@
 import React, {  use, useEffect, useState } from 'react'
 import UploadCategoryModel from '../components/UploadCategoryModel'
-import Loading from '../components/loading'
+import Loading from '../components/Loading'
 import NoData from '../components/NoData'
 import Axios from '../utils/Axios'
 import SummaryApi from '../common/SummaryApi'
