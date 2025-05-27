@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Starter project for e-commerce site",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
@@ -21,7 +22,8 @@
     "multer": "^1.4.5-lts.2",
     "react-scripts": "^5.0.1",
     "resend": "^4.2.0",
-    "stream-http": "^3.2.0"
+    "stream-http": "^3.2.0",
+    "stripe": "^18.1.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.27.0",

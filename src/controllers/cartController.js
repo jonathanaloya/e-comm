@@ -25,7 +25,7 @@ export const addToCartItemController = async(req,res)=>{
             })
         }
 
-        const cartItem = new CartProductModel({
+        const cartItem = new Cart({
             quantity : 1,
             userId : userId,
             productId : productId
@@ -128,7 +128,7 @@ export const deleteCartItemQtyController = async(req,res)=>{
       const deleteCartItem  = await Cart.deleteOne({_id : _id, userId : userId })
 
       return res.json({
-        message : "Item remove",
+        message : "Delete successfully",
         error : false,
         success : true,
         data : deleteCartItem

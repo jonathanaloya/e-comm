@@ -154,4 +154,4 @@ const GlobalProvider = ({children}) => {
     )
 }
 
-export default GlobalProvider
+export { GlobalProvider }

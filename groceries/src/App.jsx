@@ -11,7 +11,7 @@ import { setUserDetails } from './store/userSlice';
 import { setAllCategory, setAllSubCategory } from './store/productSlice';
 import Axios from './utils/Axios';
 import SummaryApi from './common/SummaryApi';
-import  GlobalProvider  from './provider/GlobalProvider';
+import  {GlobalProvider}  from './provider/GlobalProvider';
 import CartMobileLink from './components/CartMobile';
 
 function App() {

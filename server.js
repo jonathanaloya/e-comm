@@ -11,6 +11,8 @@ import uploadRouter from './src/routes/upload.js';
 import subCategoryRouter from './src/routes/subCategory.js';
 import productRouter from './src/routes/productRoutes.js';
 import cartRouter from './src/routes/cartRoutes.js';
+import orderRouter from './src/routes/orderRoutes.js';
+import addressRouter from './src/routes/addressRoutes.js';
 dotenv.config();
 
 const app = express();
@@ -46,6 +48,8 @@ app.use('/api/subcategory', subCategoryRouter)
 
 app.use('/api/product', productRouter)
 app.use('/api/cart', cartRouter)
+app.use('/api/order', orderRouter)
+app.use('/api/address', addressRouter)
 
 
 
