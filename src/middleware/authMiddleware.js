@@ -5,7 +5,7 @@ const authMiddleware = (req, res, next) => {
     
     if(!token){
       return res.status(401).json({
-        message : 'Unauthorized. Provide token'
+        message : 'Unauthorized. Provide access token',
       })
     }
 
@@ -13,7 +13,7 @@ const authMiddleware = (req, res, next) => {
 
     if(!decoded){ 
       return res.status(401).json({
-        message : 'Unauthorized. Invalid token',
+        message : 'Unauthorized. Invalid access token',
         error : true,
         success: false
       })
