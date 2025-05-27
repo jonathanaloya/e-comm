@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import connectDB from './src/config/database.js';
 import userRouter from './src/routes/userRoutes.js';
 import cookieParser from 'cookie-parser';
@@ -13,6 +12,7 @@ import productRouter from './src/routes/productRoutes.js';
 import cartRouter from './src/routes/cartRoutes.js';
 import orderRouter from './src/routes/orderRoutes.js';
 import addressRouter from './src/routes/addressRoutes.js';
+import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
@@ -30,15 +30,12 @@ app.use(helmet({
 }
 ));
 
-
-
 // Define routes
-
+const PORT = process.env.PORT || 5000;
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
 })
-
 
 
 app.use('/api/user', userRouter);
@@ -51,9 +48,6 @@ app.use('/api/cart', cartRouter)
 app.use('/api/order', orderRouter)
 app.use('/api/address', addressRouter)
 
-
-
-const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
   app.listen(PORT, () => {
