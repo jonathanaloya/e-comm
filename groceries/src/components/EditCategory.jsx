@@ -5,7 +5,6 @@ import SummaryApi from '../common/SummaryApi'
 import toast from 'react-hot-toast'
 import Axios from '../utils/Axios'
 import AxiosToastError from '../utils/AxiosToastError'
-import { set } from 'mongoose'
 
 function EditCategory({close, fetchData, data : categoryData}) {
     const [ data, setData ] = useState({

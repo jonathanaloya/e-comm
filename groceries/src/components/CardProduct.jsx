@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { DisplayPriceInShillings } from '../utils/DisplayPriceInShillings'
 import { Link } from 'react-router-dom'
 import { valideURLConvert } from '../utils/validURLConvert'

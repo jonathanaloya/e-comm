@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { useGlobalContext } from '../provider/GlobalProvider'
 import { FaCartShopping } from 'react-icons/fa6'
 import { DisplayPriceInShillings } from '../utils/DisplayPriceInShillings'
