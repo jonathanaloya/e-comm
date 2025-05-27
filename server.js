@@ -16,12 +16,23 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-app.use(cors(
-  {
-    credentials: true,
-    origin: process.env.FRONTEND_URL
-  }
-));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://e-comm-rho-five.vercel.app'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like curl or mobile apps)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS error: Origin ${origin} not allowed`));
+    }
+  },
+  credentials: true,
+}));
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(morgan());
