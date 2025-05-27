@@ -1,6 +1,6 @@
 
 
-export const baseURL = "https://cse-341-project1-h1kw.onrender.com"
+export const baseURL = "https://e-comm-rho-five.vercel.app"
 
 const SummaryApi = {
     register : {
