@@ -174,7 +174,7 @@ const ProductDisplayPage = () => {
                       />
                       <div className='text-sm'>
                         <div className='font-semibold'>Superfast Delivery</div>
-                        <p>Get your orer delivered to your doorstep at the earliest from dark stores near you.</p>
+                        <p>Get Your order be delivered to your doorstep within a very short time and enjoy a hassle free experience</p>
                       </div>
                   </div>
                   <div className='flex  items-center gap-4 my-4'>
@@ -185,7 +185,7 @@ const ProductDisplayPage = () => {
                       />
                       <div className='text-sm'>
                         <div className='font-semibold'>Best Prices & Offers</div>
-                        <p>Best price destination with offers directly from the nanufacturers.</p>
+                        <p>Get the best prices and offers on your favorite fresh food products right from the comfort of your home</p>
                       </div>
                   </div>
                   <div className='flex  items-center gap-4 my-4'>
@@ -196,7 +196,7 @@ const ProductDisplayPage = () => {
                       />
                       <div className='text-sm'>
                         <div className='font-semibold'>Wide Assortment</div>
-                        <p>Choose from 5000+ products across food personal care, household & other categories.</p>
+                        <p>Choose from 1000+ products across food personal care, household & other categories.</p>
                       </div>
                   </div>
             </div>
