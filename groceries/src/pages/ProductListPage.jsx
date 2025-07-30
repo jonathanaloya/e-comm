@@ -88,7 +88,7 @@ const ProductListPage = () => {
                 >
                   <div className='w-fit max-w-28 mx-auto lg:mx-0 bg-white rounded  box-border' >
                     <img
-                      src={s.image}
+                      src={s.Image}
                       alt='subCategory'
                       className=' w-14 lg:h-14 lg:w-12 h-full object-scale-down'
                     />

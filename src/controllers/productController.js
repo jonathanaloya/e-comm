@@ -250,7 +250,7 @@ export const deleteProductDetails = async(req,res)=>{
         const deleteProduct = await Product.deleteOne({_id : _id })
 
         return res.json({
-            message : "Delete successfully",
+            message : "Product deleted successfully",
             error : false,
             success : true,
             data : deleteProduct
