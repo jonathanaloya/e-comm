@@ -84,7 +84,7 @@ const AddAddress = ({close}) => {
                         type='text'
                         id='pincode' 
                         className='border bg-blue-50 p-2 rounded'
-                        {...register("pincode",{required : true})}
+                        {...register("pincode",{required : false})}
                     />
                 </div>
                 <div className='grid gap-1'>
