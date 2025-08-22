@@ -85,7 +85,7 @@ export const updateCartItemQtyController = async(req,res)=>{
 
         if(!_id ||  !qty){
             return res.status(400).json({
-                message : "provide _id, qty"
+                message : "Provide Cart id and quantity",
             })
         }
 
@@ -97,7 +97,7 @@ export const updateCartItemQtyController = async(req,res)=>{
         })
 
         return res.json({
-            message : "Update cart",
+            message : "Cart updated successfully",
             success : true,
             error : false, 
             data : updateCartitem
@@ -119,7 +119,7 @@ export const deleteCartItemQtyController = async(req,res)=>{
       
       if(!_id){
         return res.status(400).json({
-            message : "provide _id",
+            message : "Provide Cart id",
             error : true,
             success : false
         })
@@ -128,7 +128,7 @@ export const deleteCartItemQtyController = async(req,res)=>{
       const deleteCartItem  = await Cart.deleteOne({_id : _id, userId : userId })
 
       return res.json({
-        message : "Deleted successfully",
+        message : "Cart deleted successfully",
         error : false,
         success : true,
         data : deleteCartItem

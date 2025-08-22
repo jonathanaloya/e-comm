@@ -5,12 +5,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { TypeAnimation } from 'react-type-animation'
 import useMobile from '../hooks/useMobile'
 
-function Search() {
-
+const Search = () => {
     const navigate = useNavigate()
     const location = useLocation()
-    const [isSearchPage, setIsSearchPage] = useState(false)
+    const [isSearchPage,setIsSearchPage] = useState(false)
     const [ isMobile ] = useMobile()
+    const params = useLocation()
+    const searchText = params.search.slice(3)
 
     useEffect(() => {
         const isSearch = location.pathname === '/search'
@@ -19,6 +20,12 @@ function Search() {
 
     const redirectToSearchPage = () => {
         navigate('/search')
+    }
+
+    const handleOnChange = (e) => {
+        const value = e.target.value
+        const url = `/search?q=${value}`
+        navigate(url)
     }
 
   return (
@@ -68,9 +75,12 @@ function Search() {
                 ) : (
                     // When search page is active
                     <div className='w-full h-full'>
-                        <input type="text" placeholder='Search for your groceries'
+                        <input type="text" 
+                        placeholder='Search for your groceries'
                         autoFocus 
-                        className='w-full bg-transparent h-full outline-none'/>
+                        defaultValue={searchText}
+                        className='w-full bg-transparent h-full outline-none'
+                        onChange={handleOnChange}/>
                     </div>
                 )
             }
