@@ -54,7 +54,7 @@ const DisplayCartItem = ({close}) => {
                                             cartItem.map((item,index)=>{
                                                 return(
                                                     <div key={item?._id+"cartItemDisplay"} className='flex  w-full gap-4'>
-                                                        <div className='w-16 h-16 min-h-16 min-w-16 bg-red-500 border rounded'>
+                                                        <div className='w-16 h-16 min-h-16 min-w-16 border rounded'>
                                                             <img
                                                                 src={item?.productId?.image[0]}
                                                                 className='object-scale-down'
