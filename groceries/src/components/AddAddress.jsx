@@ -20,7 +20,8 @@ const AddAddress = ({close}) => {
                 data : {
                     address_line :data.addressline,
                     city : data.city,
-                    state : data.state,
+                    address1 : data.address1,
+                    address2 : data.address2,
                     country : data.country,
                     pincode : data.pincode,
                     mobile : data.mobile
@@ -50,7 +51,7 @@ const AddAddress = ({close}) => {
                     <IoClose  size={25}/>
                 </button>
             </div>
-            <form className='mt-4 grid gap-4' onSubmit={handleSubmit(onSubmit)}>
+            <form className='mt-4 grid gap-4' onSubmit={handleSubmit(onSubmit)} autoComplete="off">
                 <div className='grid gap-1'>
                     <label htmlFor='addressline'>Address Line :</label>
                     <input
@@ -70,12 +71,21 @@ const AddAddress = ({close}) => {
                     />
                 </div>
                 <div className='grid gap-1'>
-                    <label htmlFor='state'>State :</label>
+                    <label htmlFor='Address1'>Address 1 :</label>
                     <input
                         type='text'
-                        id='state' 
+                        id='Address1' 
                         className='border bg-blue-50 p-2 rounded'
-                        {...register("state",{required : true})}
+                        {...register("address1",{required : true})}
+                    />
+                </div>
+                <div className='grid gap-1'>
+                    <label htmlFor='address2'>Address 2 :</label>
+                    <input
+                        type='text'
+                        id='address2' 
+                        className='border bg-blue-50 p-2 rounded'
+                        {...register("address2",{required : true})}
                     />
                 </div>
                 <div className='grid gap-1'>

@@ -11,7 +11,12 @@ const addressSchema = new mongoose.Schema({
         default: ""
     },
 
-    state : {
+    address1 : {
+        type: String,
+        default: ""
+    },
+
+    address2 : {
         type: String,
         default: ""
     },
@@ -32,6 +37,11 @@ const addressSchema = new mongoose.Schema({
     status : {
         type: Boolean,
         default: true
+    },
+
+    userId : {
+        type : mongoose.Schema.ObjectId,
+        default : ""
     }
 },{
     timestamps : true

@@ -82,6 +82,7 @@ const CheckoutPage = () => {
         AxiosToastError(error)
     }
   }
+
   return (
     <section className='bg-blue-50'>
       <div className='container mx-auto p-4 flex flex-col lg:flex-row w-full gap-5 justify-between'>
@@ -100,7 +101,8 @@ const CheckoutPage = () => {
                       <div>
                         <p>{address.address_line}</p>
                         <p>{address.city}</p>
-                        <p>{address.state}</p>
+                        <p>{address.address1}</p>
+                        <p>{address.address2}</p>
                         <p>{address.country} - {address.pincode}</p>
                         <p>{address.mobile}</p>
                       </div>

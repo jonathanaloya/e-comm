@@ -14,6 +14,7 @@ const addressSlice = createSlice({
     }
 })
 
-export const {handleAddAddress  } = addressSlice.actions
+
+export const { handleAddAddress  } = addressSlice.actions
 
 export default addressSlice.reducer

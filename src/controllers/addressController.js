@@ -1,15 +1,16 @@
 import Address from "../models/addressModel.js";
 import User from "../models/userModel.js"; 
 
-export const addAddressController = async(request,response)=>{
+export const addAddressController = async(req, res)=>{
     try {
-        const userId = request.userId // middleware
-        const { address_line , city, state, pincode, country,mobile } = request.body
+        const userId = req.userId // middleware
+        const { address_line , city, address1, address2, pincode, country, mobile } = req.body
 
         const createAddress = new Address({
             address_line,
             city,
-            state,
+            address1,
+            address2,
             country,
             pincode,
             mobile,
@@ -23,7 +24,7 @@ export const addAddressController = async(request,response)=>{
             }
         })
 
-        return response.json({
+        return res.json({
             message : "Address Created Successfully",
             error : false,
             success : true,
@@ -31,7 +32,7 @@ export const addAddressController = async(request,response)=>{
         })
 
     } catch (error) {
-        return response.status(500).json({
+        return res.status(500).json({
             message : error.message || error,
             error : true,
             success : false
@@ -39,20 +40,20 @@ export const addAddressController = async(request,response)=>{
     }
 }
 
-export const getAddressController = async(request,response)=>{
+export const getAddressController = async(req,res)=>{
     try {
-        const userId = request.userId // middleware auth
+        const userId = req.userId // middleware auth
 
         const data = await Address.find({ userId : userId }).sort({ createdAt : -1})
-
-        return response.json({
+        return res.json({
             data : data,
-            message : "List of address",
+            message : "Address Fetched Successfully",
             error : false,
             success : true
         })
+        
     } catch (error) {
-        return response.status(500).json({
+        return res.status(500).json({
             message : error.message || error ,
             error : true,
             success : false
@@ -60,28 +61,29 @@ export const getAddressController = async(request,response)=>{
     }
 }
 
-export const updateAddressController = async(request,response)=>{
+export const updateAddressController = async(req,res)=>{
     try {
-        const userId = request.userId // middleware auth 
-        const { _id, address_line,city,state,country,pincode, mobile } = request.body 
+        const userId = req.userId // middleware auth 
+        const { _id, address_line,city,Address1, Address2,country,pincode, mobile } = req.body 
 
         const updateAddress = await Address.updateOne({ _id : _id, userId : userId },{
             address_line,
             city,
-            state,
+            Address1,
+            Address2,
             country,
             mobile,
             pincode
         })
 
-        return response.json({
-            message : "Address Updated",
+        return res.json({
+            message : "Address Updated Successfully",
             error : false,
             success : true,
             data : updateAddress
         })
     } catch (error) {
-        return response.status(500).json({
+        return res.status(500).json({
             message : error.message || error,
             error : true,
             success : false
@@ -89,23 +91,23 @@ export const updateAddressController = async(request,response)=>{
     }
 }
 
-export const deleteAddresscontroller = async(request,response)=>{
+export const deleteAddresscontroller = async(req,res)=>{
     try {
-        const userId = request.userId // auth middleware    
-        const { _id } = request.body 
+        const userId = req.userId // auth middleware    
+        const { _id } = req.body 
 
         const disableAddress = await Address.updateOne({ _id : _id, userId},{
             status : false
         })
 
-        return response.json({
-            message : "Address Deleted",
+        return res.json({
+            message : "Address Deleted Successfully",
             error : false,
             success : true,
             data : disableAddress
         })
     } catch (error) {
-        return response.status(500).json({
+        return res.status(500).json({
             message : error.message || error,
             error : true,
             success : false

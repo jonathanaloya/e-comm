@@ -109,6 +109,7 @@ const GlobalProvider = ({ children }) => {
       const response = await Axios({
         ...SummaryApi.getAddress,
       });
+
       const { data: responseData } = response;
 
       if (responseData.success) {

@@ -35,6 +35,7 @@ const Address = () => {
       AxiosToastError(error)
     }
   }
+
   return (
     <div className=''>
         <div className='bg-white shadow-lg px-2 py-2 flex justify-between gap-4 items-center '>
@@ -51,7 +52,8 @@ const Address = () => {
                           <div className='w-full'>
                             <p>{address.address_line}</p>
                             <p>{address.city}</p>
-                            <p>{address.state}</p>
+                            <p>{address.address1}</p>
+                            <p>{address.address2}</p>
                             <p>{address.country} - {address.pincode}</p>
                             <p>{address.mobile}</p>
                           </div>

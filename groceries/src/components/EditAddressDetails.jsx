@@ -13,7 +13,8 @@ const EditAddressDetails = ({close, data}) => {
             userId : data.userId,
             address_line :data.address_line,
             city : data.city,
-            state : data.state,
+            address1 : data.address1,
+            address2 : data.address2,
             country : data.country,
             pincode : data.pincode,
             mobile : data.mobile 
@@ -29,7 +30,8 @@ const EditAddressDetails = ({close, data}) => {
                     ...data,
                     address_line :data.address_line,
                     city : data.city,
-                    state : data.state,
+                    address1 : data.address1,
+                    address2 : data.address2,
                     country : data.country,
                     pincode : data.pincode,
                     mobile : data.mobile
@@ -79,12 +81,21 @@ const EditAddressDetails = ({close, data}) => {
                     />
                 </div>
                 <div className='grid gap-1'>
-                    <label htmlFor='state'>State :</label>
+                    <label htmlFor='address1'>Address 1 :</label>
                     <input
                         type='text'
-                        id='state' 
+                        id='address1' 
                         className='border bg-blue-50 p-2 rounded'
-                        {...register("state",{required : true})}
+                        {...register("address1",{required : true})}
+                    />
+                </div>
+                <div className='grid gap-1'>
+                    <label htmlFor='address2'>Address 2 :</label>
+                    <input
+                        type='text'
+                        id='address2' 
+                        className='border bg-blue-50 p-2 rounded'
+                        {...register("address2",{required : true})}
                     />
                 </div>
                 <div className='grid gap-1'>
