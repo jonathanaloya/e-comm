@@ -51,7 +51,7 @@ const AddAddress = ({close}) => {
                     <IoClose  size={25}/>
                 </button>
             </div>
-            <form className='mt-4 grid gap-4' onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+            <form className='mt-4 grid gap-4' onSubmit={handleSubmit(onSubmit)}>
                 <div className='grid gap-1'>
                     <label htmlFor='addressline'>Address Line :</label>
                     <input
