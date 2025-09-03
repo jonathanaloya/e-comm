@@ -30,7 +30,7 @@ import mongoose from "mongoose";
 
         ///remove from the cart
         const removeCartItems = await Cart.deleteMany({ userId : userId })
-        const updateInUser = await UserModel.updateOne({ _id : userId }, { shopping_cart : []})
+        const updateInUser = await User.updateOne({ _id : userId }, { shopping_cart : []})
 
         return response.json({
             message : "Order successfully",
