@@ -171,7 +171,7 @@ export async function webhookStripe(request,response){
 
         console.log(order)
         if(Boolean(order[0])){
-            const removeCartItems = await  UserModel.findByIdAndUpdate(userId,{
+            const removeCartItems = await  User.findByIdAndUpdate(userId,{
                 shopping_cart : []
             })
             const removeCartProductDB = await Cart.deleteMany({ userId : userId})
