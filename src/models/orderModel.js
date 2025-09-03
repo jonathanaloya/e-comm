@@ -17,11 +17,16 @@ const orderSchema = new mongoose.Schema({
         ref: 'product'
     },
 
-    product_details : {
-        type: String,
-        image: Array
+    product_details: {
+        name: {
+            type: String,
+            required: true
+        },
+        image: { // This is an array of image URLs
+            type: [String], // Specifies an array of strings
+            required: true
+        }
     },
-
     paymentId : {
         type: String,
         default: ""
