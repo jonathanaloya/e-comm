@@ -48,20 +48,20 @@ const userSchema = new mongoose.Schema({
     default: "Active"
   },
 
-  address_details : {
+  address_details : [{
     type: mongoose.Schema.ObjectId,
     ref: "address"
-  },
+  }],
 
-  shopping_cart : {
+  shopping_cart : [{
     type: mongoose.Schema.ObjectId,
     ref: 'cartProduct'
-  },
+  }],
 
-  orderHistory : {
+  orderHistory : [{
     type: mongoose.Schema.ObjectId,
     ref: 'order'
-  },
+  }],
 
   forgot_password_otp : {
     type: String,
