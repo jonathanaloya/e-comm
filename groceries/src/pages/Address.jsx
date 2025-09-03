@@ -12,9 +12,9 @@ import { useGlobalContext } from '../provider/GlobalProvider';
 
 const Address = () => {
   const addressList = useSelector(state => state.addresses.addressList)
-  const [openAddress,setOpenAddress] = useState(false)
-  const [OpenEdit,setOpenEdit] = useState(false)
-  const [editData,setEditData] = useState({})
+  const [openAddress, setOpenAddress] = useState(false)
+  const [OpenEdit, setOpenEdit] = useState(false)
+  const [editData, setEditData] = useState({})
   const { fetchAddress} = useGlobalContext()
 
   const handleDisableAddress = async(id)=>{
@@ -26,7 +26,7 @@ const Address = () => {
         }
       })
       if(response.data.success){
-        toast.success("Address Remove")
+        toast.success("Address Deleted Successfully")
         if(fetchAddress){
           fetchAddress()
         }
