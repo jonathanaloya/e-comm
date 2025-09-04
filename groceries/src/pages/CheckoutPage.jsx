@@ -8,7 +8,6 @@ import Axios from '../utils/Axios'
 import SummaryApi from '../common/SummaryApi'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
-import { loadStripe } from '@stripe/stripe-js'
 
 const CheckoutPage = () => {
   const { notDiscountTotalPrice, totalPrice, totalQty, fetchCartItem,fetchOrder } = useGlobalContext()
@@ -52,36 +51,66 @@ const CheckoutPage = () => {
       }
   }
 
-  const handleOnlinePayment = async()=>{
+  // Assuming this is within a React component or similar frontend environment
+
+// Remove this line as we're no longer using Stripe
+// import { loadStripe } from '@stripe/stripe-js';
+
+const handleOnlinePayment = async () => {
     try {
-        toast.loading("Loading...")
-        const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY
-        const stripePromise = await loadStripe(stripePublicKey)
-       
-        const response = await Axios({
-            ...SummaryApi.payment_url,
-            data : {
-              list_items : cartItemsList,
-              addressId : addressList[selectAddress]?._id,
-              subTotalAmt : totalPrice,
-              totalAmt :  totalPrice,
-            }
-        })
-
-        const { data : responseData } = response
-
-        stripePromise.redirectToCheckout({ sessionId : responseData.id })
+        toast.loading("Initiating payment..."); // Update loading message
         
-        if(fetchCartItem){
-          fetchCartItem()
+        // Remove Stripe-related public key and promise
+        // const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+        // const stripePromise = await loadStripe(stripePublicKey);
+
+        const response = await Axios({
+            // Ensure this SummaryApi.payment_url now points to your backend's
+            // Flutterwave payment initiation endpoint, e.g., /api/orders/checkout
+            ...SummaryApi.payment_url, // Assuming this is your /api/orders/checkout endpoint
+            data: {
+                list_items: cartItemsList,
+                addressId: addressList[selectAddress]?._id,
+                subTotalAmt: totalPrice,
+                totalAmt: totalPrice,
+            }
+        });
+
+        const { data: responseData } = response;
+
+        // Check for success and the payment link from your backend
+        if (responseData.success && responseData.data) {
+            toast.dismiss(); // Dismiss loading toast
+            
+            // <<< Flutterwave Redirection <<<
+            // Your backend now returns a payment link in responseData.data
+            window.location.href = responseData.data; // Redirect user to Flutterwave
+            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+            // These fetches will happen AFTER the user returns from Flutterwave
+            // (e.g., on your /success page) or if you use client-side logic on redirect.
+            // For a robust solution, you might trigger these from the /success page
+            // after the payment is confirmed via webhook.
+            // If you keep them here, they will run immediately before the redirect,
+            // which might not reflect the actual payment status yet.
+            // Consider moving these to the page the user lands on AFTER payment.
+            // if (fetchCartItem) {
+            //     fetchCartItem();
+            // }
+            // if (fetchOrder) {
+            //     fetchOrder();
+            // }
+
+        } else {
+            toast.dismiss();
+            toast.error(responseData.message || "Failed to initiate payment.");
         }
-        if(fetchOrder){
-          fetchOrder()
-        }
+
     } catch (error) {
-        AxiosToastError(error)
+        toast.dismiss();
+        AxiosToastError(error);
     }
-  }
+};
 
   return (
     <section className='bg-blue-50'>

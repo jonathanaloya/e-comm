@@ -1,12 +1,44 @@
 import { Router } from 'express'
+import bodyParser from 'body-parser' // <<< NEW: Import bodyParser for webhook raw body
 import authMiddleware from '../middleware/authMiddleware.js'
-import { CashOnDeliveryOrderController, getOrderDetailsController, paymentController, webhookStripe } from '../controllers/orderController.js'
+import {
+    CashOnDeliveryOrderController,
+    getOrderDetailsController,
+    paymentController,
+    // webhookStripe, // <<< REMOVED: Stripe webhook is gone
+    webhookFlutterwaveController, // <<< NEW: Import the Flutterwave webhook controller
+    verifyFlutterwaveWebhook // <<< NEW: Import the verification utility
+} from '../controllers/orderController.js' // All from the same controller file now
 
 const orderRouter = Router()
 
+// Regular authenticated order routes
 orderRouter.post("/cash-on-delivery",authMiddleware, CashOnDeliveryOrderController)
-orderRouter.post('/checkout',authMiddleware,paymentController)
-orderRouter.post('/webhook',webhookStripe)
+orderRouter.post('/checkout',authMiddleware,paymentController) // This is your Flutterwave payment initiation
+
+// <<< UPDATED: Flutterwave Webhook Route
+// This endpoint requires a specific body-parser setup to get the raw body
+orderRouter.post('/webhook', bodyParser.json({
+    verify: (req, res, buf) => {
+        req.rawBody = buf; // Store the raw body for signature verification
+    }
+}), async (req, res) => {
+    const secretHash = process.env.FLUTTERWAVE_WEBHOOK_SECRET_HASH;
+    const signature = req.headers['verif-hash']; // Flutterwave webhook signature header
+
+    console.log("Received Flutterwave webhook. Attempting verification...");
+
+    // First, verify the webhook signature using the utility from orderController
+    if (!signature || !verifyFlutterwaveWebhook(signature, secretHash, req.rawBody)) {
+        console.warn('Invalid Flutterwave webhook signature received. Request rejected.');
+        return res.status(401).send('Invalid webhook signature');
+    }
+
+    console.log('Flutterwave webhook signature verified successfully. Calling controller...');
+    // If verification passes, pass control to the webhookFlutterwaveController
+    await webhookFlutterwaveController(req, res); // Call your controller function
+});
+
 orderRouter.get("/order-list",authMiddleware,getOrderDetailsController)
 
 export default orderRouter
