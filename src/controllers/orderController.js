@@ -124,7 +124,9 @@ export async function paymentController(request,response){
                 title: 'Fresh Katale',
                 description: 'Payment for your order',
             },
-            meta: meta, 
+            meta: meta,
+            
+            payment_options: 'card, mobilemoney'
         };
 
         const responseData = await flutterwaveInstance.Payment.initiate(payload);
