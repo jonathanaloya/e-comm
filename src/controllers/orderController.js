@@ -128,7 +128,12 @@ export async function paymentController(request,response){
             
             payment_options: 'card, mobilemoney'
         };
-
+        
+        console.log("--- DEBUGGING FLUTTERWAVE INSTANCE ---");
+        console.log("flutterwaveInstance type:", typeof flutterwaveInstance);
+        console.log("flutterwaveInstance keys:", Object.keys(flutterwaveInstance));
+        console.log("flutterwaveInstance.Payment exists:", !!flutterwaveInstance.Payment); // Check if Payment property exists
+        console.log("flutterwaveInstance.Transaction exists:", !!flutterwaveInstance.Transaction); 
         const responseData = await flutterwaveInstance.Transaction.initiate(payload);
 
         if (responseData && responseData.status === 'success') {
