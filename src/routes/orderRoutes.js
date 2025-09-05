@@ -12,11 +12,9 @@ import {
 
 const orderRouter = Router()
 
-// Regular authenticated order routes
 orderRouter.post("/cash-on-delivery",authMiddleware, CashOnDeliveryOrderController)
 orderRouter.post('/checkout',authMiddleware,paymentController) // This is your Flutterwave payment initiation
 
-// <<< UPDATED: Flutterwave Webhook Route
 // This endpoint requires a specific body-parser setup to get the raw body
 orderRouter.post('/webhook', bodyParser.json({
     verify: (req, res, buf) => {
