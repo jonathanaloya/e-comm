@@ -129,7 +129,7 @@ export async function paymentController(request,response){
             payment_options: 'card, mobilemoney'
         };
 
-        const responseData = await flutterwaveInstance.Payment.initiate(payload);
+        const responseData = await flutterwaveInstance.Payment.create(payload);
 
         if (responseData && responseData.status === 'success') {
             return response.status(200).json({
