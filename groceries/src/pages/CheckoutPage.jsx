@@ -1,192 +1,214 @@
-import React, { useState } from 'react'
-import { useGlobalContext } from '../provider/GlobalProvider'
-import { DisplayPriceInShillings } from '../utils/DisplayPriceInShillings'
-import AddAddress from '../components/AddAddress'
-import { useSelector } from 'react-redux'
-import AxiosToastError from '../utils/AxiosToastError'
-import Axios from '../utils/Axios'
-import SummaryApi from '../common/SummaryApi'
-import toast from 'react-hot-toast'
-import { useNavigate } from 'react-router-dom'
+// src/pages/CheckoutPage.jsx
+
+import React, { useState, useEffect } from 'react';
+import { useGlobalContext } from '../provider/GlobalProvider';
+import { DisplayPriceInShillings } from '../utils/DisplayPriceInShillings';
+import AddAddress from '../components/AddAddress';
+import { useSelector } from 'react-redux';
+import AxiosToastError from '../utils/AxiosToastError';
+import Axios from '../utils/Axios';
+import SummaryApi from '../common/SummaryApi';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import FlutterwavePaymentButton from '../components/Flutterwave'; // Updated import
 
 const CheckoutPage = () => {
-  const { notDiscountTotalPrice, totalPrice, totalQty, fetchCartItem,fetchOrder } = useGlobalContext()
-  const [openAddress, setOpenAddress] = useState(false)
-  const addressList = useSelector(state => state.addresses.addressList)
-  const [selectAddress, setSelectAddress] = useState(0)
-  const cartItemsList = useSelector(state => state.cartItem.cart)
-  const navigate = useNavigate()
+  const { notDiscountTotalPrice, totalPrice, totalQty, fetchCartItem, fetchOrder } = useGlobalContext();
+  const [openAddress, setOpenAddress] = useState(false);
+  const addressList = useSelector(state => state.addresses.addressList);
+  const [selectAddress, setSelectAddress] = useState(addressList.length > 0 ? 0 : -1); // Default to first address if available
+  const cartItemsList = useSelector(state => state.cartItem.cart);
+  const user = useSelector(state => state.user.user);
+  const navigate = useNavigate();
 
-  const handleCashOnDelivery = async() => {
-      try {
-          const response = await Axios({
-            ...SummaryApi.CashOnDeliveryOrder,
-            data : {
-              list_items : cartItemsList,
-              addressId : addressList[selectAddress]?._id,
-              subTotalAmt : totalPrice,
-              totalAmt :  totalPrice,
-            }
-          })
+  // Update selected address if address list changes
+  useEffect(() => {
+    if (addressList.length > 0 && selectAddress === -1) setSelectAddress(0);
+    if (addressList.length === 0) setSelectAddress(-1);
+  }, [addressList]);
 
-          const { data : responseData } = response
+  // Prepare customer info for Flutterwave
+  const customerEmail = user?.email || "";
+  const customerName = user?.name || "";
+  const customerPhone = addressList[selectAddress]?.mobile || user?.mobile || "";
 
-          if(responseData.success){
-              toast.success(responseData.message)
-              if(fetchCartItem){
-                fetchCartItem()
-              }
-              if(fetchOrder){
-                fetchOrder()
-              }
-              navigate('/success',{
-                state : {
-                  text : "Order"
-                }
-              })
-          }
-
-      } catch (error) {
-        AxiosToastError(error)
-      }
-  }
-
-  // Assuming this is within a React component or similar frontend environment
-
-// Remove this line as we're no longer using Stripe
-// import { loadStripe } from '@stripe/stripe-js';
-
-const handleOnlinePayment = async () => {
+  // Cash on Delivery handler
+  const handleCashOnDelivery = async () => {
+    if (selectAddress === -1 || !addressList[selectAddress]?._id) {
+      toast.error("Please select an address before proceeding with Cash on Delivery.");
+      return;
+    }
     try {
-        toast.loading("Initiating payment..."); // Update loading message
-        
-        // Remove Stripe-related public key and promise
-        // const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-        // const stripePromise = await loadStripe(stripePublicKey);
-
-        const response = await Axios({
-            // Ensure this SummaryApi.payment_url now points to your backend's
-            // Flutterwave payment initiation endpoint, e.g., /api/orders/checkout
-            ...SummaryApi.payment_url, // Assuming this is your /api/orders/checkout endpoint
-            data: {
-                list_items: cartItemsList,
-                addressId: addressList[selectAddress]?._id,
-                subTotalAmt: totalPrice,
-                totalAmt: totalPrice,
-            }
-        });
-
-        const { data: responseData } = response;
-
-        // Check for success and the payment link from your backend
-        if (responseData.success && responseData.data) {
-            toast.dismiss(); // Dismiss loading toast
-            
-            // <<< Flutterwave Redirection <<<
-            // Your backend now returns a payment link in responseData.data
-            window.location.href = responseData.data; // Redirect user to Flutterwave
-            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-            // These fetches will happen AFTER the user returns from Flutterwave
-            // (e.g., on your /success page) or if you use client-side logic on redirect.
-            // For a robust solution, you might trigger these from the /success page
-            // after the payment is confirmed via webhook.
-            // If you keep them here, they will run immediately before the redirect,
-            // which might not reflect the actual payment status yet.
-            // Consider moving these to the page the user lands on AFTER payment.
-            // if (fetchCartItem) {
-            //     fetchCartItem();
-            // }
-            // if (fetchOrder) {
-            //     fetchOrder();
-            // }
-
-        } else {
-            toast.dismiss();
-            toast.error(responseData.message || "Failed to initiate payment.");
+      const response = await Axios({
+        ...SummaryApi.CashOnDeliveryOrder,
+        data: {
+          list_items: cartItemsList,
+          addressId: addressList[selectAddress]._id,
+          subTotalAmt: totalPrice,
+          totalAmt: totalPrice,
         }
+      });
+
+      const { data: responseData } = response;
+
+      if (responseData.success) {
+        toast.success(responseData.message);
+        if (fetchCartItem) fetchCartItem();
+        if (fetchOrder) fetchOrder();
+        navigate('/success', { state: { text: "Order" } });
+      }
 
     } catch (error) {
-        toast.dismiss();
-        AxiosToastError(error);
+      AxiosToastError(error);
     }
-};
+  };
+
+  // Flutterwave Payment handlers
+  const handleOnlinePaymentSuccess = async (flutterwaveResponse) => {
+    if (selectAddress === -1 || !addressList[selectAddress]?._id) {
+      toast.error("Please select an address before proceeding with Online Payment.");
+      return;
+    }
+
+    console.log("Payment successful, Flutterwave response:", flutterwaveResponse);
+
+    try {
+      const response = await Axios.post(
+        `${process.env.REACT_APP_API_URL}/api/order/checkout`,
+        {
+          list_items: cartItemsList,
+          addressId: addressList[selectAddress]._id,
+          subTotalAmt: totalPrice,
+          totalAmt: totalPrice,
+          paymentId: flutterwaveResponse.transaction_id,
+          paymentStatus: flutterwaveResponse.status,
+          paymentMethod: "Flutterwave",
+        },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+
+      const { data: responseData } = response;
+
+      if (responseData.success) {
+        toast.success(responseData.message || "Order placed successfully!");
+        if (fetchCartItem) fetchCartItem();
+        if (fetchOrder) fetchOrder();
+        navigate("/success", { state: { text: "Order" } });
+      } else {
+        toast.error(responseData.message || "Failed to create order after payment.");
+      }
+    } catch (error) {
+      console.error("Error creating order after payment:", error);
+      toast.error("Something went wrong while creating your order.");
+    }
+  };
+
+  const handleOnlinePaymentClose = () => {
+    console.log("Flutterwave payment modal closed.");
+    toast.info("Payment was not completed.");
+  };
 
   return (
     <section className='bg-blue-50'>
       <div className='container mx-auto p-4 flex flex-col lg:flex-row w-full gap-5 justify-between'>
+        
+        {/* Address Selection */}
         <div className='w-full'>
-          {/***address***/}
-          <h3 className='text-lg font-semibold'>Choose your address</h3>
+          <h3 className='text-lg font-semibold mb-2'>Choose your address</h3>
           <div className='bg-white p-2 grid gap-4'>
-            {
-              addressList.map((address, index) => {
-                return (
-                  <label htmlFor={"address" + index} className={!address.status && "hidden"}>
-                    <div className='border rounded p-3 flex gap-3 hover:bg-blue-50'>
-                      <div>
-                        <input id={"address" + index} type='radio' value={index} onChange={(e) => setSelectAddress(e.target.value)} name='address' />
-                      </div>
-                      <div>
-                        <p>{address.address_line}</p>
-                        <p>{address.city}</p>
-                        <p>{address.address1}</p>
-                        <p>{address.address2}</p>
-                        <p>{address.country} - {address.pincode}</p>
-                        <p>{address.mobile}</p>
-                      </div>
-                    </div>
-                  </label>
-                )
-              })
-            }
-            <div onClick={() => setOpenAddress(true)} className='h-16 bg-blue-50 border-2 border-dashed flex justify-center items-center cursor-pointer'>
-              Add address
+            {addressList.length > 0 ? addressList.map((address, index) => (
+              <label key={address._id} htmlFor={"address" + index} className={!address.status ? "hidden" : ""}>
+                <div className={`border rounded p-3 flex gap-3 hover:bg-blue-50 cursor-pointer ${selectAddress == index ? 'border-green-600 ring-2 ring-green-600' : ''}`}>
+                  <input
+                    id={"address" + index}
+                    type='radio'
+                    value={index}
+                    onChange={() => setSelectAddress(index)}
+                    name='address'
+                    checked={selectAddress == index}
+                    className="accent-green-600"
+                  />
+                  <div>
+                    <p className="font-medium">{address.name}</p>
+                    <p>{address.address_line}</p>
+                    <p>{address.city}, {address.state || ''} - {address.pincode}</p>
+                    <p>{address.country}</p>
+                    <p>Mobile: {address.mobile}</p>
+                  </div>
+                </div>
+              </label>
+            )) : (
+              <p className="text-center text-gray-500 py-4">No addresses found. Please add one.</p>
+            )}
+            <div onClick={() => setOpenAddress(true)} className='h-16 bg-blue-50 border-2 border-dashed flex justify-center items-center cursor-pointer text-green-600 hover:text-green-700 hover:border-green-700'>
+              Add new address
             </div>
           </div>
-
-
-
         </div>
 
+        {/* Order Summary & Payments */}
         <div className='w-full max-w-md bg-white py-4 px-2'>
-          {/**summary**/}
-          <h3 className='text-lg font-semibold'>Summary</h3>
-          <div className='bg-white p-4'>
-            <h3 className='font-semibold'>Bill details</h3>
-            <div className='flex gap-4 justify-between ml-1'>
+          <h3 className='text-lg font-semibold mb-2'>Summary</h3>
+          <div className='bg-white p-4 border rounded'>
+            <h3 className='font-semibold mb-2'>Bill details</h3>
+            <div className='flex gap-4 justify-between ml-1 text-gray-700'>
               <p>Items total</p>
-              <p className='flex items-center gap-2'><span className='line-through text-neutral-400'>{DisplayPriceInShillings(notDiscountTotalPrice)}</span><span>{DisplayPriceInShillings(totalPrice)}</span></p>
+              <p className='flex items-center gap-2'>
+                {notDiscountTotalPrice && notDiscountTotalPrice !== totalPrice && (
+                  <span className='line-through text-neutral-400'>{DisplayPriceInShillings(notDiscountTotalPrice)}</span>
+                )}
+                <span>{DisplayPriceInShillings(totalPrice)}</span>
+              </p>
             </div>
-            <div className='flex gap-4 justify-between ml-1'>
-              <p>Quntity total</p>
-              <p className='flex items-center gap-2'>{totalQty} item</p>
+            <div className='flex gap-4 justify-between ml-1 text-gray-700'>
+              <p>Quantity total</p>
+              <p className='flex items-center gap-2'>{totalQty} {totalQty > 1 ? 'items' : 'item'}</p>
             </div>
-            <div className='flex gap-4 justify-between ml-1'>
+            <div className='flex gap-4 justify-between ml-1 text-gray-700'>
               <p>Delivery Charge</p>
               <p className='flex items-center gap-2'>Free</p>
             </div>
-            <div className='font-semibold flex items-center justify-between gap-4'>
-              <p >Grand total</p>
+            <hr className="my-2 border-gray-200" />
+            <div className='font-semibold flex items-center justify-between gap-4 text-lg'>
+              <p>Grand total</p>
               <p>{DisplayPriceInShillings(totalPrice)}</p>
             </div>
           </div>
-          <div className='w-full flex flex-col gap-4'>
-            <button className='py-2 px-4 bg-green-600 hover:bg-green-700 rounded text-white font-semibold' onClick={handleOnlinePayment}>Online Payment</button>
 
-            <button className='py-2 px-4 border-2 border-green-600 font-semibold text-green-600 hover:bg-green-600 hover:text-white' onClick={handleCashOnDelivery}>Cash on Delivery</button>
+          <div className='w-full flex flex-col gap-4 mt-4'>
+            {/* Flutterwave Payment Button */}
+            <FlutterwavePaymentButton
+              cartItemsList={cartItemsList}
+              amount={totalPrice}
+              addressList={addressList}
+              selectAddress={selectAddress}
+              email={customerEmail}
+              name={customerName}
+              phone={customerPhone}
+              fetchCartItem={fetchCartItem}
+              fetchOrder={fetchOrder}
+              onSuccess={handleOnlinePaymentSuccess}
+              onClose={handleOnlinePaymentClose}
+              disabled={
+                selectAddress === -1 || !customerEmail || !customerName || !customerPhone
+              }
+            />
+
+            {/* Cash on Delivery */}
+            <button
+              className='py-2 px-4 border-2 border-green-600 font-semibold text-green-600 hover:bg-green-600 hover:text-white rounded'
+              onClick={handleCashOnDelivery}
+              disabled={selectAddress === -1}
+            >
+              Cash on Delivery
+            </button>
           </div>
         </div>
       </div>
 
-
-      {
-        openAddress && (
-          <AddAddress close={() => setOpenAddress(false)} />
-        )
-      }
+      {openAddress && <AddAddress close={() => setOpenAddress(false)} />}
     </section>
-  )
-}
+  );
+};
 
-export default CheckoutPage
+export default CheckoutPage;

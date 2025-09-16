@@ -1,4 +1,4 @@
-import flutterwaveInstance from "../config/flutterwave.js";
+import flw from "../config/flutterwave.js";
 import Cart from "../models/cartProductModel.js";
 import Order from "../models/orderModel.js";
 import User from "../models/userModel.js";
@@ -75,91 +75,146 @@ export const pricewithDiscount = (price, dis = 1)=>{
     return actualPrice
 }
 
-export async function paymentController(request,response){
-    try {
-        const userId = request.userId // auth middleware 
-        const { list_items, totalAmt, addressId, subTotalAmt } = request.body 
+export async function paymentController(request, response) {
+  try {
+    const userId = request.userId; // from auth middleware
+    const { list_items, totalAmt, addressId, subTotalAmt } = request.body;
 
-        const user = await User.findById(userId)
-
-        if (!user) {
-            return response.status(404).json({
-                message: "User not found.",
-                error: true,
-                success: false
-            });
-        }
-
-        const transaction_id = uuidv4(); // Generate a unique transaction ID
-
-        const amount = totalAmt; 
-
-        // Pass original list_items for the webhook to reconstruct the order
-        const meta = {
-            userId: userId,
-            addressId: addressId,
-            // <<< IMPORTANT: Storing the full list_items for webhook to use
-            // Ensure this doesn't exceed Flutterwave's metadata size limits if list_items can be very large.
-            order_items_summary: list_items.map(item => ({
-                productId: item.productId._id,
-                name: item.productId.name,
-                image: item.productId.image, // Include image for order reconstruction
-                quantity: item.quantity,
-                price: item.productId.price, // Store original price for calculation at webhook
-                discount: item.productId.discount // Store discount for calculation at webhook
-            }))
-        };
-
-        const payload = {
-            tx_ref: transaction_id, 
-            amount: amount,
-            currency: 'UGX', 
-            redirect_url: `${process.env.FRONTEND_URL}/success`, 
-            customer: {
-                email: user.email,
-                mobile: user.mobile || 'N/A', 
-                name: user.name || 'Customer' 
-            },
-            customizations: {
-                title: 'Fresh Katale',
-                description: 'Payment for your order',
-            },
-            meta: meta,
-            
-            payment_options: 'card, mobilemoney'
-        };
-        
-        console.log("--- DEBUGGING FLUTTERWAVE INSTANCE ---");
-        console.log("flutterwaveInstance type:", typeof flutterwaveInstance);
-        console.log("flutterwaveInstance keys:", Object.keys(flutterwaveInstance));
-        console.log("flutterwaveInstance.Payment exists:", !!flutterwaveInstance.Payment); // Check if Payment property exists
-        console.log("flutterwaveInstance.Transaction exists:", !!flutterwaveInstance.Transaction); 
-        const responseData = await flutterwaveInstance.Transaction.initiate(payload);
-
-        if (responseData && responseData.status === 'success') {
-            return response.status(200).json({
-                message: 'Payment initiated successfully',
-                success: true,
-                error: false,
-                data: responseData.data.link 
-            });
-        } else {
-            return response.status(400).json({
-                message: responseData.message || 'Failed to initiate payment',
-                error: true,
-                success: false
-            });
-        }
-
-    } catch (error) {
-        console.error("Payment initiation error:", error);
-        return response.status(500).json({
-            message: error.message || 'An unexpected error occurred',
-            error: true,
-            success: false
-        });
+    const user = await User.findById(userId);
+    if (!user) {
+      return response.status(404).json({
+        message: "User not found.",
+        error: true,
+        success: false,
+      });
     }
+
+    const orderId = uuidv4(); // unique order ID
+    const tx_ref = uuidv4(); // Flutterwave transaction reference
+
+    // Create Order(s) in DB (one per product)
+    const orderDocs = await Promise.all(
+      list_items.map((item) =>
+        Order.create({
+          userId,
+          orderId,
+          productId: item.productId._id,
+          product_details: {
+            name: item.productId.name,
+            image: [item.productId.image],
+          },
+          delivery_address: addressId,
+          subTotalAmt,
+          totalAmt,
+          payment_status: "pending",
+        })
+      )
+    );
+
+    // Prepare payload for Flutterwave
+    const payload = {
+      tx_ref,
+      amount: totalAmt,
+      currency: "UGX",
+      redirect_url: `${process.env.FRONTEND_URL}/payment-status`,
+      payment_options: "card, mobilemoneyuganda",
+      customer: {
+        email: user.email,
+        phonenumber: user.mobile || "N/A",
+        name: user.name || "Customer",
+      },
+      customizations: {
+        title: "Fresh Katale",
+        description: "Payment for your order",
+      },
+      meta: {
+        orderId, // important to match orders later
+        userId,
+      },
+    };
+
+    const responseData = await flw.Payment.create(payload);
+
+    if (responseData && responseData.status === "success") {
+      return response.status(200).json({
+        message: "Payment initiated successfully",
+        success: true,
+        error: false,
+        data: responseData.data.link, // Flutterwave checkout link
+      });
+    } else {
+      return response.status(400).json({
+        message: responseData.message || "Failed to initiate payment",
+        error: true,
+        success: false,
+      });
+    }
+  } catch (error) {
+    console.error("Payment initiation error:", error);
+    return response.status(500).json({
+      message: error.message || "An unexpected error occurred",
+      error: true,
+      success: false,
+    });
+  }
 }
+
+export async function verifyPaymentController(request, response) {
+  try {
+    const { transaction_id } = request.body;
+    if (!transaction_id) {
+      return response.status(400).json({
+        message: "Transaction ID is required",
+        success: false,
+        error: true,
+      });
+    }
+
+    const verifyResponse = await flw.Transaction.verify({ id: transaction_id });
+
+    const paymentData = verifyResponse.data;
+    const { status, amount, currency, tx_ref, id } = paymentData;
+
+    if (status === "successful") {
+      // Update all orders with this tx_ref
+      await Order.updateMany(
+        { orderId: paymentData.meta.orderId },
+        {
+          payment_status: "paid",
+          paymentId: id.toString(),
+          invoice_receipt: paymentData.flw_ref,
+        }
+      );
+
+      return response.status(200).json({
+        message: "Payment verified successfully",
+        success: true,
+        error: false,
+        data: paymentData,
+      });
+    } else {
+      // Mark as failed
+      await Order.updateMany(
+        { orderId: paymentData.meta.orderId },
+        { payment_status: "failed" }
+      );
+
+      return response.status(400).json({
+        message: "Payment verification failed",
+        success: false,
+        error: true,
+      });
+    }
+  } catch (error) {
+    console.error("Payment verification error:", error);
+    return response.status(500).json({
+      message: error.message || "An unexpected error occurred",
+      success: false,
+      error: true,
+    });
+  }
+}
+
 
 // <<< NEW: Exporting this helper function so the webhook handler can use it
 export const getOrderProductItems = async({
@@ -204,80 +259,47 @@ export const getOrderProductItems = async({
 // <<< REMOVED: The old webhookStripe function is removed.
 // <<< NEW: This is the combined Flutterwave webhook handler function.
 export async function webhookFlutterwaveController(request, response) {
-    // Note: Raw body is captured by bodyParser in the route file and passed on req.rawBody.
-    // Signature verification is also done in the route file before this controller is called.
+  try {
+    // ✅ Verify request signature
+    const hash = crypto
+      .createHmac("sha256", process.env.FLW_SECRET_HASH) // set this in dashboard
+      .update(JSON.stringify(request.body))
+      .digest("hex");
 
-    const payload = request.body;
-    console.log(`Processing Flutterwave event in webhookFlutterwaveController: ${payload.event}, Status: ${payload.data?.status}, Tx_Ref: ${payload.data?.tx_ref}`);
-
-    if (payload.event === 'charge.completed' && payload.data?.status === 'successful') {
-        try {
-            const transactionDetails = payload.data;
-            const tx_ref = transactionDetails.tx_ref; 
-            const flutterwavePaymentId = transactionDetails.id; 
-            const paymentStatus = transactionDetails.status; 
-            const totalAmountPaid = transactionDetails.amount; 
-            const currency = transactionDetails.currency; 
-
-            const userId = transactionDetails.meta?.userId;
-            const addressId = transactionDetails.meta?.addressId;
-            const originalListItems = transactionDetails.meta?.order_items_summary; // This is the key!
-
-            if (!userId || !addressId || !originalListItems || originalListItems.length === 0) {
-                console.error(`Missing critical metadata in Flutterwave webhook for tx_ref ${tx_ref}. userId: ${userId}, addressId: ${addressId}, originalListItems present: ${Boolean(originalListItems)}`);
-                return response.status(200).send('Webhook Received, but essential data missing for order creation.');
-            }
-
-            const existingOrder = await Order.findOne({ tx_ref: tx_ref });
-            if (existingOrder) {
-                console.warn(`Order with tx_ref ${tx_ref} already exists. Skipping duplicate processing.`);
-                return response.status(200).send('Order already processed');
-            }
-
-            // Use the now-exported getOrderProductItems function
-            const orderProduct = await getOrderProductItems({
-                originalListItems: originalListItems,
-                userId: userId,
-                addressId: addressId,
-                paymentId: flutterwavePaymentId,
-                payment_status: paymentStatus,
-            });
-
-            const newOrder = new Order({
-                userId: userId,
-                paymentId: flutterwavePaymentId,
-                tx_ref: tx_ref,
-                totalAmount: totalAmountPaid,
-                currency: currency,
-                items: orderProduct,
-                deliveryAddress: addressId,
-                status: 'completed',
-                paymentDetails: transactionDetails,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-
-            await newOrder.save();
-            console.log(`New Order ${newOrder._id} created successfully for tx_ref: ${tx_ref}`);
-
-            const userUpdateResult = await User.findByIdAndUpdate(userId, {
-                $set: { shopping_cart: [] }
-            }, { new: true });
-            console.log(`User ${userId} cart updated:`, userUpdateResult ? 'success' : 'failed');
-
-            const cartDeleteResult = await Cart.deleteMany({ userId: userId });
-            console.log(`Deleted ${cartDeleteResult.deletedCount} cart items for user ${userId}.`);
-
-            response.status(200).send('Webhook received and order processed.');
-
-        } catch (error) {
-            console.error(`Error processing Flutterwave 'charge.completed' webhook for tx_ref ${payload.data?.tx_ref}:`, error);
-            response.status(200).send('Webhook received, but internal error occurred.');
-        }
-    } else {
-        console.log(`Unhandled Flutterwave event type or status: ${payload.event}, status: ${payload.data?.status}`);
-        response.status(200).send('Webhook received, no action taken for this event type/status.');
+    if (hash !== request.headers["verif-hash"]) {
+      return response.status(401).json({ message: "Invalid signature" });
     }
+
+    const event = request.body;
+    console.log("Flutterwave Webhook Event:", event);
+
+    if (event.event === "charge.completed") {
+      const data = event.data;
+      const { status, id, tx_ref, flw_ref, meta } = data;
+
+      if (status === "successful") {
+        // ✅ Update order(s) in DB
+        await Order.updateMany(
+          { orderId: meta.orderId },
+          {
+            payment_status: "paid",
+            paymentId: id.toString(),
+            invoice_receipt: flw_ref,
+          }
+        );
+      } else {
+        await Order.updateMany(
+          { orderId: meta.orderId },
+          { payment_status: "failed" }
+        );
+      }
+    }
+
+    return response.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return response.status(500).json({ message: "Webhook processing failed" });
+  }
 }
 
 
