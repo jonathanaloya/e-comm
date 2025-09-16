@@ -94,22 +94,25 @@ export async function paymentController(request, response) {
 
     // Create Order(s) in DB (one per product)
     const orderDocs = await Promise.all(
-      list_items.map((item) =>
-        Order.create({
-          userId,
-          orderId,
-          productId: item.productId._id,
-          product_details: {
-            name: item.productId.name,
-            image: [item.productId.image],
-          },
-          delivery_address: addressId,
-          subTotalAmt,
-          totalAmt,
-          payment_status: "pending",
-        })
-      )
+  list_items.map((item) =>
+    Order.create({
+      userId,
+      orderId,
+      productId: item.productId._id,
+      product_details: {
+        name: item.productId.name,
+        image: Array.isArray(item.productId.image) 
+                  ? item.productId.image 
+                  : [item.productId.image],
+      },
+      delivery_address: addressId,
+      subTotalAmt,
+      totalAmt,
+      payment_status: "pending",
+    })
+  )
     );
+
 
     // Prepare payload for Flutterwave
     const payload = {
