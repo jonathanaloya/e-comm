@@ -3,8 +3,6 @@
 import React from "react";
 import toast from "react-hot-toast"; 
 import Axios from "axios";
-import dotenv from "dotenv";
-dotenv.config();
 
 const FlutterwavePaymentButton = ({
   amount,

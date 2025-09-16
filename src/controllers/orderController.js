@@ -4,7 +4,7 @@ import Order from "../models/orderModel.js";
 import User from "../models/userModel.js";
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from 'uuid';
-import crypto from 'crypto'; // <<< NEW: Import crypto for webhook verification
+import crypto from 'crypto'; // NEW: Import crypto for webhook verification
 
 // Utility function for Flutterwave webhook signature verification
 // <<< NEW: This function is now part of orderController.js
@@ -263,7 +263,7 @@ export const getOrderProductItems = async({
 // <<< NEW: This is the combined Flutterwave webhook handler function.
 export async function webhookFlutterwaveController(request, response) {
   try {
-    // ✅ Verify request signature
+    // Verify request signature
     const hash = crypto
       .createHmac("sha256", process.env.FLW_SECRET_HASH) // set this in dashboard
       .update(JSON.stringify(request.body))
