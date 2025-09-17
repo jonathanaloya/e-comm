@@ -9,7 +9,7 @@ import AxiosToastError from '../utils/AxiosToastError';
 import Axios from '../utils/Axios';
 import SummaryApi from '../common/SummaryApi';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
 import FlutterwavePaymentButton from '../components/Flutterwave'; // Updated import
 
 const CheckoutPage = () => {
@@ -20,6 +20,7 @@ const CheckoutPage = () => {
   const cartItemsList = useSelector(state => state.cartItem.cart);
   const user = useSelector(state => state.user.user);
   const navigate = useNavigate();
+  const location = useLocation(); // To check URL params after redirect
 
   // Update selected address if address list changes
   useEffect(() => {
@@ -32,12 +33,78 @@ const CheckoutPage = () => {
   const customerName = user?.name || "";
   const customerPhone = addressList[selectAddress]?.mobile || user?.mobile || "";
 
+  // This `useEffect` hook will run when the component mounts
+  // and check for Flutterwave redirect parameters in the URL to verify payment.
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    const transaction_id = query.get('transaction_id');
+    const tx_ref = query.get('tx_ref');
+    const status = query.get('status'); // Flutterwave also sends a status like 'successful', 'cancelled'
+
+    // If we have Flutterwave parameters, it means we've been redirected back
+    if (transaction_id && tx_ref) {
+      // It's good practice to clear the URL parameters after processing
+      // navigate(location.pathname, { replace: true }); // uncomment if you want to clear URL params
+
+      if (status === 'successful') {
+        toast.loading("Verifying payment...");
+        verifyPaymentOnBackend(transaction_id, tx_ref);
+      } else if (status === 'cancelled') {
+        toast.dismiss();
+        toast.error("Payment was cancelled or failed on Flutterwave.");
+        navigate("/payment-failed", { state: { tx_ref } });
+      } else {
+        toast.dismiss();
+        toast.error("Payment status unknown. Please check your order history.");
+      }
+    }
+  }, [location.search, navigate]); // Rerun when search params change
+
+
+  // Function to call your backend's verification endpoint
+  const verifyPaymentOnBackend = async (transaction_id, tx_ref) => {
+    try {
+      const response = await Axios.get(
+        `${process.env.REACT_APP_API_URL}/api/order/verify-payment?transaction_id=${transaction_id}&tx_ref=${tx_ref}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+
+      const { data: responseData } = response;
+      toast.dismiss(); // Dismiss the "Verifying payment" toast
+
+      if (responseData.success) {
+        toast.success(responseData.message || "Payment verified and order placed successfully!");
+        if (fetchCartItem) fetchCartItem(); // Refresh cart
+        if (fetchOrder) fetchOrder();       // Refresh order history
+        navigate("/success", { state: { text: "Order" } }); // Navigate to success page
+      } else {
+        toast.error(responseData.message || "Payment verification failed.");
+        navigate("/payment-failed", { state: { tx_ref, message: responseData.message } });
+      }
+    } catch (error) {
+      toast.dismiss();
+      console.error("Error verifying payment with backend:", error);
+      toast.error("An error occurred during payment verification.");
+      navigate("/payment-failed", { state: { tx_ref, message: "Network error during verification." } });
+    }
+  };
+
+
   // Cash on Delivery handler
   const handleCashOnDelivery = async () => {
     if (selectAddress === -1 || !addressList[selectAddress]?._id) {
       toast.error("Please select an address before proceeding with Cash on Delivery.");
       return;
     }
+    if (cartItemsList.length === 0) {
+      toast.error("Your cart is empty!");
+      return;
+    }
+    if (totalPrice <= 0) {
+      toast.error("Total amount must be greater than zero.");
+      return;
+    }
+
     try {
       const response = await Axios({
         ...SummaryApi.CashOnDeliveryOrder,
@@ -46,6 +113,7 @@ const CheckoutPage = () => {
           addressId: addressList[selectAddress]._id,
           subTotalAmt: totalPrice,
           totalAmt: totalPrice,
+          paymentMethod: "Cash on Delivery", // Explicitly set payment method
         }
       });
 
@@ -64,49 +132,69 @@ const CheckoutPage = () => {
   };
 
   // Flutterwave Payment handlers
-  const handleOnlinePaymentSuccess = async (flutterwaveResponse) => {
+  // This handler is now simplified as the backend initiates the payment redirect
+  const handleOnlinePaymentInitiation = async () => {
     if (selectAddress === -1 || !addressList[selectAddress]?._id) {
       toast.error("Please select an address before proceeding with Online Payment.");
       return;
     }
+    if (cartItemsList.length === 0) {
+      toast.error("Your cart is empty!");
+      return;
+    }
+    if (totalPrice <= 0) {
+        toast.error("Total amount must be greater than zero.");
+        return;
+    }
 
-    console.log("Payment successful, Flutterwave response:", flutterwaveResponse);
+    toast.loading("Preparing payment...");
 
     try {
-      const response = await Axios.post(
-        `${process.env.REACT_APP_API_URL}/api/order/checkout`,
+      const selectedAddressId = addressList[selectAddress]._id;
+      // You might need to add a shipping cost here if your backend expects it
+      // For now, assuming totalPrice already accounts for everything or shipping is free/handled by backend
+      const amountToSend = totalPrice; 
+
+      const backendResponse = await Axios.post(
+        `${process.env.REACT_APP_API_URL}/api/order/initiate-flutterwave-payment`, // Your backend's initiation endpoint
         {
-          list_items: cartItemsList,
-          addressId: addressList[selectAddress]._id,
+          userId: user._id,
+          list_items: cartItemsList.map(item => ({ // Ensure item structure matches backend expectation
+              productId: item.productId._id, // Only send productId if backend references products
+              quantity: item.quantity,
+              price: item.price // individual item price
+          })),
+          addressId: selectedAddressId,
           subTotalAmt: totalPrice,
-          totalAmt: totalPrice,
-          paymentId: flutterwaveResponse.transaction_id,
-          paymentStatus: flutterwaveResponse.status,
-          paymentMethod: "Flutterwave",
+          totalAmt: amountToSend,
+          customerEmail: customerEmail,
+          customerName: customerName,
+          customerPhone: customerPhone,
+          // Add a redirect_url that Flutterwave will use after payment
+          // This should point back to this CheckoutPage or a dedicated payment callback page
+          redirect_url: window.location.origin + '/checkout', // Or your specific payment success URL
         },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
 
-      const { data: responseData } = response;
+      const { data: responseData } = backendResponse;
 
-      if (responseData.success) {
-        toast.success(responseData.message || "Order placed successfully!");
-        if (fetchCartItem) fetchCartItem();
-        if (fetchOrder) fetchOrder();
-        navigate("/success", { state: { text: "Order" } });
+      if (responseData.success && responseData.data?.link) {
+        toast.dismiss(); // Dismiss the "Preparing payment" toast
+        toast.success("Redirecting to payment gateway...");
+        // Redirect to the Flutterwave checkout link provided by the backend
+        window.location.href = responseData.data.link;
       } else {
-        toast.error(responseData.message || "Failed to create order after payment.");
+        toast.dismiss();
+        toast.error(responseData.message || "Failed to initiate payment. Please try again.");
       }
     } catch (error) {
-      console.error("Error creating order after payment:", error);
-      toast.error("Something went wrong while creating your order.");
+      toast.dismiss();
+      console.error("Error initiating payment with backend:", error);
+      AxiosToastError(error, "Could not start payment. Please try again.");
     }
   };
 
-  const handleOnlinePaymentClose = () => {
-    console.log("Flutterwave payment modal closed.");
-    toast.info("Payment was not completed.");
-  };
 
   return (
     <section className='bg-blue-50'>
@@ -118,14 +206,14 @@ const CheckoutPage = () => {
           <div className='bg-white p-2 grid gap-4'>
             {addressList.length > 0 ? addressList.map((address, index) => (
               <label key={address._id} htmlFor={"address" + index} className={!address.status ? "hidden" : ""}>
-                <div className={`border rounded p-3 flex gap-3 hover:bg-blue-50 cursor-pointer ${selectAddress == index ? 'border-green-600 ring-2 ring-green-600' : ''}`}>
+                <div className={`border rounded p-3 flex gap-3 hover:bg-blue-50 cursor-pointer ${selectAddress === index ? 'border-green-600 ring-2 ring-green-600' : ''}`}>
                   <input
                     id={"address" + index}
                     type='radio'
                     value={index}
                     onChange={() => setSelectAddress(index)}
                     name='address'
-                    checked={selectAddress == index}
+                    checked={selectAddress === index}
                     className="accent-green-600"
                   />
                   <div>
@@ -176,29 +264,21 @@ const CheckoutPage = () => {
           </div>
 
           <div className='w-full flex flex-col gap-4 mt-4'>
-            {/* Flutterwave Payment Button */}
-            <FlutterwavePaymentButton
-              cartItemsList={cartItemsList}
-              amount={totalPrice}
-              addressList={addressList}
-              selectAddress={selectAddress}
-              email={customerEmail}
-              name={customerName}
-              phone={customerPhone}
-              fetchCartItem={fetchCartItem}
-              fetchOrder={fetchOrder}
-              onSuccess={handleOnlinePaymentSuccess}
-              onClose={handleOnlinePaymentClose}
+            {/* Flutterwave Payment Button (now triggers backend initiation) */}
+            <button
+              className='py-2 px-4 bg-green-600 font-semibold text-white hover:bg-green-700 rounded'
+              onClick={handleOnlinePaymentInitiation}
               disabled={
-                selectAddress === -1 || !customerEmail || !customerName || !customerPhone
+                selectAddress === -1 || cartItemsList.length === 0 || totalPrice <= 0
               }
-            />
-
+            >
+              Pay with Flutterwave
+            </button>
             {/* Cash on Delivery */}
             <button
               className='py-2 px-4 border-2 border-green-600 font-semibold text-green-600 hover:bg-green-600 hover:text-white rounded'
               onClick={handleCashOnDelivery}
-              disabled={selectAddress === -1}
+              disabled={selectAddress === -1 || cartItemsList.length === 0 || totalPrice <= 0}
             >
               Cash on Delivery
             </button>
