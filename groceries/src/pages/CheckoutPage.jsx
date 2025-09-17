@@ -154,10 +154,10 @@ const CheckoutPage = () => {
       // You might need to add a shipping cost here if your backend expects it
       // For now, assuming totalPrice already accounts for everything or shipping is free/handled by backend
       const amountToSend = totalPrice; 
-      const fullBackendUrl = `${process.env.REACT_APP_API_URL}/api/order/checkout`; // Or the original /api/order/checkout endpoint
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL // Or the original /api/order/checkout endpoint
       console.log("DEBUG: Constructed Backend URL:", amountToSend);
       const backendResponse = await Axios.post(
-        fullBackendUrl, // Your backend's initiation endpoint
+        `${API_BASE_URL}/api/order/checkout`, // Your backend's initiation endpoint
         {
           userId: user?._id,
           list_items: cartItemsList.map(item => ({ // Ensure item structure matches backend expectation
