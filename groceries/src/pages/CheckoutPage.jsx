@@ -133,15 +133,17 @@ const CheckoutPage = () => {
 
   // Flutterwave Payment handlers
   // This handler is now simplified as the backend initiates the payment redirect
- const handleOnlinePaymentInitiation = async () => {
+const handleOnlinePaymentInitiation = async () => {
   if (selectAddress === -1 || !addressList[selectAddress]?._id) {
     toast.error("Please select an address before proceeding with Online Payment.");
     return;
   }
-  if (!cartItemsList || cartItemsList.length === 0) {
+
+  if (cartItemsList.length === 0) {
     toast.error("Your cart is empty!");
     return;
   }
+
   if (totalPrice <= 0) {
     toast.error("Total amount must be greater than zero.");
     return;
@@ -150,29 +152,39 @@ const CheckoutPage = () => {
   toast.loading("Preparing payment...");
 
   try {
-    // Map cart items to backend expected structure
-    const payloadListItems = cartItemsList.map(item => ({
-      price: Number(item.price),
-      productId: item.productId?._id || item._id,
-      quantity: Number(item.quantity)
+    const selectedAddressId = addressList[selectAddress]._id;
+    const amountToSend = totalPrice; // Or include shipping if needed
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+    // Map cart items to match backend expectation
+    const listItems = cartItemsList.map(item => ({
+      productId: {
+        _id: item.productId._id.toString(), // ensure string
+        name: item.productId.name,
+        image: Array.isArray(item.productId.image) ? item.productId.image : [item.productId.image]
+      },
+      quantity: Number(item.quantity),
+      price: Number(item.productId.price) // ensure non-zero number
     }));
 
-    const response = await Axios({
-      ...SummaryApi.payment_url, // Use your SummaryApi object
-      data: {
-        userId: user?._id,
-        list_items: payloadListItems,
-        addressId: addressList[selectAddress]?._id,
-        subTotalAmt: totalPrice,
-        totalAmt: totalPrice, // Add shipping if needed
-        customerEmail,
-        customerName,
-        customerPhone,
-        redirect_url: window.location.origin + "/checkout"
-      }
-    });
 
-    const { data: responseData } = response;
+    const backendResponse = await Axios.post(
+      `${API_BASE_URL}/api/order/checkout`,
+      {
+        userId: user?._id,
+        list_items: listItems,
+        addressId: selectedAddressId,
+        subTotalAmt: totalPrice,
+        totalAmt: amountToSend,
+        customerEmail: customerEmail,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        redirect_url: window.location.origin + '/checkout'
+      },
+      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+    );
+
+    const { data: responseData } = backendResponse;
 
     if (responseData.success && responseData.data?.link) {
       toast.dismiss();
@@ -184,10 +196,12 @@ const CheckoutPage = () => {
     }
   } catch (error) {
     toast.dismiss();
-    console.error("Error initiating payment with backend via SummaryApi:", error);
+    console.error("Error initiating payment with backend:", error);
     AxiosToastError(error, "Could not start payment. Please try again.");
   }
 };
+
+
 
 
 

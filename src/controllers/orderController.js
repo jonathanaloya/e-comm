@@ -77,7 +77,7 @@ export const pricewithDiscount = (price, dis = 1)=>{
 
 export async function paymentController(request, response) {
   try {
-    const userId = request.userId; // Assuming userId is set by your auth middleware
+    const userId = request.userId; // From auth middleware
     const { list_items, totalAmt, addressId, subTotalAmt } = request.body;
 
     if (!userId || !list_items || list_items.length === 0 || !totalAmt || !addressId) {
@@ -97,55 +97,51 @@ export async function paymentController(request, response) {
       });
     }
 
-    // Generate a single unique ID for the entire order group
-    const mainOrderId = `ORD-${uuidv4().substring(0, 8)}-${Date.now()}`;
-    const tx_ref = `FLW-${uuidv4().substring(0, 8)}-${Date.now()}`; // Unique Flutterwave transaction reference
+    // Unique transaction reference for Flutterwave
+    const tx_ref = `FLW-${uuidv4().substring(0, 8)}-${Date.now()}`;
 
-    // Create individual Order documents for each product item
-    // Each product in the order will have its own Order document,
-    // but they will all share the same `mainOrderId` for grouping
-    // and the `tx_ref` to link to the Flutterwave transaction.
+    // Group ID to link all items in this checkout
+    const mainOrderId = `ORD-GROUP-${uuidv4()}`;
+
+    // Create individual Order documents per item with unique orderId
     const orderPromises = list_items.map(async (item) => {
-      // Basic validation for item structure
-      if (!item.productId || !item.productId._id || !item.productId.name || !item.productId.image || !item.price || !item.quantity) {
-          throw new Error("Invalid product item structure in list_items.");
-      }
+  if (!item.productId || !item.productId._id || !item.productId.name || !item.productId.image || !item.price || !item.quantity) {
+    throw new Error("Invalid product item structure in list_items.");
+  }
 
-      return Order.create({
-        userId,
-        orderId: mainOrderId, // Use a single mainOrderId to group all items
-        productId: item.productId._id, // Reference to the actual product
-        product_details: {
-          name: item.productId.name,
-          image: Array.isArray(item.productId.image)
-            ? item.productId.image
-            : [item.productId.image],
-        },
-        delivery_address: addressId,
-        // Store item-specific subtotal/total or leave as 0 if `totalAmt` is for the whole cart
-        // For simplicity, let's use the cart's subTotalAmt and totalAmt for each order doc.
-        // In a real scenario, you might want item.price * item.quantity here.
-        subTotalAmt: item.price * item.quantity, // Amount for this specific item
-        totalAmt: item.price * item.quantity,     // Amount for this specific item
-        // The overall transaction amount is `totalAmt` from request.body
-        paymentId: tx_ref, // Initially store the Flutterwave transaction reference
-        payment_status: "pending", // Initial status
-      });
+  const uniqueOrderId = `ORD-${uuidv4()}`; // Only use UUID
+
+  return Order.create({
+    userId,
+    orderId: uniqueOrderId,      // guaranteed unique
+    mainOrderId: mainOrderId,    // group ID
+    productId: item.productId._id,
+    product_details: {
+      name: item.productId.name,
+      image: Array.isArray(item.productId.image) ? item.productId.image : [item.productId.image],
+    },
+    delivery_address: addressId,
+    subTotalAmt: item.price * item.quantity,
+    totalAmt: item.price * item.quantity,
+    paymentId: tx_ref,
+    payment_status: "pending",
+  });
     });
+
 
     const createdOrderDocs = await Promise.all(orderPromises);
     console.log(`Created ${createdOrderDocs.length} order documents for mainOrderId: ${mainOrderId}`);
 
     // Prepare payload for Flutterwave
     const payload = {
-      tx_ref: tx_ref, // Use the generated tx_ref
-      amount: totalAmt, // Total amount for the entire order (all list_items combined)
-      currency: "UGX", // Ensure this is consistent with your system's currency
-      redirect_url: `${process.env.FRONTEND_URL}/payment-status?tx_ref=${tx_ref}`, // Pass tx_ref for verification
+      tx_ref: tx_ref,
+      amount: totalAmt,
+      currency: "UGX",
+      redirect_url: `${process.env.FRONTEND_URL}/payment-status?tx_ref=${tx_ref}`,
       payment_options: "card,mobilemoneyuganda",
       customer: {
         email: user.email,
-        phonenumber: user.mobile ? user.mobile.toString() : "N/A", // Ensure phonenumber is a string
+        phonenumber: user.mobile ? user.mobile.toString() : "N/A",
         name: user.name || "Customer",
       },
       customizations: {
@@ -153,37 +149,35 @@ export async function paymentController(request, response) {
         description: `Payment for Order ${mainOrderId}`,
       },
       meta: {
-        mainOrderId: mainOrderId, // Important to match orders later
+        mainOrderId: mainOrderId,
         userId: userId.toString(),
-        // Potentially store totalAmt and currency here for initial verification
         expectedAmount: totalAmt,
         expectedCurrency: "UGX",
       },
     };
 
-    const responseData = await flw.Payment.initiate(payload); // Use .initiate for consistency
+    const responseData = await flw.Payment.initiate(payload);
 
-    if (responseData && responseData.status === "success" && responseData.data && responseData.data.link) {
-      // No need to update orders again here; paymentId already holds tx_ref
+    if (responseData && responseData.status === "success" && responseData.data?.link) {
       return response.status(200).json({
         message: "Payment initiated successfully",
         success: true,
         error: false,
-        data: responseData.data.link, // Flutterwave checkout link
-        mainOrderId: mainOrderId, // Return your main order ID
-        tx_ref: tx_ref // Return the Flutterwave reference
+        data: responseData.data.link,
+        mainOrderId: mainOrderId,
+        tx_ref: tx_ref
       });
     } else {
-      // If Flutterwave initiation fails, mark all associated orders as 'failed'
+      // Mark orders as failed if Flutterwave initiation fails
       await Order.updateMany(
-        { paymentId: tx_ref }, // Find by the tx_ref we stored
+        { paymentId: tx_ref },
         { payment_status: "failed" }
       );
       return response.status(400).json({
         message: responseData.message || "Failed to initiate payment",
         error: true,
         success: false,
-        flutterwaveResponse: responseData // Include Flutterwave's response for debugging
+        flutterwaveResponse: responseData
       });
     }
   } catch (error) {
