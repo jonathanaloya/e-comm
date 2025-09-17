@@ -156,7 +156,7 @@ export async function paymentController(request, response) {
       },
     };
 
-    const responseData = await flw.Payment.initiate(payload);
+    const responseData = await flw.Payment.initialize(payload);
 
     if (responseData && responseData.status === "success" && responseData.data?.link) {
       return response.status(200).json({
