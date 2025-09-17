@@ -6,6 +6,7 @@ import {
     getOrderDetailsController,
     paymentController,
     // webhookStripe, // <<< REMOVED: Stripe webhook is gone
+    verifyPaymentController,
     webhookFlutterwaveController, // <<< NEW: Import the Flutterwave webhook controller
     verifyFlutterwaveWebhook // <<< NEW: Import the verification utility
 } from '../controllers/orderController.js' // All from the same controller file now
@@ -14,7 +15,7 @@ const orderRouter = Router()
 
 orderRouter.post("/cash-on-delivery",authMiddleware, CashOnDeliveryOrderController)
 orderRouter.post('/checkout',authMiddleware, paymentController) // This is your Flutterwave payment initiation
-
+orderRouter.post('/verify-payment',authMiddleware, verifyPaymentController)
 // This endpoint requires a specific body-parser setup to get the raw body
 orderRouter.post('/webhook', bodyParser.json({
     verify: (req, res, buf) => {

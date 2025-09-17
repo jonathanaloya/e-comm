@@ -154,13 +154,12 @@ const CheckoutPage = () => {
       // You might need to add a shipping cost here if your backend expects it
       // For now, assuming totalPrice already accounts for everything or shipping is free/handled by backend
       const amountToSend = totalPrice; 
-
       const backendResponse = await Axios.post(
-        `${process.env.REACT_APP_API_URL}/api/order/initiate-flutterwave-payment`, // Your backend's initiation endpoint
+        `${process.env.REACT_APP_API_URL}/api/order/checkout`, // Your backend's initiation endpoint
         {
-          userId: user._id,
+          userId: user?._id,
           list_items: cartItemsList.map(item => ({ // Ensure item structure matches backend expectation
-              productId: item.productId._id, // Only send productId if backend references products
+              productId: item.productId?._id, // Only send productId if backend references products
               quantity: item.quantity,
               price: item.price // individual item price
           })),
@@ -272,7 +271,7 @@ const CheckoutPage = () => {
                 selectAddress === -1 || cartItemsList.length === 0 || totalPrice <= 0
               }
             >
-              Pay with Flutterwave
+              Pay Online
             </button>
             {/* Cash on Delivery */}
             <button
