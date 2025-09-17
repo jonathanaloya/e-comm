@@ -133,68 +133,63 @@ const CheckoutPage = () => {
 
   // Flutterwave Payment handlers
   // This handler is now simplified as the backend initiates the payment redirect
-  const handleOnlinePaymentInitiation = async () => {
-    if (selectAddress === -1 || !addressList[selectAddress]?._id) {
-      toast.error("Please select an address before proceeding with Online Payment.");
-      return;
-    }
-    if (cartItemsList.length === 0) {
-      toast.error("Your cart is empty!");
-      return;
-    }
-    if (totalPrice <= 0) {
-        toast.error("Total amount must be greater than zero.");
-        return;
-    }
+ const handleOnlinePaymentInitiation = async () => {
+  if (selectAddress === -1 || !addressList[selectAddress]?._id) {
+    toast.error("Please select an address before proceeding with Online Payment.");
+    return;
+  }
+  if (!cartItemsList || cartItemsList.length === 0) {
+    toast.error("Your cart is empty!");
+    return;
+  }
+  if (totalPrice <= 0) {
+    toast.error("Total amount must be greater than zero.");
+    return;
+  }
 
-    toast.loading("Preparing payment...");
+  toast.loading("Preparing payment...");
 
-    try {
-      const selectedAddressId = addressList[selectAddress]._id;
-      // You might need to add a shipping cost here if your backend expects it
-      // For now, assuming totalPrice already accounts for everything or shipping is free/handled by backend
-      const amountToSend = totalPrice; 
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL // Or the original /api/order/checkout endpoint
-      console.log("DEBUG: Constructed Backend URL:", amountToSend);
-      const backendResponse = await Axios.post(
-        `${API_BASE_URL}/api/order/checkout`, // Your backend's initiation endpoint
-        {
-          userId: user?._id,
-          list_items: cartItemsList.map(item => ({ // Ensure item structure matches backend expectation
-              productId: item.productId?._id, // Only send productId if backend references products
-              quantity: item.quantity,
-              price: item.price // individual item price
-          })),
-          addressId: selectedAddressId,
-          subTotalAmt: totalPrice,
-          totalAmt: amountToSend,
-          customerEmail: customerEmail,
-          customerName: customerName,
-          customerPhone: customerPhone,
-          // Add a redirect_url that Flutterwave will use after payment
-          // This should point back to this CheckoutPage or a dedicated payment callback page
-          redirect_url: window.location.origin + '/checkout', // Or your specific payment success URL
-        },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
+  try {
+    // Map cart items to backend expected structure
+    const payloadListItems = cartItemsList.map(item => ({
+      price: Number(item.price),
+      productId: item.productId?._id || item._id,
+      quantity: Number(item.quantity)
+    }));
 
-      const { data: responseData } = backendResponse;
-
-      if (responseData.success && responseData.data?.link) {
-        toast.dismiss(); // Dismiss the "Preparing payment" toast
-        toast.success("Redirecting to payment gateway...");
-        // Redirect to the Flutterwave checkout link provided by the backend
-        window.location.href = responseData.data.link;
-      } else {
-        toast.dismiss();
-        toast.error(responseData.message || "Failed to initiate payment. Please try again.");
+    const response = await Axios({
+      ...SummaryApi.payment_url, // Use your SummaryApi object
+      data: {
+        userId: user?._id,
+        list_items: payloadListItems,
+        addressId: addressList[selectAddress]?._id,
+        subTotalAmt: totalPrice,
+        totalAmt: totalPrice, // Add shipping if needed
+        customerEmail,
+        customerName,
+        customerPhone,
+        redirect_url: window.location.origin + "/checkout"
       }
-    } catch (error) {
+    });
+
+    const { data: responseData } = response;
+
+    if (responseData.success && responseData.data?.link) {
       toast.dismiss();
-      console.error("Error initiating payment with backend:", error);
-      AxiosToastError(error, "Could not start payment. Please try again.");
+      toast.success("Redirecting to payment gateway...");
+      window.location.href = responseData.data.link;
+    } else {
+      toast.dismiss();
+      toast.error(responseData.message || "Failed to initiate payment. Please try again.");
     }
-  };
+  } catch (error) {
+    toast.dismiss();
+    console.error("Error initiating payment with backend via SummaryApi:", error);
+    AxiosToastError(error, "Could not start payment. Please try again.");
+  }
+};
+
+
 
 
   return (
