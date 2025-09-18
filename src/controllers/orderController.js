@@ -5,6 +5,8 @@ import User from "../models/userModel.js";
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto'; // NEW: Import crypto for webhook verification
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Utility function for Flutterwave webhook signature verification
 const flw = new Flutterwave(process.env.FLUTTERWAVE_PUBLIC_KEY, process.env.FLUTTERWAVE_SECRET_KEY);
@@ -157,6 +159,8 @@ export async function paymentController(request, response) {
     };
 
     const responseData = await flw.Payment.initialize(payload);
+    console.log(flw.Payment);
+
 
     if (responseData && responseData.status === "success" && responseData.data?.link) {
       return response.status(200).json({
