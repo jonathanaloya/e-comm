@@ -200,11 +200,11 @@ const handleOnlinePaymentInitiation = async () => {
 
     const { data: responseData } = backendResponse;
 
-    if (responseData.success && responseData.data?.link) {
+    if (responseData.success && responseData.data) {
       toast.dismiss();
       toast.success("Redirecting to payment gateway...");
       // Note: We don't reset processing state here because user will be redirected
-      window.location.href = responseData.data.link;
+      window.location.href = responseData.data;
     } else {
       toast.dismiss();
       toast.error(responseData.message || "Failed to initiate payment. Please try again.");

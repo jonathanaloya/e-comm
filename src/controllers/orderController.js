@@ -8,8 +8,26 @@ import crypto from 'crypto'; // NEW: Import crypto for webhook verification
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Initialize Flutterwave with error handling
+let flw;
+try {
+  // Try different initialization approaches
+  if (typeof Flutterwave === 'function') {
+    flw = new Flutterwave(process.env.FLUTTERWAVE_PUBLIC_KEY, process.env.FLUTTERWAVE_SECRET_KEY);
+  } else if (Flutterwave.default && typeof Flutterwave.default === 'function') {
+    flw = new Flutterwave.default(process.env.FLUTTERWAVE_PUBLIC_KEY, process.env.FLUTTERWAVE_SECRET_KEY);
+  } else {
+    console.error('Flutterwave constructor not found:', typeof Flutterwave);
+  }
+  
+  if (flw) {
+    console.log('Flutterwave initialized successfully');
+  }
+} catch (error) {
+  console.error('Failed to initialize Flutterwave:', error);
+}
+
 // Utility function for Flutterwave webhook signature verification
-const flw = new Flutterwave(process.env.FLUTTERWAVE_PUBLIC_KEY, process.env.FLUTTERWAVE_SECRET_KEY);
 export function verifyFlutterwaveWebhook(signature, secretHash, rawBody) {
     if (!signature || !secretHash || !rawBody) {
         return false;
@@ -79,6 +97,16 @@ export const pricewithDiscount = (price, dis = 1)=>{
 
 export async function paymentController(request, response) {
   try {
+    // Check if Flutterwave is properly initialized
+    if (!flw) {
+      console.error('Flutterwave not initialized. Check environment variables.');
+      return response.status(500).json({
+        message: "Payment service not available. Please contact support.",
+        error: true,
+        success: false,
+      });
+    }
+
     const userId = request.userId; // From auth middleware
     const { list_items, totalAmt, addressId, subTotalAmt } = request.body;
 
@@ -134,8 +162,9 @@ export async function paymentController(request, response) {
     const createdOrderDocs = await Promise.all(orderPromises);
     console.log(`Created ${createdOrderDocs.length} order documents for mainOrderId: ${mainOrderId}`);
 
-    // Prepare payload for Flutterwave
+    // Prepare payload for Flutterwave Charge (hosted payment)
     const payload = {
+      type: "hosted",
       tx_ref: tx_ref,
       amount: totalAmt,
       currency: "UGX",
@@ -143,12 +172,13 @@ export async function paymentController(request, response) {
       payment_options: "card,mobilemoneyuganda",
       customer: {
         email: user.email,
-        phonenumber: user.mobile ? user.mobile.toString() : "N/A",
+        phonenumber: user.mobile ? user.mobile.toString() : "256700000000",
         name: user.name || "Customer",
       },
       customizations: {
         title: "Fresh Katale",
         description: `Payment for Order ${mainOrderId}`,
+        logo: "https://your-logo-url.com/logo.png" // Optional
       },
       meta: {
         mainOrderId: mainOrderId,
@@ -173,20 +203,34 @@ export async function paymentController(request, response) {
       mainOrderId
     });
 
-    const responseData = await flw.Payment.initialize(payload);
+    // Check if Charge method exists (Flutterwave v3 uses Charge, not Payment)
+    if (!flw.Charge || typeof flw.Charge !== 'function') {
+      console.error('Flutterwave Charge method not available:', {
+        hasCharge: !!flw.Charge,
+        chargeType: typeof flw.Charge,
+        availableMethods: Object.getOwnPropertyNames(flw)
+      });
+      return response.status(500).json({
+        message: "Payment charge method not available",
+        error: true,
+        success: false,
+      });
+    }
+
+    const responseData = await flw.Charge(payload);
     console.log("Flutterwave response:", {
       status: responseData?.status,
       hasLink: !!responseData?.data?.link,
       message: responseData?.message
     });
 
-    if (responseData && responseData.status === "success" && responseData.data?.link) {
+    if (responseData && responseData.status === "success" && responseData.data?.hosted_link) {
       console.log(`Payment initiation successful for mainOrderId: ${mainOrderId}, tx_ref: ${tx_ref}`);
       return response.status(200).json({
         message: "Payment initiated successfully",
         success: true,
         error: false,
-        data: responseData.data.link,
+        data: responseData.data.hosted_link, // Flutterwave Charge returns hosted_link
         mainOrderId: mainOrderId,
         tx_ref: tx_ref
       });
