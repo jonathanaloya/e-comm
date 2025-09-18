@@ -306,6 +306,200 @@ export const sendWelcomeEmail = async (user) => {
   }
 };
 
+// Send promotional email
+export const sendPromotionalEmail = async (users, promoData) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email service not configured. Skipping promotional email.');
+      return { success: false, message: 'Email service not configured' };
+    }
+
+    const { title, description, discount, validUntil, promoCode, imageUrl } = promoData;
+
+    const promotionalTemplate = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 0 auto; padding: 0; }
+            .header { background: #FF6B35; color: white; padding: 30px 20px; text-align: center; }
+            .content { padding: 30px 20px; }
+            .promo-box { background: linear-gradient(135deg, #FFE6E6, #FFF0F0); border: 2px dashed #FF6B35; padding: 30px; margin: 20px 0; text-align: center; border-radius: 10px; }
+            .promo-code { font-size: 32px; font-weight: bold; color: #FF6B35; background: white; padding: 15px 25px; border-radius: 8px; display: inline-block; margin: 15px 0; letter-spacing: 2px; }
+            .cta-button { background: #FF6B35; color: white; padding: 15px 40px; text-decoration: none; border-radius: 30px; display: inline-block; font-weight: bold; font-size: 16px; margin: 20px 0; }
+            .discount-badge { font-size: 48px; font-weight: bold; color: #FF6B35; margin: 10px 0; }
+            .validity { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            .footer { background: #f1f1f1; padding: 20px; text-align: center; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎉 ${title}</h1>
+              <p style="font-size: 18px; margin: 10px 0;">Special offer just for you!</p>
+            </div>
+            
+            <div class="content">
+              ${imageUrl ? `<div style="text-align: center; margin: 20px 0;"><img src="${imageUrl}" alt="Promotion" style="max-width: 100%; height: auto; border-radius: 10px;"></div>` : ''}
+              
+              <p style="font-size: 18px; text-align: center;">${description}</p>
+              
+              <div class="promo-box">
+                <div class="discount-badge">${discount}% OFF</div>
+                <h2 style="color: #FF6B35; margin: 15px 0;">Save Big on Your Next Order!</h2>
+                ${promoCode ? `
+                  <p style="margin: 20px 0;">Use this exclusive promo code:</p>
+                  <div class="promo-code">${promoCode}</div>
+                  <p style="font-size: 14px; color: #666; margin: 10px 0;">Copy and paste at checkout</p>
+                ` : ''}
+                
+                <div class="validity">
+                  <p><strong>⏰ Valid Until:</strong> ${validUntil}</p>
+                  <p style="font-size: 14px; color: #666;">Don't miss out on this limited-time offer!</p>
+                </div>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" class="cta-button">🛒 SHOP NOW</a>
+              </div>
+              
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3>Why Choose Fresh Katale?</h3>
+                <ul style="text-align: left; color: #555;">
+                  <li>🥬 Fresh, quality products</li>
+                  <li>🚚 Fast delivery to your doorstep</li>
+                  <li>💰 Best prices guaranteed</li>
+                  <li>📞 24/7 customer support</li>
+                </ul>
+              </div>
+              
+              <p style="font-size: 12px; color: #666; margin: 30px 0 0 0;">*Terms and conditions apply. Cannot be combined with other offers. Valid for one-time use per customer.</p>
+            </div>
+            
+            <div class="footer">
+              <p>&copy; 2024 Fresh Katale. All rights reserved.</p>
+              <p>You're receiving this email because you subscribed to our newsletter.</p>
+              <p><a href="#" style="color: #666;">Unsubscribe</a> | <a href="#" style="color: #666;">Update Preferences</a></p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const transporter = createTransporter();
+    const results = [];
+    
+    // Send emails in batches to avoid rate limiting
+    const batchSize = 50;
+    for (let i = 0; i < users.length; i += batchSize) {
+      const batch = users.slice(i, i + batchSize);
+      const batchPromises = batch.map(user => {
+        const mailOptions = {
+          from: `"Fresh Katale Offers" <${process.env.EMAIL_USER}>`,
+          to: user.email,
+          subject: `🎉 ${title} - Save ${discount}%!`,
+          html: promotionalTemplate
+        };
+        
+        return transporter.sendMail(mailOptions)
+          .then(result => ({ user: user.email, success: true, messageId: result.messageId }))
+          .catch(error => ({ user: user.email, success: false, error: error.message }));
+      });
+      
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+      
+      // Add delay between batches
+      if (i + batchSize < users.length) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+    
+    const successCount = results.filter(r => r.success).length;
+    console.log(`Promotional emails sent: ${successCount}/${users.length}`);
+    
+    return { success: true, results, successCount, totalCount: users.length };
+  } catch (error) {
+    console.error('Error sending promotional emails:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Send newsletter subscription confirmation
+export const sendNewsletterConfirmation = async (email, name) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email service not configured. Skipping newsletter confirmation.');
+      return { success: false, message: 'Email service not configured' };
+    }
+
+    const confirmationTemplate = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; }
+            .welcome-box { background: #e8f5e8; padding: 20px; margin: 20px 0; border-radius: 8px; text-align: center; }
+            .footer { background: #f1f1f1; padding: 20px; text-align: center; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📧 Newsletter Subscription Confirmed!</h1>
+            </div>
+            
+            <div class="content">
+              <p>Hello ${name || 'Valued Customer'},</p>
+              
+              <div class="welcome-box">
+                <h2>🎉 You're all set!</h2>
+                <p>You've successfully subscribed to the Fresh Katale newsletter.</p>
+              </div>
+              
+              <p>You'll now receive:</p>
+              <ul>
+                <li>🎯 Exclusive offers and discounts</li>
+                <li>🆕 New product announcements</li>
+                <li>📈 Weekly deals and promotions</li>
+                <li>🍎 Fresh tips and recipes</li>
+              </ul>
+              
+              <p>We promise to keep your inbox interesting with valuable content and great deals!</p>
+              
+              <p>Best regards,<br>Fresh Katale Team</p>
+            </div>
+            
+            <div class="footer">
+              <p>&copy; 2024 Fresh Katale. All rights reserved.</p>
+              <p><a href="#" style="color: #666;">Unsubscribe</a> at any time</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: `"Fresh Katale" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: '📧 Newsletter Subscription Confirmed - Fresh Katale',
+      html: confirmationTemplate
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Newsletter confirmation email sent:', result.messageId);
+    
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending newsletter confirmation:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Test email configuration
 export const testEmailConfiguration = async () => {
   try {

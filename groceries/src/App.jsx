@@ -13,6 +13,7 @@ import Axios from './utils/Axios';
 import SummaryApi from './common/SummaryApi';
 import  GlobalProvider  from './provider/GlobalProvider';
 import CartMobileLink from './components/CartMobile';
+import FloatingHelpButton from './components/FloatingHelpButton';
 
 function App() {
   const dispatch = useDispatch()
@@ -79,6 +80,8 @@ function App() {
           <CartMobileLink/>
         )
       }
+      {/* Floating Help Button - Available on all pages */}
+      <FloatingHelpButton />
     </GlobalProvider>
   )
 }

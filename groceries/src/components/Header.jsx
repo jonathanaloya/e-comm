@@ -93,6 +93,14 @@ const Header = () => {
 
             {/**User Icons display in desktop */}
             <div className="hidden lg:flex items-center gap-10">
+              {/* Help and Support Links */}
+              <Link to="/faq" className="text-neutral-600 hover:text-green-600 transition-colors">
+                FAQ
+              </Link>
+              <Link to="/contact-support" className="text-neutral-600 hover:text-green-600 transition-colors">
+                Support
+              </Link>
+              
               {user?._id ? (
                 <div className="relative">
                   <div

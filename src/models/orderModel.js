@@ -59,7 +59,9 @@ const orderSchema = new mongoose.Schema({
 
     quantity : {
         type: Number,
-        default: 1
+        required: true,
+        default: 1,
+        min: 1
     },
 
     mainOrderId : {

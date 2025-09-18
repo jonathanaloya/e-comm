@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto'; // NEW: Import crypto for webhook verification
 import dotenv from 'dotenv';
+import { sendOrderConfirmationEmail } from '../services/emailService.js';
 dotenv.config();
 
 // Initialize Flutterwave with error handling
@@ -71,10 +72,10 @@ export async function CashOnDeliveryOrderController(request,response){
                 paymentId : "", // No paymentId for COD
                 payment_status : "CASH ON DELIVERY",
                 delivery_address : addressId ,
-                subTotalAmt  : subTotalAmt, // Assuming these are total sub/total amounts for the whole order
-                totalAmt  :  totalAmt,      // You might want to store individual item totals as well.
+                subTotalAmt  : el.price * el.quantity, // Individual item subtotal
+                totalAmt  :  el.price * el.quantity,   // Individual item total
                 deliveryFee: deliveryFee,   // Add delivery fee to COD orders
-                quantity: el.quantity // Ensure quantity is captured for COD items too
+                quantity: el.quantity || 1 // Ensure quantity is captured for COD items too
             })
         })
 
@@ -83,6 +84,37 @@ export async function CashOnDeliveryOrderController(request,response){
         ///remove from the cart
         const removeCartItems = await Cart.deleteMany({ userId : userId })
         const updateInUser = await User.updateOne({ _id : userId }, { shopping_cart : []})
+
+        // Send order confirmation email
+        try {
+            const user = await User.findById(userId)
+            const address = await (await import('../models/addressModel.js')).default.findById(addressId)
+            
+            if (user && user.email) {
+                const orderForEmail = {
+                    mainOrderId: generatedOrder[0].orderId,
+                    orderId: generatedOrder[0].orderId,
+                    createdAt: new Date(),
+                    payment_status: 'CASH ON DELIVERY',
+                    order_status: 'confirmed',
+                    totalAmount: finalTotalAmt,
+                    deliveryFee: deliveryFee,
+                    items: generatedOrder.map(order => ({
+                        product_details: order.product_details,
+                        quantity: order.quantity,
+                        totalAmt: order.totalAmt,
+                        name: order.product_details.name,
+                        price: order.totalAmt / order.quantity
+                    }))
+                }
+                
+                await sendOrderConfirmationEmail(orderForEmail, user, address)
+                console.log('Order confirmation email sent for COD order:', generatedOrder[0].orderId)
+            }
+        } catch (emailError) {
+            console.error('Failed to send order confirmation email:', emailError)
+            // Don't fail the order if email fails
+        }
 
         return response.json({
             message : "Order successfully",
@@ -305,6 +337,7 @@ export async function paymentController(request, response) {
     subTotalAmt: item.price * item.quantity,
     totalAmt: item.price * item.quantity,
     deliveryFee: deliveryFee, // Add delivery fee to each order item
+    quantity: item.quantity || 1, // Ensure quantity is saved
     paymentId: tx_ref,
     payment_status: "pending",
   });
@@ -502,6 +535,50 @@ export async function verifyPaymentController(request, response) {
         await Cart.deleteMany({ userId: userId });
         await User.updateOne({ _id: userId }, { shopping_cart: [] });
         console.log(`Cleared cart for user ${userId} after successful payment verification`);
+        
+        // Send order confirmation email for successful payment
+        try {
+            const user = await User.findById(userId);
+            const address = await (await import('../models/addressModel.js')).default.findById(pendingOrders[0].delivery_address);
+            
+            if (user && user.email) {
+                // Group orders by mainOrderId for email
+                const groupedForEmail = {};
+                pendingOrders.forEach(order => {
+                    const key = order.mainOrderId || order.orderId;
+                    if (!groupedForEmail[key]) {
+                        groupedForEmail[key] = {
+                            mainOrderId: key,
+                            orderId: key,
+                            createdAt: order.createdAt,
+                            payment_status: 'successful',
+                            order_status: 'confirmed',
+                            totalAmount: 0,
+                            deliveryFee: order.deliveryFee || 0,
+                            items: []
+                        };
+                    }
+                    groupedForEmail[key].totalAmount += order.totalAmt;
+                    groupedForEmail[key].items.push({
+                        product_details: order.product_details,
+                        quantity: order.quantity,
+                        totalAmt: order.totalAmt,
+                        name: order.product_details.name,
+                        price: order.totalAmt / (order.quantity || 1)
+                    });
+                });
+                
+                // Send email for the first/main order group
+                const mainOrder = Object.values(groupedForEmail)[0];
+                if (mainOrder) {
+                    await sendOrderConfirmationEmail(mainOrder, user, address);
+                    console.log('Order confirmation email sent for successful payment:', mainOrder.mainOrderId);
+                }
+            }
+        } catch (emailError) {
+            console.error('Failed to send order confirmation email for payment:', emailError);
+            // Don't fail the payment verification if email fails
+        }
 
         // --- FULFILLMENT LOGIC HERE ---
         // For example:

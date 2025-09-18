@@ -267,7 +267,15 @@ export const deleteProductDetails = async(req,res)=>{
 //search product
 export const searchProduct = async(req,res)=>{
     try {
-        let { search, page , limit } = req.body 
+        let { 
+            search, 
+            page, 
+            limit, 
+            sortBy,
+            minPrice,
+            maxPrice,
+            categories
+        } = req.body 
 
         if(!page){
             page = 1
@@ -276,16 +284,98 @@ export const searchProduct = async(req,res)=>{
             limit  = 10
         }
 
-        const query = search ? {
-            $text : {
-                $search : search
+        // Build query object
+        let query = {}
+        
+        // Text search
+        if(search && search.trim()) {
+            query.$text = {
+                $search : search.trim()
             }
-        } : {}
+        }
+        
+        // Price range filter
+        if(minPrice !== undefined || maxPrice !== undefined) {
+            query.price = {}
+            if(minPrice !== undefined && !isNaN(parseFloat(minPrice))) {
+                query.price.$gte = parseFloat(minPrice)
+            }
+            if(maxPrice !== undefined && !isNaN(parseFloat(maxPrice))) {
+                query.price.$lte = parseFloat(maxPrice)
+            }
+        }
+        
+        // Category filter
+        if(categories && Array.isArray(categories) && categories.length > 0) {
+            query.category = { $in: categories }
+        }
+
+        // Build sort object
+        let sortQuery = { createdAt: -1 } // default sort
+        
+        switch(sortBy) {
+            case 'price-low-high':
+                sortQuery = { price: 1 }
+                break
+            case 'price-high-low':
+                sortQuery = { price: -1 }
+                break
+            case 'name-az':
+                sortQuery = { name: 1 }
+                break
+            case 'name-za':
+                sortQuery = { name: -1 }
+                break
+            case 'newest':
+                sortQuery = { createdAt: -1 }
+                break
+            case 'relevance':
+                // For text search relevance, we use the text score
+                if(search && search.trim()) {
+                    sortQuery = { score: { $meta: 'textScore' } }
+                }
+                break
+            default:
+                sortQuery = { createdAt: -1 }
+        }
 
         const skip = ( page - 1) * limit
 
-        const [data,dataCount] = await Promise.all([
-            Product.find(query).sort({ createdAt  : -1 }).skip(skip).limit(limit).populate('category subCategory'),
+        // Build aggregation pipeline for better performance and flexibility
+        const pipeline = [
+            { $match: query },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'subcategories',
+                    localField: 'subCategory', 
+                    foreignField: '_id',
+                    as: 'subCategory'
+                }
+            }
+        ]
+        
+        // Add text score projection if doing relevance sort
+        if(sortBy === 'relevance' && search && search.trim()) {
+            pipeline.unshift({ $addFields: { score: { $meta: 'textScore' } } })
+        }
+        
+        pipeline.push(
+            { $sort: sortQuery },
+            { $skip: skip },
+            { $limit: limit }
+        )
+
+        // Execute aggregation and count query in parallel
+        const [data, dataCount] = await Promise.all([
+            Product.aggregate(pipeline),
             Product.countDocuments(query)
         ])
 
@@ -294,12 +384,18 @@ export const searchProduct = async(req,res)=>{
             error : false,
             success : true,
             data : data,
-            totalCount :dataCount,
+            totalCount : dataCount,
             totalPage : Math.ceil(dataCount/limit),
             page : page,
-            limit : limit 
+            limit : limit,
+            filters: {
+                search: search || '',
+                sortBy: sortBy || 'relevance',
+                minPrice: minPrice,
+                maxPrice: maxPrice,
+                categories: categories || []
+            }
         })
-
 
     } catch (error) {
         return res.status(500).json({

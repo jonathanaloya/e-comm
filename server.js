@@ -13,6 +13,8 @@ import cartRouter from './src/routes/cartRoutes.js';
 import orderRouter from './src/routes/orderRoutes.js';
 import addressRouter from './src/routes/addressRoutes.js';
 import adminRouter from './src/routes/adminRoutes.js';
+import newsletterRouter from './src/routes/newsletterRoutes.js';
+import supportRouter from './src/routes/supportRoutes.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -60,6 +62,8 @@ app.use('/api/cart', cartRouter)
 app.use('/api/order', orderRouter)
 app.use('/api/address', addressRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/newsletter', newsletterRouter)
+app.use('/api/support', supportRouter)
 
 
 connectDB().then(() => {
