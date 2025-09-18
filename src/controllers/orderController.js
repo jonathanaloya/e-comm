@@ -95,6 +95,100 @@ export const pricewithDiscount = (price, dis = 1)=>{
     return actualPrice
 }
 
+// Delivery fee calculation based on location
+function calculateDeliveryFee(addressId, cartTotal = 0) {
+  // Base delivery fee structure for Uganda
+  const deliveryRates = {
+    // Kampala areas (cheaper delivery)
+    kampala: {
+      fee: 5000, // 5,000 UGX
+      freeDeliveryThreshold: 100000 // Free delivery above 100,000 UGX
+    },
+    // Other major cities
+    major_cities: {
+      fee: 10000, // 10,000 UGX
+      freeDeliveryThreshold: 150000 // Free delivery above 150,000 UGX
+    },
+    // Rural/distant areas
+    rural: {
+      fee: 15000, // 15,000 UGX
+      freeDeliveryThreshold: 200000 // Free delivery above 200,000 UGX
+    },
+    // Default
+    default: {
+      fee: 8000, // 8,000 UGX
+      freeDeliveryThreshold: 120000 // Free delivery above 120,000 UGX
+    }
+  };
+
+  // Determine delivery zone based on address (you can enhance this logic)
+  function getDeliveryZone(address) {
+    if (!address) return 'default';
+    
+    const city = address.city?.toLowerCase() || '';
+    const state = address.state?.toLowerCase() || '';
+    
+    // Kampala and suburbs
+    if (city.includes('kampala') || state.includes('kampala') || 
+        city.includes('wakiso') || city.includes('mukono')) {
+      return 'kampala';
+    }
+    
+    // Major cities
+    if (city.includes('jinja') || city.includes('mbarara') || 
+        city.includes('gulu') || city.includes('lira') ||
+        city.includes('fort portal') || city.includes('mbale')) {
+      return 'major_cities';
+    }
+    
+    // Default to rural for other areas
+    return 'rural';
+  }
+
+  try {
+    // If no address provided, return default fee
+    if (!addressId) {
+      const defaultRate = deliveryRates.default;
+      return cartTotal >= defaultRate.freeDeliveryThreshold ? 0 : defaultRate.fee;
+    }
+
+    // For now, we'll use a simple zone-based calculation
+    // You can enhance this by integrating with actual address data
+    const zone = 'default'; // This would be determined by actual address lookup
+    const rate = deliveryRates[zone] || deliveryRates.default;
+    
+    // Check if eligible for free delivery
+    if (cartTotal >= rate.freeDeliveryThreshold) {
+      return 0;
+    }
+    
+    return rate.fee;
+  } catch (error) {
+    console.error('Error calculating delivery fee:', error);
+    return deliveryRates.default.fee;
+  }
+}
+
+// Enhanced delivery fee calculation with address lookup
+async function calculateDeliveryFeeWithAddress(addressId, cartTotal = 0) {
+  try {
+    // Import Address model dynamically to avoid circular dependency
+    const { default: Address } = await import('../models/addressModel.js');
+    
+    if (addressId) {
+      const address = await Address.findById(addressId);
+      if (address) {
+        return calculateDeliveryFee(address, cartTotal);
+      }
+    }
+    
+    return calculateDeliveryFee(null, cartTotal);
+  } catch (error) {
+    console.error('Error in delivery fee calculation with address:', error);
+    return calculateDeliveryFee(null, cartTotal);
+  }
+}
+
 // Format phone number for Uganda mobile money
 function formatUgandaPhoneNumber(phoneNumber) {
   if (!phoneNumber) return "256700000000"; // Default fallback
@@ -149,6 +243,16 @@ export async function paymentController(request, response) {
       });
     }
 
+    // Calculate delivery fee based on address and cart total
+    const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, subTotalAmt || totalAmt);
+    const finalTotalAmt = totalAmt + deliveryFee;
+    
+    console.log('Order totals:', {
+      subTotal: subTotalAmt || totalAmt,
+      deliveryFee: deliveryFee,
+      finalTotal: finalTotalAmt
+    });
+
     const user = await User.findById(userId);
     if (!user) {
       return response.status(404).json({
@@ -184,6 +288,7 @@ export async function paymentController(request, response) {
     delivery_address: addressId,
     subTotalAmt: item.price * item.quantity,
     totalAmt: item.price * item.quantity,
+    deliveryFee: deliveryFee, // Add delivery fee to each order item
     paymentId: tx_ref,
     payment_status: "pending",
   });
@@ -196,7 +301,7 @@ export async function paymentController(request, response) {
     // Prepare payload for Flutterwave v3 payments API (hosted payment)
     const payload = {
       tx_ref: tx_ref,
-      amount: totalAmt,
+      amount: finalTotalAmt, // Use final total including delivery fee
       currency: "UGX",
       redirect_url: `${process.env.FRONTEND_URL}/payment-status`,
       payment_options: "card,mobilemoneyuganda",
