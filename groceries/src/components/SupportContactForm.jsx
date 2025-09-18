@@ -445,9 +445,10 @@ const SupportContactForm = ({ onTicketCreated, preSelectedOrder = null }) => {
         {/* Submit Button */}
         <div className="pt-4 border-t border-gray-200">
           <button
+            onClick={handleSubmit}
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+            className="w-full py-3 bg-primary-600 bg-blue-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
           >
             {loading ? (
               <>
