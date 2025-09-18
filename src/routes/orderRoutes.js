@@ -8,7 +8,8 @@ import {
     // webhookStripe, // <<< REMOVED: Stripe webhook is gone
     verifyPaymentController,
     webhookFlutterwaveController, // <<< NEW: Import the Flutterwave webhook controller
-    verifyFlutterwaveWebhook // <<< NEW: Import the verification utility
+    verifyFlutterwaveWebhook, // <<< NEW: Import the verification utility
+    calculateDeliveryFeeController // <<< NEW: Import delivery fee controller
 } from '../controllers/orderController.js' // All from the same controller file now
 
 const orderRouter = Router()
@@ -39,5 +40,6 @@ orderRouter.post('/webhook', bodyParser.json({
 });
 
 orderRouter.get("/order-list",authMiddleware,getOrderDetailsController)
+orderRouter.post("/calculate-delivery-fee",authMiddleware,calculateDeliveryFeeController)
 
 export default orderRouter

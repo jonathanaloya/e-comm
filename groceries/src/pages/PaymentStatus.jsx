@@ -55,9 +55,9 @@ const PaymentStatus = () => {
           if (fetchCartItem) fetchCartItem();
           if (fetchOrder) fetchOrder();
           
-          // Redirect to success page after a short delay
+          // Redirect to home page after a short delay
           setTimeout(() => {
-            navigate('/success', { state: { text: 'Order' } });
+            navigate('/', { replace: true });
           }, 2000);
         } else {
           setPaymentStatus('failed');
@@ -108,7 +108,7 @@ const PaymentStatus = () => {
               </div>
               <h2 className="text-2xl font-bold text-green-800 mb-2">Payment Successful!</h2>
               <p className="text-gray-600 mb-6">{message}</p>
-              <p className="text-sm text-gray-500">Redirecting you to the success page...</p>
+              <p className="text-sm text-gray-500">Redirecting you to the home page...</p>
             </>
           )}
 

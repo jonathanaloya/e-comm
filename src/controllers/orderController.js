@@ -43,7 +43,17 @@ export function verifyFlutterwaveWebhook(signature, secretHash, rawBody) {
 export async function CashOnDeliveryOrderController(request,response){
     try {
         const userId = request.userId // auth middleware 
-        const { list_items, totalAmt, addressId, subTotalAmt } = request.body 
+        const { list_items, totalAmt, addressId, subTotalAmt } = request.body
+        
+        // Calculate delivery fee for COD orders
+        const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, subTotalAmt || totalAmt);
+        const finalTotalAmt = totalAmt + deliveryFee;
+        
+        console.log('COD Order totals:', {
+            subTotal: subTotalAmt || totalAmt,
+            deliveryFee: deliveryFee,
+            finalTotal: finalTotalAmt
+        });
 
         // It's good practice to generate a unique ID for COD orders too,
         // and perhaps store the totalAmt/subTotalAmt from the request,
@@ -63,6 +73,7 @@ export async function CashOnDeliveryOrderController(request,response){
                 delivery_address : addressId ,
                 subTotalAmt  : subTotalAmt, // Assuming these are total sub/total amounts for the whole order
                 totalAmt  :  totalAmt,      // You might want to store individual item totals as well.
+                deliveryFee: deliveryFee,   // Add delivery fee to COD orders
                 quantity: el.quantity // Ensure quantity is captured for COD items too
             })
         })
@@ -303,7 +314,7 @@ export async function paymentController(request, response) {
       tx_ref: tx_ref,
       amount: finalTotalAmt, // Use final total including delivery fee
       currency: "UGX",
-      redirect_url: `${process.env.FRONTEND_URL}/payment-status`,
+      redirect_url: `${process.env.FRONTEND_URL || 'https://e-comm-rho-five.vercel.app'}/payment-status`,
       payment_options: "card,mobilemoneyuganda",
       customer: {
         email: user.email,
@@ -671,5 +682,42 @@ export async function getOrderDetailsController(request,response){
             error : true,
             success : false
         })
+    }
+}
+
+// API endpoint to calculate delivery fee
+export async function calculateDeliveryFeeController(request, response) {
+    try {
+        const { addressId, cartTotal } = request.body;
+        
+        if (!addressId || cartTotal === undefined) {
+            return response.status(400).json({
+                message: "Address ID and cart total are required",
+                error: true,
+                success: false
+            });
+        }
+
+        const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, cartTotal);
+        const finalTotal = cartTotal + deliveryFee;
+        
+        return response.json({
+            message: "Delivery fee calculated successfully",
+            data: {
+                deliveryFee: deliveryFee,
+                cartTotal: cartTotal,
+                finalTotal: finalTotal,
+                isFreeDelivery: deliveryFee === 0
+            },
+            error: false,
+            success: true
+        });
+    } catch (error) {
+        console.error('Error in delivery fee calculation:', error);
+        return response.status(500).json({
+            message: error.message || "Failed to calculate delivery fee",
+            error: true,
+            success: false
+        });
     }
 }

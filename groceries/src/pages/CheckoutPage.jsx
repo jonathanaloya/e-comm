@@ -17,6 +17,9 @@ const CheckoutPage = () => {
   const [openAddress, setOpenAddress] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('');
+  const [deliveryFee, setDeliveryFee] = useState(0);
+  const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
+  const [finalTotal, setFinalTotal] = useState(totalPrice);
   const addressList = useSelector(state => state.addresses.addressList);
   const [selectAddress, setSelectAddress] = useState(addressList.length > 0 ? 0 : -1); // Default to first address if available
   const cartItemsList = useSelector(state => state.cartItem.cart);
@@ -24,11 +27,63 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
   const location = useLocation(); // To check URL params after redirect
 
+  // Function to calculate delivery fee
+  const calculateDeliveryFee = async (addressIndex) => {
+    if (addressIndex === -1 || !addressList[addressIndex]?._id) {
+      setDeliveryFee(0);
+      setFinalTotal(totalPrice);
+      return;
+    }
+
+    setIsCalculatingDelivery(true);
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || process.env.REACT_APP_API_URL;
+      const response = await Axios.post(
+        `${API_BASE_URL}/api/order/calculate-delivery-fee`,
+        {
+          addressId: addressList[addressIndex]._id,
+          cartTotal: totalPrice
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      const { data: responseData } = response;
+      if (responseData.success) {
+        setDeliveryFee(responseData.data.deliveryFee);
+        setFinalTotal(responseData.data.finalTotal);
+      } else {
+        console.error('Failed to calculate delivery fee:', responseData.message);
+        setDeliveryFee(8000); // Default delivery fee
+        setFinalTotal(totalPrice + 8000);
+      }
+    } catch (error) {
+      console.error('Error calculating delivery fee:', error);
+      setDeliveryFee(8000); // Default delivery fee on error
+      setFinalTotal(totalPrice + 8000);
+    } finally {
+      setIsCalculatingDelivery(false);
+    }
+  };
+
   // Update selected address if address list changes
   useEffect(() => {
-    if (addressList.length > 0 && selectAddress === -1) setSelectAddress(0);
+    if (addressList.length > 0 && selectAddress === -1) {
+      setSelectAddress(0);
+      calculateDeliveryFee(0);
+    }
     if (addressList.length === 0) setSelectAddress(-1);
   }, [addressList]);
+
+  // Calculate delivery fee when address or total price changes
+  useEffect(() => {
+    if (selectAddress !== -1) {
+      calculateDeliveryFee(selectAddress);
+    }
+  }, [selectAddress, totalPrice]);
 
   // Prepare customer info for Flutterwave
   const customerEmail = user?.email || "";
@@ -103,7 +158,7 @@ const CheckoutPage = () => {
       toast.error("Your cart is empty!");
       return;
     }
-    if (totalPrice <= 0) {
+    if (finalTotal <= 0) {
       toast.error("Total amount must be greater than zero.");
       return;
     }
@@ -119,7 +174,7 @@ const CheckoutPage = () => {
           list_items: cartItemsList,
           addressId: addressList[selectAddress]._id,
           subTotalAmt: totalPrice,
-          totalAmt: totalPrice,
+          totalAmt: finalTotal, // Use final total including delivery fee
           paymentMethod: "Cash on Delivery", // Explicitly set payment method
         }
       });
@@ -156,7 +211,7 @@ const handleOnlinePaymentInitiation = async () => {
     return;
   }
 
-  if (totalPrice <= 0) {
+  if (finalTotal <= 0) {
     toast.error("Total amount must be greater than zero.");
     return;
   }
@@ -189,7 +244,7 @@ const handleOnlinePaymentInitiation = async () => {
         list_items: listItems,
         addressId: selectedAddressId,
         subTotalAmt: totalPrice,
-        totalAmt: amountToSend,
+        totalAmt: finalTotal, // Use final total including delivery fee
         customerEmail: customerEmail,
         customerName: customerName,
         customerPhone: customerPhone,
@@ -240,7 +295,10 @@ const handleOnlinePaymentInitiation = async () => {
                     id={"address" + index}
                     type='radio'
                     value={index}
-                    onChange={() => setSelectAddress(index)}
+                    onChange={() => {
+                      setSelectAddress(index);
+                      calculateDeliveryFee(index);
+                    }}
                     name='address'
                     checked={selectAddress === index}
                     className="accent-green-600"
@@ -283,12 +341,26 @@ const handleOnlinePaymentInitiation = async () => {
             </div>
             <div className='flex gap-4 justify-between ml-1 text-gray-700'>
               <p>Delivery Charge</p>
-              <p className='flex items-center gap-2'>Free</p>
+              <p className='flex items-center gap-2'>
+                {isCalculatingDelivery ? (
+                  <span className="text-sm">Calculating...</span>
+                ) : deliveryFee === 0 ? (
+                  <span className="text-green-600 font-medium">Free</span>
+                ) : (
+                  <span>{DisplayPriceInShillings(deliveryFee)}</span>
+                )}
+              </p>
             </div>
             <hr className="my-2 border-gray-200" />
             <div className='font-semibold flex items-center justify-between gap-4 text-lg'>
               <p>Grand total</p>
-              <p>{DisplayPriceInShillings(totalPrice)}</p>
+              <p>
+                {isCalculatingDelivery ? (
+                  <span className="text-sm">Calculating...</span>
+                ) : (
+                  DisplayPriceInShillings(finalTotal)
+                )}
+              </p>
             </div>
           </div>
 
@@ -300,7 +372,7 @@ const handleOnlinePaymentInitiation = async () => {
               }`}
               onClick={handleOnlinePaymentInitiation}
               disabled={
-                selectAddress === -1 || cartItemsList.length === 0 || totalPrice <= 0 || isProcessing
+                selectAddress === -1 || cartItemsList.length === 0 || finalTotal <= 0 || isProcessing || isCalculatingDelivery
               }
             >
               {isProcessing && paymentMethod === 'ONLINE' ? (
@@ -318,7 +390,7 @@ const handleOnlinePaymentInitiation = async () => {
                 isProcessing ? 'border-gray-400 text-gray-400 cursor-not-allowed' : 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white'
               }`}
               onClick={handleCashOnDelivery}
-              disabled={selectAddress === -1 || cartItemsList.length === 0 || totalPrice <= 0 || isProcessing}
+              disabled={selectAddress === -1 || cartItemsList.length === 0 || finalTotal <= 0 || isProcessing || isCalculatingDelivery}
             >
               {isProcessing && paymentMethod === 'COD' ? (
                 <>
