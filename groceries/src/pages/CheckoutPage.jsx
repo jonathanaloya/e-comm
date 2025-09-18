@@ -345,7 +345,7 @@ const handleOnlinePaymentInitiation = async () => {
                 {isCalculatingDelivery ? (
                   <span className="text-sm">Calculating...</span>
                 ) : deliveryFee === 0 ? (
-                  <span className="text-green-600 font-medium">{DisplayPriceInShillings(deliveryFee)}</span>
+                  <span className="text-green-600 font-medium">Free</span>
                 ) : (
                   <span>{DisplayPriceInShillings(deliveryFee)}</span>
                 )}

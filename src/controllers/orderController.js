@@ -138,17 +138,23 @@ function calculateDeliveryFee(addressId, cartTotal = 0) {
     
     const city = address.city?.toLowerCase() || '';
     const state = address.state?.toLowerCase() || '';
+    const addressLine = address.address_line?.toLowerCase() || '';
+    const country = address.country?.toLowerCase() || '';
     
     // Kampala and suburbs
-    if (city.includes('kampala') || state.includes('kampala') || 
-        city.includes('wakiso') || city.includes('mukono')) {
+    if (city.includes('kampala') || state.includes('kampala') || addressLine.includes('kampala') || 
+        city.includes('wakiso') || state.includes('wakiso') || addressLine.includes('wakiso') ||
+        city.includes('mukono') || state.includes('mukono') || addressLine.includes('mukono')) {
       return 'kampala';
     }
     
     // Major cities
-    if (city.includes('jinja') || city.includes('mbarara') || 
-        city.includes('gulu') || city.includes('lira') ||
-        city.includes('fort portal') || city.includes('mbale')) {
+    if (city.includes('jinja') || state.includes('jinja') || addressLine.includes('jinja') ||
+        city.includes('mbarara') || state.includes('mbarara') || addressLine.includes('mbarara') ||
+        city.includes('gulu') || state.includes('gulu') || addressLine.includes('gulu') ||
+        city.includes('lira') || state.includes('lira') || addressLine.includes('lira') ||
+        city.includes('fort portal') || state.includes('fort portal') || addressLine.includes('fort portal') ||
+        city.includes('mbale') || state.includes('mbale') || addressLine.includes('mbale')) {
       return 'major_cities';
     }
     
@@ -163,9 +169,8 @@ function calculateDeliveryFee(addressId, cartTotal = 0) {
       return cartTotal >= defaultRate.freeDeliveryThreshold ? 0 : defaultRate.fee;
     }
 
-    // For now, we'll use a simple zone-based calculation
-    // You can enhance this by integrating with actual address data
-    const zone = 'default'; // This would be determined by actual address lookup
+    // Determine delivery zone based on actual address data
+    const zone = getDeliveryZone(addressId);
     const rate = deliveryRates[zone] || deliveryRates.default;
     
     // Check if eligible for free delivery
@@ -181,7 +186,7 @@ function calculateDeliveryFee(addressId, cartTotal = 0) {
 }
 
 // Enhanced delivery fee calculation with address lookup
-async function calculateDeliveryFeeWithAddress(addressId, cartTotal = 0) {
+export async function calculateDeliveryFeeWithAddress(addressId, cartTotal = 0) {
   try {
     // Import Address model dynamically to avoid circular dependency
     const { default: Address } = await import('../models/addressModel.js');
@@ -725,6 +730,12 @@ export async function calculateDeliveryFeeController(request, response) {
     try {
         const { addressId, cartTotal } = request.body;
         
+        console.log('Delivery fee calculation request:', {
+            addressId,
+            cartTotal,
+            userId: request.userId
+        });
+        
         if (!addressId || cartTotal === undefined) {
             return response.status(400).json({
                 message: "Address ID and cart total are required",
@@ -735,6 +746,13 @@ export async function calculateDeliveryFeeController(request, response) {
 
         const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, cartTotal);
         const finalTotal = cartTotal + deliveryFee;
+        
+        console.log('Delivery fee calculation result:', {
+            addressId,
+            cartTotal,
+            deliveryFee,
+            finalTotal
+        });
         
         return response.json({
             message: "Delivery fee calculated successfully",

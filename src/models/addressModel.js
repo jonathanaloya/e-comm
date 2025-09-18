@@ -11,6 +11,11 @@ const addressSchema = new mongoose.Schema({
         default: ""
     },
 
+    state : {
+        type: String,
+        default: ""
+    },
+
     address1 : {
         type: String,
         default: ""
