@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { FaHeadset, FaPhone, FaEnvelope, FaWhatsapp, FaMapMarkerAlt, FaClock, FaQuestionCircle } from 'react-icons/fa'
+import { FaHeadset, FaEnvelope, FaWhatsapp, FaMapMarkerAlt, FaClock, FaQuestionCircle } from 'react-icons/fa'
+import { FaPhone } from "react-icons/fa6";
 import { useNavigate } from 'react-router-dom'
 import SupportContactForm from '../components/SupportContactForm'
 
@@ -9,11 +10,11 @@ const ContactSupport = () => {
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent("Hi! I need help with Fresh Katale grocery store.")
-    window.open(`https://wa.me/256700000000?text=${message}`, '_blank')
+    window.open(`https://wa.me/256785733366?text=${message}`, '_blank')
   }
 
   const handleCall = () => {
-    window.open('tel:+256700000000', '_self')
+    window.open('tel:+256785733366', '_self')
   }
 
   const handleEmail = () => {
@@ -58,7 +59,7 @@ const ContactSupport = () => {
               className="w-full text-center group"
             >
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
-                <FaPhone className="text-blue-600 text-2xl" />
+                <FaPhone className="text-blue-600 text-2xl block md:hidden relative -top-1" />
               </div>
               <h3 className="font-semibold text-gray-800 mb-2">Call Us</h3>
               <p className="text-gray-600 text-sm mb-4">Speak directly with our team</p>

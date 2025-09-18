@@ -161,26 +161,26 @@ const FAQ = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <FaQuestionCircle className="text-primary-600 text-3xl" />
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+            <FaQuestionCircle className="text-blue-600 text-2xl sm:text-3xl" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Frequently Asked Questions</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-4 px-4">Frequently Asked Questions</h1>
+          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
             Find quick answers to common questions about Fresh Katale grocery delivery
           </p>
         </div>
 
         {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-8">
+        <div className="max-w-2xl mx-auto mb-6 sm:mb-8 px-4">
           <div className="relative">
-            <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FaSearch className="absolute left-6 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search for answers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg"
+              className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-lg"
             />
           </div>
         </div>
@@ -290,7 +290,7 @@ const FAQ = () => {
                 <button
                   onClick={() => {
                     const message = encodeURIComponent("Hi! I have a question that wasn't covered in the FAQ.")
-                    window.open(`https://wa.me/256700000000?text=${message}`, '_blank')
+                    window.open(`https://wa.me/256785733366?text=${message}`, '_blank')
                   }}
                   className="px-6 py-3 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-600 hover:text-white transition-colors font-medium"
                 >

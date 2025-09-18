@@ -36,12 +36,13 @@ const FloatingHelpButton = () => {
   return (
     <>
       {/* Floating Help Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
         {isOpen && (
-          <div className="mb-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4 min-w-[280px] animate-fadeInUp">
+          <div className="mb-4 bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-[280px] sm:min-w-[320px] max-w-[90vw] animate-fadeInUp">
+            <div className="max-h-[70vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                <FaHeadset className="text-primary-600" />
+                <FaHeadset className="text-blue-600" />
                 Need Help?
               </h3>
               <button
@@ -124,25 +125,29 @@ const FloatingHelpButton = () => {
                 We're here to help 24/7! 
               </p>
             </div>
+            </div>
           </div>
         )}
 
         {/* Main floating button */}
-        <button
-          onClick={toggleHelp}
-          className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-            isOpen 
-              ? 'bg-red-500 hover:bg-red-600' 
-              : 'bg-primary-600 hover:bg-primary-700'
-          }`}
-          aria-label="Get Help"
-        >
-          {isOpen ? (
-            <FaTimes className="text-white text-xl" />
-          ) : (
-            <FaHeadset className="text-white text-xl" />
-          )}
-        </button>
+        <div className="fixed bottom-28 right-4 block lg:hidden z-50">
+          <button
+            onClick={toggleHelp}
+            className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+              isOpen 
+                ? 'bg-red-500 hover:bg-red-600' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+            aria-label="Get Help"
+          >
+            {isOpen ? (
+              <FaTimes className="text-white text-lg" />
+            ) : (
+              <FaHeadset className="text-white text-lg" />
+            )}
+          </button>
+        </div>
+
       </div>
 
       {/* Custom CSS for animation */}
