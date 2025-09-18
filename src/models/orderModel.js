@@ -52,6 +52,27 @@ const orderSchema = new mongoose.Schema({
         default: 0
     },
 
+    deliveryFee : {
+        type: Number,
+        default: 0
+    },
+
+    quantity : {
+        type: Number,
+        default: 1
+    },
+
+    mainOrderId : {
+        type: String,
+        default: ""
+    },
+
+    order_status : {
+        type: String,
+        enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
+        default: 'pending'
+    },
+
     invoice_receipt : {
         type: String,
         default:""

@@ -668,11 +668,46 @@ export async function getOrderDetailsController(request,response){
     try {
         const userId = request.userId // order id
 
-        const orderlist = await Order.find({ userId : userId }).sort({ createdAt : -1 }).populate('delivery_address')
+        const orderlist = await Order.find({ userId : userId })
+            .sort({ createdAt : -1 })
+            .populate('delivery_address')
+            .populate('productId', 'name price image category')
+
+        // Group orders by mainOrderId for better display
+        const groupedOrders = {};
+        const ungroupedOrders = [];
+
+        orderlist.forEach(order => {
+            if (order.mainOrderId) {
+                if (!groupedOrders[order.mainOrderId]) {
+                    groupedOrders[order.mainOrderId] = {
+                        mainOrderId: order.mainOrderId,
+                        createdAt: order.createdAt,
+                        payment_status: order.payment_status,
+                        order_status: order.order_status,
+                        delivery_address: order.delivery_address,
+                        paymentId: order.paymentId,
+                        items: [],
+                        totalAmount: 0,
+                        deliveryFee: order.deliveryFee || 0
+                    };
+                }
+                groupedOrders[order.mainOrderId].items.push(order);
+                groupedOrders[order.mainOrderId].totalAmount += order.totalAmt;
+            } else {
+                ungroupedOrders.push(order);
+            }
+        });
+
+        const formattedOrders = {
+            groupedOrders: Object.values(groupedOrders),
+            individualOrders: ungroupedOrders,
+            totalOrders: orderlist.length
+        };
 
         return response.json({
             message : "order list",
-            data : orderlist,
+            data : formattedOrders,
             error : false,
             success : true
         })
