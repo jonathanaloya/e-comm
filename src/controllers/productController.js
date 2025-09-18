@@ -342,8 +342,21 @@ export const searchProduct = async(req,res)=>{
         const skip = ( page - 1) * limit
 
         // Build aggregation pipeline for better performance and flexibility
+        // Separate $text filter from other query filters
+        let textQuery = null;
+        let otherFilters = { ...query };
+
+        if(query.$text) {
+            textQuery = { $match: { $text: query.$text } };
+            delete otherFilters.$text;
+        }
+
+        const otherMatch = Object.keys(otherFilters).length ? { $match: otherFilters } : null;
+
+        // Build pipeline
         const pipeline = [
-            { $match: query },
+            ...(textQuery ? [textQuery] : []),   // $text match first
+            ...(otherMatch ? [otherMatch] : []), // other filters next
             {
                 $lookup: {
                     from: 'categories',
@@ -355,23 +368,25 @@ export const searchProduct = async(req,res)=>{
             {
                 $lookup: {
                     from: 'subcategories',
-                    localField: 'subCategory', 
+                    localField: 'subCategory',
                     foreignField: '_id',
                     as: 'subCategory'
                 }
             }
-        ]
-        
-        // Add text score projection if doing relevance sort
+        ];
+
+        // Add text score projection if relevance sorting
         if(sortBy === 'relevance' && search && search.trim()) {
-            pipeline.unshift({ $addFields: { score: { $meta: 'textScore' } } })
+            pipeline.push({ $addFields: { score: { $meta: 'textScore' } } });
         }
-        
+
+        // Sorting, skipping, limiting
         pipeline.push(
             { $sort: sortQuery },
             { $skip: skip },
             { $limit: limit }
-        )
+        );
+
 
         // Execute aggregation and count query in parallel
         const [data, dataCount] = await Promise.all([
