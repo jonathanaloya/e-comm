@@ -29,10 +29,13 @@ const FlutterwavePaymentButton = ({
       return;
     }
 
+    toast.loading("Preparing payment...");
+    
     try {
       // 1️⃣ Call backend /checkout API
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || process.env.REACT_APP_API_URL;
       const res = await Axios.post(
-        `${process.env.REACT_APP_API_URL}/api/order/checkout`,
+        `${API_BASE_URL}/api/order/checkout`,
         {
           list_items: cartItemsList,
           addressId: addressList[selectAddress]?._id,
@@ -48,17 +51,22 @@ const FlutterwavePaymentButton = ({
 
       if (res.data.success && res.data.data) {
         const flutterwaveLink = res.data.data;
+        toast.dismiss();
+        toast.success("Redirecting to payment gateway...");
 
         // 2️⃣ Redirect user to Flutterwave checkout
         window.location.href = flutterwaveLink;
 
       } else {
+        toast.dismiss();
         toast.error(res.data.message || "Failed to initiate payment.");
         if (onClose) onClose();
       }
     } catch (error) {
       console.error("Error initiating payment:", error);
-      toast.error("Something went wrong while initiating payment.");
+      toast.dismiss();
+      const errorMessage = error?.response?.data?.message || "Something went wrong while initiating payment.";
+      toast.error(errorMessage);
       if (onClose) onClose();
     }
   };

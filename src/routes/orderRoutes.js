@@ -15,14 +15,14 @@ const orderRouter = Router()
 
 orderRouter.post("/cash-on-delivery",authMiddleware, CashOnDeliveryOrderController)
 orderRouter.post('/checkout',authMiddleware, paymentController) // This is your Flutterwave payment initiation
-orderRouter.post('/verify-payment',authMiddleware, verifyPaymentController)
+orderRouter.get('/verify-payment',authMiddleware, verifyPaymentController)
 // This endpoint requires a specific body-parser setup to get the raw body
 orderRouter.post('/webhook', bodyParser.json({
     verify: (req, res, buf) => {
         req.rawBody = buf; // Store the raw body for signature verification
     }
 }), async (req, res) => {
-    const secretHash = process.env.FLUTTERWAVE_WEBHOOK_SECRET_HASH;
+    const secretHash = process.env.FLUTTERWAVE_WEBHOOK_SECRET || process.env.FLW_SECRET_HASH;
     const signature = req.headers['verif-hash']; // Flutterwave webhook signature header
 
     console.log("Received Flutterwave webhook. Attempting verification...");

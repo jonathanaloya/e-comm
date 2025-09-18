@@ -139,7 +139,7 @@ export async function paymentController(request, response) {
       tx_ref: tx_ref,
       amount: totalAmt,
       currency: "UGX",
-      redirect_url: `${process.env.FRONTEND_URL}/payment-status?tx_ref=${tx_ref}`,
+      redirect_url: `${process.env.FRONTEND_URL}/payment-status`,
       payment_options: "card,mobilemoneyuganda",
       customer: {
         email: user.email,
@@ -155,14 +155,33 @@ export async function paymentController(request, response) {
         userId: userId.toString(),
         expectedAmount: totalAmt,
         expectedCurrency: "UGX",
+        orderItems: list_items.map(item => ({
+          productId: item.productId._id,
+          name: item.productId.name,
+          image: item.productId.image,
+          quantity: item.quantity,
+          price: item.price
+        }))
       },
     };
 
-    const responseData = await flw.Payment.initialize(payload);
-    console.log(flw.Payment);
+    console.log("Initializing Flutterwave payment with payload:", {
+      tx_ref,
+      amount: totalAmt,
+      currency: "UGX",
+      customer: payload.customer,
+      mainOrderId
+    });
 
+    const responseData = await flw.Payment.initialize(payload);
+    console.log("Flutterwave response:", {
+      status: responseData?.status,
+      hasLink: !!responseData?.data?.link,
+      message: responseData?.message
+    });
 
     if (responseData && responseData.status === "success" && responseData.data?.link) {
+      console.log(`Payment initiation successful for mainOrderId: ${mainOrderId}, tx_ref: ${tx_ref}`);
       return response.status(200).json({
         message: "Payment initiated successfully",
         success: true,
@@ -173,12 +192,17 @@ export async function paymentController(request, response) {
       });
     } else {
       // Mark orders as failed if Flutterwave initiation fails
+      console.error("Payment initiation failed:", {
+        responseData,
+        tx_ref,
+        mainOrderId
+      });
       await Order.updateMany(
         { paymentId: tx_ref },
         { payment_status: "failed" }
       );
       return response.status(400).json({
-        message: responseData.message || "Failed to initiate payment",
+        message: responseData?.message || "Failed to initiate payment",
         error: true,
         success: false,
         flutterwaveResponse: responseData
@@ -233,8 +257,17 @@ export async function verifyPaymentController(request, response) {
     }
 
 
+    console.log(`Verifying payment with Flutterwave - transaction_id: ${transaction_id}, tx_ref: ${tx_ref}`);
     const verifyResponse = await flw.Transaction.verify({ id: transaction_id });
     const paymentData = verifyResponse.data; // This is the actual transaction data from Flutterwave
+    
+    console.log("Flutterwave verification response:", {
+      status: verifyResponse.status,
+      paymentStatus: paymentData?.status,
+      amount: paymentData?.amount,
+      currency: paymentData?.currency,
+      tx_ref: paymentData?.tx_ref
+    });
 
     if (verifyResponse.status === "success" && paymentData && paymentData.status === "successful") {
       // --- IMPORTANT SECURITY CHECKS ---
@@ -261,17 +294,19 @@ export async function verifyPaymentController(request, response) {
             payment_status: "successful",
             paymentId: paymentData.id.toString(), // Store Flutterwave's actual transaction ID
             invoice_receipt: paymentData.flw_ref, // Flutterwave's reference
-            // You might want to store the full paymentData as well for auditing
           }
         );
+
+        // Clear user's cart after successful payment
+        const userId = pendingOrders[0].userId;
+        await Cart.deleteMany({ userId: userId });
+        await User.updateOne({ _id: userId }, { shopping_cart: [] });
+        console.log(`Cleared cart for user ${userId} after successful payment verification`);
 
         // --- FULFILLMENT LOGIC HERE ---
         // For example:
         // - Update inventory for each product in `pendingOrders`
         // - Send order confirmation emails to the user
-        // - Add the mainOrderId to the user's `orderHistory` (if not done by reference)
-        // You can use `user.orderHistory.push(firstOrder._id)` and `await user.save()`
-        // Or better yet, loop through `pendingOrders` and add each `_id` to `user.orderHistory`
 
         return response.status(200).json({
           message: "Payment verified successfully",
@@ -377,11 +412,12 @@ export async function webhookFlutterwaveController(request, response) {
   try {
     // Verify request signature
     const hash = crypto
-      .createHmac("sha256", process.env.FLW_SECRET_HASH) // set this in dashboard
+      .createHmac("sha256", process.env.FLUTTERWAVE_WEBHOOK_SECRET || process.env.FLW_SECRET_HASH) // Use consistent env var
       .update(JSON.stringify(request.body))
       .digest("hex");
 
     if (hash !== request.headers["verif-hash"]) {
+      console.warn("Invalid webhook signature received");
       return response.status(401).json({ message: "Invalid signature" });
     }
 
@@ -392,21 +428,36 @@ export async function webhookFlutterwaveController(request, response) {
       const data = event.data;
       const { status, id, tx_ref, flw_ref, meta } = data;
 
+      console.log("Processing charge.completed event:", {
+        status,
+        tx_ref,
+        mainOrderId: meta?.mainOrderId
+      });
+
       if (status === "successful") {
-        // ✅ Update order(s) in DB
-        await Order.updateMany(
-          { orderId: meta.orderId },
+        // Update orders using tx_ref (paymentId) instead of orderId
+        const updateResult = await Order.updateMany(
+          { paymentId: tx_ref },
           {
-            payment_status: "paid",
+            payment_status: "successful",
             paymentId: id.toString(),
             invoice_receipt: flw_ref,
           }
         );
+        console.log(`Updated ${updateResult.modifiedCount} orders to successful status`);
+        
+        // Clear user's cart if payment is successful
+        if (meta?.userId) {
+          await Cart.deleteMany({ userId: meta.userId });
+          await User.updateOne({ _id: meta.userId }, { shopping_cart: [] });
+          console.log(`Cleared cart for user ${meta.userId}`);
+        }
       } else {
-        await Order.updateMany(
-          { orderId: meta.orderId },
+        const updateResult = await Order.updateMany(
+          { paymentId: tx_ref },
           { payment_status: "failed" }
         );
+        console.log(`Updated ${updateResult.modifiedCount} orders to failed status`);
       }
     }
 

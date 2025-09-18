@@ -15,6 +15,8 @@ import FlutterwavePaymentButton from '../components/Flutterwave'; // Updated imp
 const CheckoutPage = () => {
   const { notDiscountTotalPrice, totalPrice, totalQty, fetchCartItem, fetchOrder } = useGlobalContext();
   const [openAddress, setOpenAddress] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('');
   const addressList = useSelector(state => state.addresses.addressList);
   const [selectAddress, setSelectAddress] = useState(addressList.length > 0 ? 0 : -1); // Default to first address if available
   const cartItemsList = useSelector(state => state.cartItem.cart);
@@ -64,8 +66,9 @@ const CheckoutPage = () => {
   // Function to call your backend's verification endpoint
   const verifyPaymentOnBackend = async (transaction_id, tx_ref) => {
     try {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || process.env.REACT_APP_API_URL;
       const response = await Axios.get(
-        `${process.env.REACT_APP_API_URL}/api/order/verify-payment?transaction_id=${transaction_id}&tx_ref=${tx_ref}`,
+        `${API_BASE_URL}/api/order/verify-payment?transaction_id=${transaction_id}&tx_ref=${tx_ref}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
 
@@ -105,6 +108,10 @@ const CheckoutPage = () => {
       return;
     }
 
+    setIsProcessing(true);
+    setPaymentMethod('COD');
+    toast.loading("Processing your order...");
+
     try {
       const response = await Axios({
         ...SummaryApi.CashOnDeliveryOrder,
@@ -118,6 +125,7 @@ const CheckoutPage = () => {
       });
 
       const { data: responseData } = response;
+      toast.dismiss();
 
       if (responseData.success) {
         toast.success(responseData.message);
@@ -127,7 +135,11 @@ const CheckoutPage = () => {
       }
 
     } catch (error) {
+      toast.dismiss();
       AxiosToastError(error);
+    } finally {
+      setIsProcessing(false);
+      setPaymentMethod('');
     }
   };
 
@@ -149,6 +161,8 @@ const handleOnlinePaymentInitiation = async () => {
     return;
   }
 
+  setIsProcessing(true);
+  setPaymentMethod('ONLINE');
   toast.loading("Preparing payment...");
 
   try {
@@ -189,15 +203,20 @@ const handleOnlinePaymentInitiation = async () => {
     if (responseData.success && responseData.data?.link) {
       toast.dismiss();
       toast.success("Redirecting to payment gateway...");
+      // Note: We don't reset processing state here because user will be redirected
       window.location.href = responseData.data.link;
     } else {
       toast.dismiss();
       toast.error(responseData.message || "Failed to initiate payment. Please try again.");
+      setIsProcessing(false);
+      setPaymentMethod('');
     }
   } catch (error) {
     toast.dismiss();
     console.error("Error initiating payment with backend:", error);
     AxiosToastError(error, "Could not start payment. Please try again.");
+    setIsProcessing(false);
+    setPaymentMethod('');
   }
 };
 
@@ -276,21 +295,39 @@ const handleOnlinePaymentInitiation = async () => {
           <div className='w-full flex flex-col gap-4 mt-4'>
             {/* Flutterwave Payment Button (now triggers backend initiation) */}
             <button
-              className='py-2 px-4 bg-green-600 font-semibold text-white hover:bg-green-700 rounded'
+              className={`py-2 px-4 font-semibold text-white rounded flex items-center justify-center gap-2 ${
+                isProcessing ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+              }`}
               onClick={handleOnlinePaymentInitiation}
               disabled={
-                selectAddress === -1 || cartItemsList.length === 0 || totalPrice <= 0
+                selectAddress === -1 || cartItemsList.length === 0 || totalPrice <= 0 || isProcessing
               }
             >
-              Pay Online
+              {isProcessing && paymentMethod === 'ONLINE' ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  Processing...
+                </>
+              ) : (
+                'Pay Online'
+              )}
             </button>
             {/* Cash on Delivery */}
             <button
-              className='py-2 px-4 border-2 border-green-600 font-semibold text-green-600 hover:bg-green-600 hover:text-white rounded'
+              className={`py-2 px-4 border-2 font-semibold rounded flex items-center justify-center gap-2 ${
+                isProcessing ? 'border-gray-400 text-gray-400 cursor-not-allowed' : 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white'
+              }`}
               onClick={handleCashOnDelivery}
-              disabled={selectAddress === -1 || cartItemsList.length === 0 || totalPrice <= 0}
+              disabled={selectAddress === -1 || cartItemsList.length === 0 || totalPrice <= 0 || isProcessing}
             >
-              Cash on Delivery
+              {isProcessing && paymentMethod === 'COD' ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                  Processing...
+                </>
+              ) : (
+                'Cash on Delivery'
+              )}
             </button>
           </div>
         </div>
