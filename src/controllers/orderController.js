@@ -95,6 +95,37 @@ export const pricewithDiscount = (price, dis = 1)=>{
     return actualPrice
 }
 
+// Format phone number for Uganda mobile money
+function formatUgandaPhoneNumber(phoneNumber) {
+  if (!phoneNumber) return "256700000000"; // Default fallback
+  
+  let formatted = phoneNumber.toString().replace(/\s+/g, ''); // Remove spaces
+  
+  // Remove leading + if present
+  if (formatted.startsWith('+')) {
+    formatted = formatted.substring(1);
+  }
+  
+  // If it starts with 256 (Uganda country code), use as is
+  if (formatted.startsWith('256')) {
+    return formatted;
+  }
+  
+  // If it starts with 0, replace with 256
+  if (formatted.startsWith('0')) {
+    return '256' + formatted.substring(1);
+  }
+  
+  // If it's just the local number (7XX, 3XX, etc.), add 256
+  if (formatted.length >= 9 && (formatted.startsWith('7') || formatted.startsWith('3') || formatted.startsWith('4'))) {
+    return '256' + formatted;
+  }
+  
+  // Fallback to default
+  console.warn('Could not format phone number:', phoneNumber, 'using default');
+  return "256700000000";
+}
+
 export async function paymentController(request, response) {
   try {
     // Check if Flutterwave is properly initialized
@@ -171,7 +202,7 @@ export async function paymentController(request, response) {
       payment_options: "card,mobilemoneyuganda",
       customer: {
         email: user.email,
-        phonenumber: user.mobile ? user.mobile.toString() : "256700000000",
+        phonenumber: formatUgandaPhoneNumber(user.mobile),
         name: user.name || "Customer",
       },
       customizations: {
@@ -191,7 +222,9 @@ export async function paymentController(request, response) {
       amount: totalAmt,
       currency: "UGX",
       customer: payload.customer,
-      mainOrderId
+      mainOrderId,
+      formattedPhone: formatUgandaPhoneNumber(user.mobile),
+      originalPhone: user.mobile
     });
 
     // For hosted payments, we'll use direct HTTP API call to Flutterwave
