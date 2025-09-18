@@ -162,9 +162,8 @@ export async function paymentController(request, response) {
     const createdOrderDocs = await Promise.all(orderPromises);
     console.log(`Created ${createdOrderDocs.length} order documents for mainOrderId: ${mainOrderId}`);
 
-    // Prepare payload for Flutterwave Charge (hosted payment)
+    // Prepare payload for Flutterwave v3 payments API (hosted payment)
     const payload = {
-      type: "hosted",
       tx_ref: tx_ref,
       amount: totalAmt,
       currency: "UGX",
@@ -178,21 +177,13 @@ export async function paymentController(request, response) {
       customizations: {
         title: "Fresh Katale",
         description: `Payment for Order ${mainOrderId}`,
-        logo: "https://your-logo-url.com/logo.png" // Optional
       },
       meta: {
         mainOrderId: mainOrderId,
         userId: userId.toString(),
         expectedAmount: totalAmt,
-        expectedCurrency: "UGX",
-        orderItems: list_items.map(item => ({
-          productId: item.productId._id,
-          name: item.productId.name,
-          image: item.productId.image,
-          quantity: item.quantity,
-          price: item.price
-        }))
-      },
+        expectedCurrency: "UGX"
+      }
     };
 
     console.log("Initializing Flutterwave payment with payload:", {
@@ -203,34 +194,45 @@ export async function paymentController(request, response) {
       mainOrderId
     });
 
-    // Check if Charge method exists (Flutterwave v3 uses Charge, not Payment)
-    if (!flw.Charge || typeof flw.Charge !== 'function') {
-      console.error('Flutterwave Charge method not available:', {
-        hasCharge: !!flw.Charge,
-        chargeType: typeof flw.Charge,
-        availableMethods: Object.getOwnPropertyNames(flw)
-      });
+    // For hosted payments, we'll use direct HTTP API call to Flutterwave
+    // since the Node.js SDK doesn't have a direct hosted payment method
+    const axios = await import('axios');
+    
+    let responseData;
+    try {
+      const flutterwaveResponse = await axios.default.post(
+        'https://api.flutterwave.com/v3/payments',
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      responseData = flutterwaveResponse.data;
+    } catch (axiosError) {
+      console.error('Flutterwave API error:', axiosError.response?.data || axiosError.message);
       return response.status(500).json({
-        message: "Payment charge method not available",
+        message: axiosError.response?.data?.message || "Failed to connect to payment service",
         error: true,
         success: false,
       });
     }
-
-    const responseData = await flw.Charge(payload);
     console.log("Flutterwave response:", {
       status: responseData?.status,
       hasLink: !!responseData?.data?.link,
       message: responseData?.message
     });
 
-    if (responseData && responseData.status === "success" && responseData.data?.hosted_link) {
+    if (responseData && responseData.status === "success" && responseData.data?.link) {
       console.log(`Payment initiation successful for mainOrderId: ${mainOrderId}, tx_ref: ${tx_ref}`);
       return response.status(200).json({
         message: "Payment initiated successfully",
         success: true,
         error: false,
-        data: responseData.data.hosted_link, // Flutterwave Charge returns hosted_link
+        data: responseData.data.link, // Flutterwave v3 API returns link
         mainOrderId: mainOrderId,
         tx_ref: tx_ref
       });
