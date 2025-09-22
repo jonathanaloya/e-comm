@@ -4,7 +4,7 @@ import './App.css'
 import Header from './components/Header';
 import Footer from './components/Footer';
 import toast, { Toaster } from 'react-hot-toast';
-import { useEffect } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import fetchUserDetails from './utils/fetchUserDetails';
 import { useDispatch } from 'react-redux';
 import { setUserDetails } from './store/userSlice';
@@ -15,11 +15,13 @@ import  GlobalProvider  from './provider/GlobalProvider';
 import CartMobileLink from './components/CartMobile';
 import FloatingHelpButton from './components/FloatingHelpButton';
 import InstallPrompt from './components/InstallPrompt';
+import LoadingSpinner from './components/LoadingSpinner';
 
 
 function App() {
   const dispatch = useDispatch()
   const location = useLocation()
+  const [isLoading, setIsLoading] = useState(true)
 
 
   const fetchUser = async() =>{
@@ -64,17 +66,34 @@ function App() {
 }
     
   useEffect(() => {
-    fetchUser()
-    fetchCategory()
-    fetchSubCategory()
-    // fetchCartItem()
+    const initializeApp = async () => {
+      try {
+        await Promise.all([
+          fetchUser(),
+          fetchCategory(),
+          fetchSubCategory()
+        ])
+      } catch (error) {
+        console.error('App initialization error:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    initializeApp()
   },[])
+
+  if (isLoading) {
+    return <LoadingSpinner />
+  }
 
   return (
     <GlobalProvider> 
       <Header/>
       <main className='min-h-[78vh]'>
+        <Suspense fallback={<LoadingSpinner />}>
           <Outlet/>
+        </Suspense>
       </main>
       <Footer/>
       <Toaster/>

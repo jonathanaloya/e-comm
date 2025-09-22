@@ -110,12 +110,12 @@ const DisplayCartItem = ({close}) => {
 
             {
                 cartItem[0] && (
-                    <div className='p-2 border-t bg-white'>
-                        <div className='bg-green-700 text-neutral-100 px-4 font-bold text-base py-4 rounded flex items-center gap-4 justify-between'>
+                    <div className='p-2 border-t bg-white pb-safe'>
+                        <div className='bg-green-700 text-neutral-100 px-4 font-bold text-base py-4 rounded flex items-center gap-4 justify-between mb-2'>
                             <div>
                                 {DisplayPriceInShillings(totalPrice)}
                             </div>
-                            <button onClick={redirectToCheckoutPage} className='flex items-center gap-1 hover:bg-green-600 px-3 py-1 rounded transition-colors'>
+                            <button onClick={redirectToCheckoutPage} className='flex items-center gap-1 hover:bg-green-600 px-4 py-2 rounded transition-colors min-h-[44px]'>
                                 Proceed
                                 <span><FaCaretRight/></span>
                             </button>

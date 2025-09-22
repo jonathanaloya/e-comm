@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fresh-katale-v1';
+const CACHE_NAME = 'fresh-katale-v2';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -19,19 +19,29 @@ self.addEventListener('fetch', (event) => {
   }
   
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then((response) => {
-        if (response) {
-          return response;
+        // Cache successful responses
+        if (response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
         }
-        return fetch(event.request).catch(() => {
+        return response;
+      })
+      .catch(() => {
+        // Return cached version on network failure
+        return caches.match(event.request).then((response) => {
+          if (response) {
+            return response;
+          }
           // Return offline page for navigation requests
           if (event.request.mode === 'navigate') {
             return caches.match('/');
           }
         });
-      }
-    )
+      })
   );
 });
 
