@@ -174,61 +174,89 @@ export const pricewithDiscount = (price, dis = 1)=>{
     return actualPrice
 }
 
-// Delivery fee calculation based on location
+// Delivery fee calculation based on location (Jumia Uganda style)
 function calculateDeliveryFee(addressId, cartTotal = 0) {
-  // Base delivery fee structure for Uganda
+  // Jumia Uganda delivery fee structure
   const deliveryRates = {
-    // Kampala areas (cheaper delivery)
-    kampala: {
+    // Kampala Central areas
+    kampala_central: {
+      fee: 4000, // 3,000 UGX
+      freeDeliveryThreshold: 50000 // Free delivery above 50,000 UGX
+    },
+    // Kampala suburbs
+    kampala_suburbs: {
+      fee: 6000, // 4,000 UGX
+      freeDeliveryThreshold: 75000 // Free delivery above 75,000 UGX
+    },
+    // Wakiso, Mukono (Greater Kampala)
+    greater_kampala: {
       fee: 5000, // 5,000 UGX
       freeDeliveryThreshold: 100000 // Free delivery above 100,000 UGX
     },
-    // Other major cities
+    // Major cities (Jinja, Mbarara, Gulu, etc.)
     major_cities: {
-      fee: 10000, // 10,000 UGX
+      fee: 15000, // 7,000 UGX
       freeDeliveryThreshold: 150000 // Free delivery above 150,000 UGX
     },
-    // Rural/distant areas
-    rural: {
-      fee: 15000, // 15,000 UGX
+    // Other towns
+    other_towns: {
+      fee: 25000, // 10,000 UGX
       freeDeliveryThreshold: 200000 // Free delivery above 200,000 UGX
     },
     // Default
     default: {
-      fee: 8000, // 8,000 UGX
-      freeDeliveryThreshold: 120000 // Free delivery above 120,000 UGX
+      fee: 5000, // 5,000 UGX
+      freeDeliveryThreshold: 100000 // Free delivery above 100,000 UGX
     }
   };
 
-  // Determine delivery zone based on address (you can enhance this logic)
+  // Determine delivery zone based on address (Jumia Uganda zones)
   function getDeliveryZone(address) {
     if (!address) return 'default';
     
     const city = address.city?.toLowerCase() || '';
     const state = address.state?.toLowerCase() || '';
     const addressLine = address.address_line?.toLowerCase() || '';
-    const country = address.country?.toLowerCase() || '';
     
-    // Kampala and suburbs
+    // Kampala Central (CBD, Nakasero, Kololo, etc.)
+    if (addressLine.includes('central') || addressLine.includes('cbd') || 
+        addressLine.includes('nakasero') || addressLine.includes('kololo') ||
+        addressLine.includes('bugolobi') || addressLine.includes('muyenga') ||
+        city.includes('kampala central')) {
+      return 'kampala_central';
+    }
+    
+    // Kampala suburbs
     if (city.includes('kampala') || state.includes('kampala') || addressLine.includes('kampala') ||
-        city.includes('entebbe') || state.includes('entebbe') || addressLine.includes('entebbe') || 
-        city.includes('wakiso') || state.includes('wakiso') || addressLine.includes('wakiso') ||
-        city.includes('mukono') || state.includes('mukono') || addressLine.includes('mukono')) {
-      return 'kampala';
+        addressLine.includes('ntinda') || addressLine.includes('kiwatule') ||
+        addressLine.includes('najera') || addressLine.includes('kansanga') ||
+        addressLine.includes('ggaba') || addressLine.includes('kabalagala')) {
+      return 'kampala_suburbs';
+    }
+    
+    // Greater Kampala (Wakiso, Mukono, Entebbe)
+    if (city.includes('wakiso') || state.includes('wakiso') || addressLine.includes('wakiso') ||
+        city.includes('mukono') || state.includes('mukono') || addressLine.includes('mukono') ||
+        city.includes('entebbe') || state.includes('entebbe') || addressLine.includes('entebbe') ||
+        addressLine.includes('nansana') || addressLine.includes('kira') ||
+        addressLine.includes('bweyogerere') || addressLine.includes('kyanja')) {
+      return 'greater_kampala';
     }
     
     // Major cities
-    if (city.includes('jinja') || state.includes('jinja') || addressLine.includes('jinja') ||
-        city.includes('mbarara') || state.includes('mbarara') || addressLine.includes('mbarara') ||
-        city.includes('gulu') || state.includes('gulu') || addressLine.includes('gulu') ||
-        city.includes('lira') || state.includes('lira') || addressLine.includes('lira') ||
-        city.includes('fort portal') || state.includes('fort portal') || addressLine.includes('fort portal') ||
-        city.includes('mbale') || state.includes('mbale') || addressLine.includes('mbale')) {
+    if (city.includes('jinja') || addressLine.includes('jinja') ||
+        city.includes('mbarara') || addressLine.includes('mbarara') ||
+        city.includes('gulu') || addressLine.includes('gulu') ||
+        city.includes('lira') || addressLine.includes('lira') ||
+        city.includes('fort portal') || addressLine.includes('fort portal') ||
+        city.includes('mbale') || addressLine.includes('mbale') ||
+        city.includes('masaka') || addressLine.includes('masaka') ||
+        city.includes('soroti') || addressLine.includes('soroti')) {
       return 'major_cities';
     }
     
-    // Default to rural for other areas
-    return 'rural';
+    // Default to other towns
+    return 'other_towns';
   }
 
   try {
@@ -254,7 +282,7 @@ function calculateDeliveryFee(addressId, cartTotal = 0) {
   }
 }
 
-// Enhanced delivery fee calculation with distance-based pricing
+// Enhanced delivery fee calculation (Jumia Uganda style)
 export async function calculateDeliveryFeeWithAddress(addressId, cartTotal = 0) {
   try {
     // Import Address model dynamically to avoid circular dependency
@@ -262,16 +290,11 @@ export async function calculateDeliveryFeeWithAddress(addressId, cartTotal = 0) 
     
     if (addressId) {
       const address = await Address.findById(addressId);
-      if (address && address.coordinates) {
-        // Use distance-based calculation if coordinates are available
-        const distance = address.distance || calculateDistanceFromCoordinates(address.coordinates);
-        const deliveryFee = Math.ceil(distance) * 1000; // 1000 shillings per km, rounded up
-        
-        console.log(`Distance-based delivery fee: ${distance}km = ${deliveryFee} UGX`);
+      if (address) {
+        // Use zone-based calculation (like Jumia)
+        const deliveryFee = calculateDeliveryFee(address, cartTotal);
+        console.log(`Zone-based delivery fee: ${deliveryFee} UGX for cart total: ${cartTotal} UGX`);
         return deliveryFee;
-      } else if (address) {
-        // Fallback to zone-based calculation
-        return calculateDeliveryFee(address, cartTotal);
       }
     }
     
@@ -282,24 +305,7 @@ export async function calculateDeliveryFeeWithAddress(addressId, cartTotal = 0) 
   }
 }
 
-// Calculate distance from store location (Kampala coordinates)
-function calculateDistanceFromCoordinates(userCoordinates) {
-  const storeLocation = { lat: 0.3476, lng: 32.5825 }; // Kampala, Uganda
-  
-  // Haversine formula to calculate distance
-  const R = 6371; // Earth's radius in kilometers
-  const dLat = (userCoordinates.lat - storeLocation.lat) * Math.PI / 180;
-  const dLng = (userCoordinates.lng - storeLocation.lng) * Math.PI / 180;
-  
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(storeLocation.lat * Math.PI / 180) * Math.cos(userCoordinates.lat * Math.PI / 180) *
-            Math.sin(dLng/2) * Math.sin(dLng/2);
-  
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const distance = R * c;
-  
-  return distance;
-}
+
 
 // Format phone number for Uganda mobile money
 function formatUgandaPhoneNumber(phoneNumber) {
@@ -891,17 +897,15 @@ export async function calculateDeliveryFeeController(request, response) {
             });
         }
 
-        // If coordinates are provided, update the address with coordinates and distance
+        // If coordinates are provided, update the address with coordinates
         if (coordinates && coordinates.lat && coordinates.lng) {
             const { default: Address } = await import('../models/addressModel.js');
-            const distance = calculateDistanceFromCoordinates(coordinates);
             
             await Address.findByIdAndUpdate(addressId, {
-                coordinates: coordinates,
-                distance: distance
+                coordinates: coordinates
             });
             
-            console.log(`Updated address with coordinates and distance: ${distance}km`);
+            console.log('Updated address with coordinates');
         }
 
         const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, cartTotal);
@@ -921,8 +925,6 @@ export async function calculateDeliveryFeeController(request, response) {
                 deliveryFee: deliveryFee,
                 cartTotal: cartTotal,
                 finalTotal: finalTotal,
-                distance: coordinates ? Math.ceil(calculateDistanceFromCoordinates(coordinates)) : null,
-                pricePerKm: 1000,
                 isFreeDelivery: deliveryFee === 0
             },
             error: false,
