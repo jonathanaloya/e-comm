@@ -7,6 +7,10 @@ const SummaryApi = {
         url : '/api/user/register',
         method : 'post'
     },
+    verifyRegistrationOtp : {
+        url : '/api/user/verify-registration-otp',
+        method : 'post'
+    },
     login : {
         url : '/api/user/login',
         method : 'post'

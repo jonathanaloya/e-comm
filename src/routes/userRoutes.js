@@ -1,12 +1,14 @@
 import express from 'express';
 import { Router } from 'express';
-import { uploadAvatar, loginUser, logoutUser, registerUser, verifyEmail, updateUserDetails, forgotPassword, verifyForgotPasswordOtp, resetPassword, refreshToken, getUserLoginDetails } from '../controllers/userController.js';
+import { uploadAvatar, loginUser, logoutUser, registerUser, verifyEmail, verifyRegistrationOtp, updateUserDetails, forgotPassword, verifyForgotPasswordOtp, resetPassword, refreshToken, getUserLoginDetails } from '../controllers/userController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import upload from '../middleware/multer.js';
 
 const userRouter = Router()
 
 userRouter.post('/register', registerUser);
+
+userRouter.post('/verify-registration-otp', verifyRegistrationOtp);
 
 userRouter.post('/verify-email', verifyEmail);
 

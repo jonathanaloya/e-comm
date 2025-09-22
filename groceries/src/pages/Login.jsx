@@ -8,12 +8,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import fetchUserDetails from '../utils/fetchUserDetails'
 import { useDispatch } from 'react-redux'
 import { setUserDetails } from '../store/userSlice'
+import ReCaptcha from '../components/ReCaptcha'
 
 function Login() {
     const [ data, setData ] = useState({
         email: '',
         password: ''
     })
+    const [ recaptchaToken, setRecaptchaToken ] = useState('')
+    const [ requiresOtp, setRequiresOtp ] = useState(false)
+    const [ otp, setOtp ] = useState('')
 
     const [ showPassword, setShowPassword ] = useState(false)
     const navigate = useNavigate()
@@ -28,32 +32,45 @@ function Login() {
         })
     }
 
-    const validateValue = Object.values(data).every(el => el)
+    const validateValue = requiresOtp ? (data.email && otp) : (Object.values(data).every(el => el) && recaptchaToken)
     const handleSubmit = async(e) => {
         e.preventDefault()
+
+        if(!requiresOtp && !recaptchaToken){
+            toast.error('Please complete the reCAPTCHA verification')
+            return
+        }
 
         try {
             const response = await Axios({
                 ...SummaryApi.login,
-                data : data
+                data : requiresOtp ? { email: data.email, otp } : { ...data, recaptchaToken }
             })
 
             if(response.data.error){
                 toast.error(response.data.message)    
             }
             if(response.data.success){
-                toast.success(response.data.message)
-                localStorage.setItem('accesstoken', response.data.data.accesstoken)
-                localStorage.setItem('refreshToken', response.data.data.refreshToken)
+                if(response.data.requiresTwoFactor){
+                    toast.success(response.data.message)
+                    setRequiresOtp(true)
+                    setRecaptchaToken('')
+                } else {
+                    toast.success(response.data.message)
+                    localStorage.setItem('accesstoken', response.data.data.accesstoken)
+                    localStorage.setItem('refreshToken', response.data.data.refreshToken)
 
-                const userDetails = await fetchUserDetails()
-                dispatch(setUserDetails(userDetails.data))
+                    const userDetails = await fetchUserDetails()
+                    dispatch(setUserDetails(userDetails.data))
 
-                setData({
-                    email: '',
-                    password: '',
-                })
-                navigate('/')
+                    setData({
+                        email: '',
+                        password: '',
+                    })
+                    setOtp('')
+                    setRequiresOtp(false)
+                    navigate('/')
+                }
             }
 
         } catch (error) {
@@ -87,7 +104,34 @@ function Login() {
                     <Link to={'/forgot-password'} className='text-green-700 block ml-auto hover:text-green-800 font-semibold text-sm'>Forgot Password ?</Link>
                 </div>
 
-                <button disabled={!validateValue} className={` ${validateValue ? 'bg-green-800 hover:bg-green-600' : 'bg-gray-500'} text-white p-2 rounded font-semibold my-3 tracking-wider`}>Login</button>
+                {requiresOtp && (
+                    <div className='grid gap-1'>
+                        <label htmlFor="otp">Enter OTP :</label>
+                        <input 
+                            type="text" 
+                            id='otp' 
+                            name='otp' 
+                            placeholder='Enter the OTP sent to your email' 
+                            className='bg-green-50 p-2 border rounded outline-none focus:border-primary-200' 
+                            value={otp} 
+                            onChange={(e) => setOtp(e.target.value)}
+                        />
+                    </div>
+                )}
+
+                {!requiresOtp && (
+                    <div className='grid gap-1'>
+                        <ReCaptcha 
+                            onVerify={setRecaptchaToken}
+                            onExpired={() => setRecaptchaToken('')}
+                            onError={() => setRecaptchaToken('')}
+                        />
+                    </div>
+                )}
+
+                <button disabled={!validateValue} className={` ${validateValue ? 'bg-green-800 hover:bg-green-600' : 'bg-gray-500'} text-white p-2 rounded font-semibold my-3 tracking-wider`}>
+                    {requiresOtp ? 'Verify OTP' : 'Login'}
+                </button>
             </form>
 
             <p>

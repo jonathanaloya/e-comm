@@ -9,16 +9,29 @@ import generateRefreshToken from '../utilities/generateRefreshToken.js';
 import uploadImageCloudinary from '../utilities/updateImageCloudinary.js';
 import generateOtp from '../utilities/generateOtp.js';
 import forgotPasswordTemplate from '../utilities/forgotPasswordTemplate.js';
+import verifyRecaptcha from '../utilities/verifyRecaptcha.js';
+import loginOtpTemplate from '../utilities/loginOtpTemplate.js';
 
 // Register user
 export async function registerUser(req, res) {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ 
-        message: 'All fields are required',
+    const { name, email, password, recaptchaToken } = req.body; // Expect recaptchaToken
+    if (!name || !email || !password || !recaptchaToken) {
+      return res.status(400).json({
+        message: 'All fields are required, including reCAPTCHA verification',
         error: true,
-        success: false 
+        success: false
+      });
+    }
+
+    // Verify reCAPTCHA
+    const recaptchaResult = await verifyRecaptcha(recaptchaToken);
+    if (!recaptchaResult.success) {
+      return res.status(400).json({
+        message: 'reCAPTCHA verification failed. Please try again.',
+        error: true,
+        success: false,
+        recaptchaErrors: recaptchaResult['error-codes']
       });
     }
 
@@ -32,35 +45,39 @@ export async function registerUser(req, res) {
       })
     }
 
-
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt); 
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const otp = generateOtp(); // Generate OTP for email verification
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
 
     const payload = {
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      login_otp: otp, // Store OTP for initial email verification
+      login_otp_expiry: otpExpiry
     }
     const newUser = new User(payload);
     const save =await newUser.save();
-    const verifyEmailUrl = `${process.env.FRONTEND_URL}/verify-email?code=${save?._id}`
 
-    const verifyEmail = await sendEmail({
+    // Send the OTP to the user's email for verification
+    await sendEmail({
       sendTo: email,
-      subject: 'Verify your email address',
-      html: verifyEmailTemplate({ 
-        name: name, 
-        url: verifyEmailUrl
+      subject: 'Verify your email address - Confirmation Code',
+      html: verifyEmailTemplate({ // Re-use or create a new template for OTP
+        name: name,
+        otp: otp // Pass the OTP to the template
       })
     })
 
     return res.json({
-      message: 'User registered successfully',
+      message: 'User registered successfully. A confirmation code has been sent to your email to verify your account.',
       error: false,
       success: true,
-      data: save
+      data: { userId: save?._id, email: save?.email } // Don't return sensitive info
     })
-    
+
   } catch (error) {
     return res.status(500).json({
       message: error.message || error,
@@ -69,6 +86,245 @@ export async function registerUser(req, res) {
     });
   }
 }
+
+// New endpoint to verify registration OTP (replaces existing verifyEmail for new flow)
+export async function verifyRegistrationOtp(req, res) {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        message: 'Email and OTP are required',
+        error: true,
+        success: false
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        message: 'User not found',
+        error: true,
+        success: false
+      });
+    }
+
+    if (user.login_otp !== otp) {
+      return res.status(400).json({
+        message: 'Invalid OTP',
+        error: true,
+        success: false
+      });
+    }
+
+    if (new Date() > user.login_otp_expiry) {
+      return res.status(400).json({
+        message: 'OTP expired. Please register again to get a new code.',
+        error: true,
+        success: false
+      });
+    }
+
+    // Mark email as verified and clear OTP fields
+    user.verify_email = true;
+    user.login_otp = '';
+    user.login_otp_expiry = null;
+    await user.save();
+
+    return res.json({
+      message: 'Email verified successfully. You can now log in.',
+      error: false,
+      success: true
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false
+    });
+  }
+}
+
+
+// Login user
+export async function loginUser(req, res) {
+  try {
+    const { email, password, recaptchaToken, otp } = req.body; // Expect recaptchaToken and otp for 2FA
+
+    // --- Phase 1: Initial Login Request (without OTP, but with reCAPTCHA) ---
+    if (!otp) { // If OTP is not provided, this is the first step of login
+      if (!email || !password || !recaptchaToken){
+        return res.status(400).json({
+          message : "Please provide email, password, and reCAPTCHA verification",
+          error : true,
+          success : false
+        })
+      }
+
+      // Verify reCAPTCHA
+      const recaptchaResult = await verifyRecaptcha(recaptchaToken);
+      if (!recaptchaResult.success) {
+        return res.status(400).json({
+          message: 'reCAPTCHA verification failed. Please try again.',
+          error: true,
+          success: false,
+          recaptchaErrors: recaptchaResult['error-codes']
+        });
+      }
+
+      const user = await User.findOne({ email });
+
+      if(!user){
+        return res.status(400).json({
+          message: 'User not registered',
+          error: true,
+          success: false
+        })
+      }
+
+      if(!user.verify_email){
+        return res.status(400).json({
+          message: 'Please verify your email address first.',
+          error: true,
+          success: false
+        })
+      }
+
+      if(user.status !== 'Active'){
+        return res.status(400).json({
+          message: 'User is not active. Contact Admin',
+          error: true,
+          success: false
+        })
+      }
+
+      const checkPassword = await bcrypt.compare(password, user.password);
+
+      if(!checkPassword){
+        return res.status(400).json({
+          message: 'Invalid password',
+          error: true,
+          success: false
+        })
+      }
+
+      // If password is correct, generate and send OTP for 2FA
+      const loginOtp = generateOtp();
+      const loginOtpExpiry = new Date(Date.now() + 5 * 60 * 1000); // OTP valid for 5 minutes
+
+      user.login_otp = loginOtp;
+      user.login_otp_expiry = loginOtpExpiry;
+      await user.save();
+
+      await sendEmail({
+        sendTo: email,
+        subject: 'Your Login Confirmation Code',
+        html: loginOtpTemplate({ // You'll create this template
+          name: user.name,
+          otp: loginOtp
+        })
+      });
+
+      return res.json({
+        message: 'Authentication successful. A confirmation code has been sent to your email.',
+        error: false,
+        success: true,
+        requiresTwoFactor: true, // Indicate to the frontend that OTP is needed
+        email: email // Send email back to frontend to prompt for OTP
+      });
+
+    } else {
+      // --- Phase 2: OTP Verification ---
+      if (!email || !otp){
+        return res.status(400).json({
+          message : "Please provide email and OTP",
+          error : true,
+          success : false
+        })
+      }
+
+      const user = await User.findOne({ email });
+
+      if(!user){
+        return res.status(400).json({
+          message: 'User not found or OTP session expired',
+          error: true,
+          success: false
+        })
+      }
+
+      if (user.login_otp !== otp) {
+        return res.status(400).json({
+          message: 'Invalid confirmation code.',
+          error: true,
+          success: false
+        });
+      }
+
+      if (new Date() > user.login_otp_expiry) {
+        // Clear OTP if expired
+        user.login_otp = '';
+        user.login_otp_expiry = null;
+        await user.save();
+        return res.status(400).json({
+          message: 'Confirmation code expired. Please initiate login again.',
+          error: true,
+          success: false
+        });
+      }
+
+      // OTP is valid, proceed with login
+      // Clear OTP fields after successful verification
+      user.login_otp = '';
+      user.login_otp_expiry = null;
+      await user.save();
+
+
+      const accesstoken = await generateAccessToken(user._id)
+      const refreshToken = await generateRefreshToken(user._id)
+
+      const updateUserDetails = await User.findByIdAndUpdate(user?._id , {
+        last_login_date : Date.now(),
+        refresh_token: refreshToken // Store refresh token in user model
+      })
+
+      const cookiesOption = {
+        httpOnly : true,
+        secure : process.env.NODE_ENV === 'production', // Use secure in production
+        sameSite : "None" // Needed for cross-site cookie
+      }
+
+      res.cookie('accessToken', accesstoken, cookiesOption)
+      res.cookie('refreshToken', refreshToken, cookiesOption)
+
+      return res.json({
+        message : "Login Successfully",
+        error : false,
+        success : true,
+        data : {
+          accesstoken,
+          refreshToken,
+          user: { // You might want to send back some user details
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            // ... other public user data
+          }
+        }
+      })
+    }
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || error,
+      error : true,
+      success: false
+    })
+  }
+};
 
 // Verify Email
 export async function verifyEmail(req, res) {
@@ -104,81 +360,6 @@ export async function verifyEmail(req, res) {
     })
   }
 }
-
-// Login user
-export async function loginUser(req, res) {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password){
-      return res.status(400).json({
-        message : "Please provide email and password",
-        error : true,
-        success : false
-      })
-    }
-
-    const user = await User.findOne({ email });
-
-    if(!user){
-      return res.status(400).json({
-        message: 'User not registered',
-        error: true,
-        success: false
-      })
-    }
-
-    if(user.status !== 'Active'){
-      return res.status(400).json({
-        message: 'User is not active. Contact Admin',
-        error: true,
-        success: false
-      })
-    } 
-      const checkPassword = await bcrypt.compare(password, user.password);
-
-      if(!checkPassword){
-        return res.status(400).json({
-          message: 'Invalid password',
-          error: true,
-          success: false
-        })
-      }
-    
-      const accesstoken = await generateAccessToken(user._id)
-      const refreshToken = await generateRefreshToken(user._id)
-
-      const updateUserDetails = await User.findByIdAndUpdate(user?._id , {
-        last_login_date : Date.now(),
-      })
-
-      const cookiesOption = {
-        httpOnly : true,
-        secure : true,
-        sameSite : "None"
-      }
-    
-      res.cookie('accessToken', accesstoken, cookiesOption)
-      res.cookie('refreshToken', refreshToken, cookiesOption)
-
-      return res.json({
-        message : "Login Successfully",
-        error : false,
-        success : true,
-        data : {
-          accesstoken,
-          refreshToken
-        }
-      })
-
-  } catch (error) {
-    return res.status(500).json({
-      message: error.message || error,
-      error : true,
-      success: false
-    })
-  }
-};
 
 // Logout user
 
@@ -282,7 +463,26 @@ export async function updateUserDetails(req, res){
 // forgot password when user not loged in
 export async function forgotPassword(req, res){
   try {
-    const { email } = req.body
+    const { email, recaptchaToken } = req.body
+
+    if (!email || !recaptchaToken) {
+      return res.status(400).json({
+        message: 'Email and reCAPTCHA verification are required',
+        error: true,
+        success: false
+      })
+    }
+
+    // Verify reCAPTCHA
+    const recaptchaResult = await verifyRecaptcha(recaptchaToken);
+    if (!recaptchaResult.success) {
+      return res.status(400).json({
+        message: 'reCAPTCHA verification failed. Please try again.',
+        error: true,
+        success: false,
+        recaptchaErrors: recaptchaResult['error-codes']
+      });
+    }
 
     const user = await User.findOne({ email })
 
@@ -391,14 +591,25 @@ export async function verifyForgotPasswordOtp(req, res){
 export async function resetPassword(req, res){
   try {
     
-    const { email, newPassword, confirmPassword } = req.body
+    const { email, newPassword, confirmPassword, recaptchaToken } = req.body
 
-    if(!email || !newPassword || !confirmPassword){
+    if(!email || !newPassword || !confirmPassword || !recaptchaToken){
       return res.status(400).json({
-        message : "Email, new password and confirm password are required",
+        message : "Email, new password, confirm password, and reCAPTCHA verification are required",
         error : true,
         success : false
       })
+    }
+
+    // Verify reCAPTCHA
+    const recaptchaResult = await verifyRecaptcha(recaptchaToken);
+    if (!recaptchaResult.success) {
+      return res.status(400).json({
+        message: 'reCAPTCHA verification failed. Please try again.',
+        error: true,
+        success: false,
+        recaptchaErrors: recaptchaResult['error-codes']
+      });
     }
 
     const user = await User.findOne({ email })

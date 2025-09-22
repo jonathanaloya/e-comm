@@ -4,11 +4,13 @@ import Axios from '../utils/Axios'
 import SummaryApi from '../common/SummaryApi'
 import AxiosToastError from '../utils/AxiosToastError'
 import { Link, useNavigate } from 'react-router-dom'
+import ReCaptcha from '../components/ReCaptcha'
 
 function ForgotPassword() {
     const [ data, setData ] = useState({
         email: ''
     })
+    const [ recaptchaToken, setRecaptchaToken ] = useState('')
     const navigate = useNavigate()
     const handleChange = (e) => {
         const { name, value } = e.target
@@ -20,14 +22,19 @@ function ForgotPassword() {
         })
     }
 
-    const validateValue = Object.values(data).every(el => el)
+    const validateValue = Object.values(data).every(el => el) && recaptchaToken
     const handleSubmit = async(e) => {
         e.preventDefault()
+
+        if(!recaptchaToken){
+            toast.error('Please complete the reCAPTCHA verification')
+            return
+        }
 
         try {
             const response = await Axios({
                 ...SummaryApi.forgot_password,
-                data : data
+                data : { ...data, recaptchaToken }
             })
             if(response.data.error){
                 toast.error(response.data.message)    
@@ -40,6 +47,7 @@ function ForgotPassword() {
                 setData({
                     email: ''
                 })
+                setRecaptchaToken('')
                 
             }
 
@@ -57,6 +65,14 @@ function ForgotPassword() {
                 <div className='grid gap-1'>
                     <label htmlFor="email">Email :</label>
                     <input type="email" id='email' name='email' placeholder='Enter your email' className='bg-green-50 p-2 border rounded outline-none focus:border-primary-200' value={data.email} onChange={handleChange}/>
+                </div>
+
+                <div className='grid gap-1'>
+                    <ReCaptcha 
+                        onVerify={setRecaptchaToken}
+                        onExpired={() => setRecaptchaToken('')}
+                        onError={() => setRecaptchaToken('')}
+                    />
                 </div>
 
                 <button disabled={!validateValue} className={` ${validateValue ? 'bg-green-800 hover:bg-green-600' : 'bg-gray-500'} text-white p-2 rounded font-semibold my-3 tracking-wider`}>Submit</button>

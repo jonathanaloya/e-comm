@@ -174,7 +174,8 @@ function calculateDeliveryFee(addressId, cartTotal = 0) {
     const country = address.country?.toLowerCase() || '';
     
     // Kampala and suburbs
-    if (city.includes('kampala') || state.includes('kampala') || addressLine.includes('kampala') || 
+    if (city.includes('kampala') || state.includes('kampala') || addressLine.includes('kampala') ||
+        city.includes('entebbe') || state.includes('entebbe') || addressLine.includes('entebbe') || 
         city.includes('wakiso') || state.includes('wakiso') || addressLine.includes('wakiso') ||
         city.includes('mukono') || state.includes('mukono') || addressLine.includes('mukono')) {
       return 'kampala';

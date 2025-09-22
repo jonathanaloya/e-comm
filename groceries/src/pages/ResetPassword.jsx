@@ -5,6 +5,7 @@ import SummaryApi from '../common/SummaryApi'
 import toast from 'react-hot-toast'
 import AxiosToastError from '../utils/AxiosToastError'
 import Axios from '../utils/Axios'
+import ReCaptcha from '../components/ReCaptcha'
 
 function ResetPassword() {
     const location = useLocation()
@@ -18,8 +19,9 @@ function ResetPassword() {
 
     const [ showPassword, setShowPassword ] = useState(false)
     const [ showConfirmPassword, setShowConfirmPassword ] = useState(false)
+    const [ recaptchaToken, setRecaptchaToken ] = useState('')
 
-    const validateValue = Object.values(data).every(el => el)
+    const validateValue = Object.values(data).every(el => el) && recaptchaToken
 
     useEffect(() => {
         if(!(location?.state?.data?.success)){
@@ -55,10 +57,15 @@ function ResetPassword() {
           return
       }
 
+      if(!recaptchaToken){
+          toast.error('Please complete the reCAPTCHA verification')
+          return
+      }
+
       try {
           const response = await Axios({
               ...SummaryApi.resetPassword,
-              data : data
+              data : { ...data, recaptchaToken }
           })
           if(response.data.error){
               toast.error(response.data.message)    
@@ -71,6 +78,7 @@ function ResetPassword() {
                   newPassword: '',
                   confirmPassword: ''
               })
+              setRecaptchaToken('')
               
           }
 
@@ -114,6 +122,14 @@ function ResetPassword() {
                                 }
                             </div>
                         </div>
+                    </div>
+
+                    <div className='grid gap-1'>
+                        <ReCaptcha 
+                            onVerify={setRecaptchaToken}
+                            onExpired={() => setRecaptchaToken('')}
+                            onError={() => setRecaptchaToken('')}
+                        />
                     </div>
     
                     <button disabled={!validateValue} className={` ${validateValue ? 'bg-green-800 hover:bg-green-600' : 'bg-gray-500'} text-white p-2 rounded font-semibold my-3 tracking-wider`}>Change Password</button>

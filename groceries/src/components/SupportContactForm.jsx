@@ -110,7 +110,7 @@ const SupportContactForm = ({ onTicketCreated, preSelectedOrder = null }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+    console.log("formData", formData)
     // Validation
     if (!formData.contactInfo.name.trim()) {
       toast.error('Please enter your name')

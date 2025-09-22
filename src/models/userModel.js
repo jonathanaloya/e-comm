@@ -73,6 +73,14 @@ const userSchema = new mongoose.Schema({
     default: ""
   },
 
+  login_otp: { 
+    type: String,
+    default: '',
+  },
+  login_otp_expiry: { 
+    type: Date,
+  },
+
   role : {
     type: String,
     enum: ["ADMIN", "USER"],
