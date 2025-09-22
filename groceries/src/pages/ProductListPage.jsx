@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Axios from '../utils/Axios'
 import SummaryApi from '../common/SummaryApi'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import AxiosToastError from '../utils/AxiosToastError'
 import Loading from '../components/Loading'
 import CardProduct from '../components/CardProduct'
@@ -15,7 +15,10 @@ const ProductListPage = () => {
   const [totalPage, setTotalPage] = useState(1)
   const params = useParams()
   const AllSubCategory = useSelector(state => state.product.allSubCategory)
+  const AllCategory = useSelector(state => state.product.allCategory)
   const [DisplaySubCatory, setDisplaySubCategory] = useState([])
+  const [showSidebar, setShowSidebar] = useState(false)
+  const navigate = useNavigate()
 
   console.log(AllSubCategory)
 
@@ -72,44 +75,112 @@ const ProductListPage = () => {
     setDisplaySubCategory(sub)
   }, [params, AllSubCategory])
 
+  const handleCategoryClick = (categoryId, categoryName) => {
+    const subcategory = AllSubCategory.find(sub => {
+      return sub.category.some(c => c._id === categoryId)
+    })
+    if (subcategory) {
+      const url = `/${valideURLConvert(categoryName)}-${categoryId}/${valideURLConvert(subcategory.name)}-${subcategory._id}`
+      navigate(url)
+    }
+  }
+
   return (
-    <section className='sticky top-24 lg:top-20'>
-      <div className='container sticky top-24  mx-auto grid grid-cols-[90px,1fr]  md:grid-cols-[200px,1fr] lg:grid-cols-[280px,1fr]'>
-        {/**sub category **/}
-        <div className=' min-h-[88vh] max-h-[88vh] overflow-y-scroll  grid gap-1 shadow-md scrollbarCustom bg-white py-2'>
-          {
-            DisplaySubCatory.map((s, index) => {
-               const link = `/${valideURLConvert(s?.category[0]?.name)}-${s?.category[0]?._id}/${valideURLConvert(s.name)}-${s._id}`
-              return (
-                <Link to={link} className={`w-full p-2 lg:flex items-center lg:w-full lg:h-16 box-border lg:gap-4 border-b 
-                  hover:bg-green-100 cursor-pointer
-                  ${subCategoryId === s._id ? "bg-green-100" : ""}
-                `}
-                >
-                  <div className='w-fit max-w-28 mx-auto lg:mx-0 bg-white rounded  box-border' >
-                    <img
-                      src={s.Image}
-                      alt='subCategory'
-                      className=' w-14 lg:h-14 lg:w-12 h-full object-scale-down'
-                    />
-                  </div>
-                  <p className='-mt-6 lg:mt-0 text-xs text-center lg:text-left lg:text-base'>{s.name}</p>
-                </Link>
-              )
-            })
-          }
+    <section className='min-h-screen bg-gray-50'>
+      <div className='container mx-auto'>
+        {/* Mobile Menu Button */}
+        <div className='lg:hidden bg-white shadow-sm p-4 sticky top-16 z-20'>
+          <button 
+            onClick={() => setShowSidebar(!showSidebar)}
+            className='flex items-center gap-2 text-green-700 font-medium'
+          >
+            <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 6h16M4 12h16M4 18h16' />
+            </svg>
+            Categories & Subcategories
+          </button>
         </div>
 
+        <div className='grid grid-cols-1 lg:grid-cols-[300px,1fr] gap-4 p-4'>
+          {/* Sidebar */}
+          <div className={`bg-white rounded-lg shadow-sm overflow-hidden ${
+            showSidebar ? 'block' : 'hidden lg:block'
+          } ${showSidebar ? 'fixed inset-0 z-30 lg:relative' : ''}`}>
+            {showSidebar && (
+              <div className='lg:hidden p-4 border-b flex justify-between items-center'>
+                <h3 className='font-semibold'>Categories</h3>
+                <button onClick={() => setShowSidebar(false)} className='text-gray-500'>
+                  <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+              </div>
+            )}
+            
+            <div className='max-h-[80vh] overflow-y-auto'>
+              {/* Categories Section */}
+              <div className='p-4 border-b'>
+                <h4 className='font-medium text-gray-700 mb-3'>Categories</h4>
+                <div className='grid grid-cols-2 lg:grid-cols-1 gap-2'>
+                  {
+                    AllCategory.map((cat) => (
+                      <button
+                        key={cat._id}
+                        onClick={() => handleCategoryClick(cat._id, cat.name)}
+                        className={`p-2 rounded-lg text-left hover:bg-green-50 transition-colors ${
+                          categoryId === cat._id ? 'bg-green-100 text-green-700' : 'text-gray-600'
+                        }`}
+                      >
+                        <div className='flex items-center gap-2'>
+                          <img src={cat.Image} alt={cat.name} className='w-8 h-8 object-cover rounded' />
+                          <span className='text-sm font-medium'>{cat.name}</span>
+                        </div>
+                      </button>
+                    ))
+                  }
+                </div>
+              </div>
 
-        {/**Product **/}
-        <div className='sticky top-20'>
-          <div className='bg-white shadow-md p-4 z-10'>
-            <h3 className='font-semibold'>{subCategoryName}</h3>
+              {/* Subcategories Section */}
+              <div className='p-4'>
+                <h4 className='font-medium text-gray-700 mb-3'>Subcategories</h4>
+                <div className='space-y-1'>
+                  {
+                    DisplaySubCatory.map((s) => {
+                      const link = `/${valideURLConvert(s?.category[0]?.name)}-${s?.category[0]?._id}/${valideURLConvert(s.name)}-${s._id}`
+                      return (
+                        <Link 
+                          key={s._id}
+                          to={link} 
+                          onClick={() => setShowSidebar(false)}
+                          className={`flex items-center gap-3 p-3 rounded-lg hover:bg-green-50 transition-colors ${
+                            subCategoryId === s._id ? 'bg-green-100 text-green-700' : 'text-gray-600'
+                          }`}
+                        >
+                          <img
+                            src={s.Image}
+                            alt={s.name}
+                            className='w-10 h-10 object-cover rounded'
+                          />
+                          <span className='text-sm font-medium'>{s.name}</span>
+                        </Link>
+                      )
+                    })
+                  }
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
 
-           <div className='min-h-[80vh] max-h-[80vh] overflow-y-auto relative'>
-            <div className=' grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 p-4 gap-4 '>
+
+          {/* Products Section */}
+          <div className='bg-white rounded-lg shadow-sm overflow-hidden'>
+            <div className='p-4 border-b'>
+              <h3 className='text-xl font-semibold text-gray-800'>{subCategoryName}</h3>
+            </div>
+            
+            <div className='p-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
                 {
                   data.map((p, index) => {
                     return (
@@ -121,16 +192,29 @@ const ProductListPage = () => {
                   })
                 }
               </div>
-           </div>
-
-            {
-              loading && (
-                <Loading />
-              )
-            }
-
+              
+              {loading && (
+                <div className='flex justify-center py-8'>
+                  <Loading />
+                </div>
+              )}
+              
+              {data.length === 0 && !loading && (
+                <div className='text-center py-12 text-gray-500'>
+                  <p>No products found in this category.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+        
+        {/* Mobile Overlay */}
+        {showSidebar && (
+          <div 
+            className='lg:hidden fixed inset-0 bg-black bg-opacity-50 z-20'
+            onClick={() => setShowSidebar(false)}
+          />
+        )}
       </div>
     </section>
   )

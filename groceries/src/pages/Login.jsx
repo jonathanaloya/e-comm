@@ -16,8 +16,6 @@ function Login() {
         password: ''
     })
     const [ recaptchaToken, setRecaptchaToken ] = useState('')
-    const [ requiresOtp, setRequiresOtp ] = useState(false)
-    const [ otp, setOtp ] = useState('')
 
     const [ showPassword, setShowPassword ] = useState(false)
     const navigate = useNavigate()
@@ -32,11 +30,11 @@ function Login() {
         })
     }
 
-    const validateValue = requiresOtp ? (data.email && otp) : (Object.values(data).every(el => el) && recaptchaToken)
+    const validateValue = Object.values(data).every(el => el) && recaptchaToken
     const handleSubmit = async(e) => {
         e.preventDefault()
 
-        if(!requiresOtp && !recaptchaToken){
+        if(!recaptchaToken){
             toast.error('Please complete the reCAPTCHA verification')
             return
         }
@@ -44,7 +42,7 @@ function Login() {
         try {
             const response = await Axios({
                 ...SummaryApi.login,
-                data : requiresOtp ? { email: data.email, otp } : { ...data, recaptchaToken }
+                data : { ...data, recaptchaToken }
             })
 
             if(response.data.error){
@@ -53,7 +51,13 @@ function Login() {
             if(response.data.success){
                 if(response.data.requiresTwoFactor){
                     toast.success(response.data.message)
-                    setRequiresOtp(true)
+                    navigate('/login-otp-verification', {
+                        state: { email: data.email }
+                    })
+                    setData({
+                        email: '',
+                        password: '',
+                    })
                     setRecaptchaToken('')
                 } else {
                     toast.success(response.data.message)
@@ -67,8 +71,6 @@ function Login() {
                         email: '',
                         password: '',
                     })
-                    setOtp('')
-                    setRequiresOtp(false)
                     navigate('/')
                 }
             }
@@ -104,34 +106,15 @@ function Login() {
                     <Link to={'/forgot-password'} className='text-green-700 block ml-auto hover:text-green-800 font-semibold text-sm'>Forgot Password ?</Link>
                 </div>
 
-                {requiresOtp && (
-                    <div className='grid gap-1'>
-                        <label htmlFor="otp">Enter OTP :</label>
-                        <input 
-                            type="text" 
-                            id='otp' 
-                            name='otp' 
-                            placeholder='Enter the OTP sent to your email' 
-                            className='bg-green-50 p-2 border rounded outline-none focus:border-primary-200' 
-                            value={otp} 
-                            onChange={(e) => setOtp(e.target.value)}
-                        />
-                    </div>
-                )}
+                <div className='grid gap-1'>
+                    <ReCaptcha 
+                        onVerify={setRecaptchaToken}
+                        onExpired={() => setRecaptchaToken('')}
+                        onError={() => setRecaptchaToken('')}
+                    />
+                </div>
 
-                {!requiresOtp && (
-                    <div className='grid gap-1'>
-                        <ReCaptcha 
-                            onVerify={setRecaptchaToken}
-                            onExpired={() => setRecaptchaToken('')}
-                            onError={() => setRecaptchaToken('')}
-                        />
-                    </div>
-                )}
-
-                <button disabled={!validateValue} className={` ${validateValue ? 'bg-green-800 hover:bg-green-600' : 'bg-gray-500'} text-white p-2 rounded font-semibold my-3 tracking-wider`}>
-                    {requiresOtp ? 'Verify OTP' : 'Login'}
-                </button>
+                <button disabled={!validateValue} className={` ${validateValue ? 'bg-green-800 hover:bg-green-600' : 'bg-gray-500'} text-white p-2 rounded font-semibold my-3 tracking-wider`}>Login</button>
             </form>
 
             <p>

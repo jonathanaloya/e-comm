@@ -48,34 +48,20 @@ export async function registerUser(req, res) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const otp = generateOtp(); // Generate OTP for email verification
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
-
     const payload = {
       name,
       email,
       password: hashedPassword,
-      login_otp: otp, // Store OTP for initial email verification
-      login_otp_expiry: otpExpiry
+      verify_email: true // Auto-verify email on registration
     }
     const newUser = new User(payload);
     const save =await newUser.save();
 
-    // Send the OTP to the user's email for verification
-    await sendEmail({
-      sendTo: email,
-      subject: 'Verify your email address - Confirmation Code',
-      html: verifyEmailTemplate({ // Re-use or create a new template for OTP
-        name: name,
-        otp: otp // Pass the OTP to the template
-      })
-    })
-
     return res.json({
-      message: 'User registered successfully. A confirmation code has been sent to your email to verify your account.',
+      message: 'User registered successfully. You can now login with your credentials.',
       error: false,
       success: true,
-      data: { userId: save?._id, email: save?.email } // Don't return sensitive info
+      data: { userId: save?._id, email: save?.email }
     })
 
   } catch (error) {

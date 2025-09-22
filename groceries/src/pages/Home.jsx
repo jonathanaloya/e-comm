@@ -44,33 +44,41 @@ const Home = () => {
           </div>
       </div>
       
-      <div className='container mx-auto px-4 my-2 grid grid-cols-5 md:grid-cols-8 lg:grid-cols-10  gap-2'>
+      <div className='container mx-auto px-4 my-6'>
+        <h2 className='text-2xl font-semibold mb-4 text-center'>Shop by Category</h2>
+        <div className='grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4'>
           {
             loadingCategory ? (
               new Array(12).fill(null).map((c,index)=>{
                 return(
-                  <div key={index+"loadingcategory"} className='bg-white rounded p-4 min-h-36 grid gap-2 shadow animate-pulse'>
-                    <div className='bg-blue-100 min-h-24 rounded'></div>
-                    <div className='bg-blue-100 h-8 rounded'></div>
+                  <div key={index+"loadingcategory"} className='bg-white rounded-lg p-3 shadow-sm animate-pulse'>
+                    <div className='bg-gray-200 aspect-square rounded-lg mb-2'></div>
+                    <div className='bg-gray-200 h-4 rounded'></div>
                   </div>
                 )
               })
             ) : (
               categoryData.map((cat,index)=>{
                 return(
-                  <div key={cat._id+"displayCategory"} className='w-full h-full' onClick={()=>handleRedirectProductListpage(cat._id,cat.name)}>
-                    <div>
+                  <div 
+                    key={cat._id+"displayCategory"} 
+                    className='bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer group'
+                    onClick={()=>handleRedirectProductListpage(cat._id,cat.name)}
+                  >
+                    <div className='aspect-square mb-2 overflow-hidden rounded-lg bg-gray-50'>
                         <img 
                           src={cat.Image}
-                          className='w-full h-full object-scale-down'
+                          alt={cat.name}
+                          className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200'
                         />
                     </div>
+                    <p className='text-sm font-medium text-center text-gray-700 truncate'>{cat.name}</p>
                   </div>
                 )
               })
-              
             )
           }
+        </div>
       </div>
 
       {/***display category product */}

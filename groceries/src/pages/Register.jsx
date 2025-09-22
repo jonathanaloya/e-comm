@@ -54,9 +54,7 @@ function Register() {
             }
             if(response.data.success){
                 toast.success(response.data.message)
-                navigate('/email-verification', {
-                    state: { email: data.email }
-                })
+                navigate('/login')
                 setData({
                     name: '',
                     email: '',
