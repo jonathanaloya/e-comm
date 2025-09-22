@@ -261,8 +261,9 @@ export async function loginUser(req, res) {
 
       const cookiesOption = {
         httpOnly : true,
-        secure : process.env.NODE_ENV === 'production', // Use secure in production
-        sameSite : "None" // Needed for cross-site cookie
+        secure : process.env.NODE_ENV === 'production',
+        sameSite : "None",
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
       }
 
       res.cookie('accessToken', accesstoken, cookiesOption)
@@ -651,7 +652,8 @@ export async function refreshToken(req, res){
     const cookiesOption = {
       httpOnly : true,
       secure : true,
-      sameSite : "None"
+      sameSite : "None",
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
     }
 
     res.cookie('accessToken', newAccessToken, cookiesOption)

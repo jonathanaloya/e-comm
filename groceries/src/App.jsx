@@ -15,12 +15,12 @@ import  GlobalProvider  from './provider/GlobalProvider';
 import CartMobileLink from './components/CartMobile';
 import FloatingHelpButton from './components/FloatingHelpButton';
 import InstallPrompt from './components/InstallPrompt';
-import { useSessionTimeout } from './hooks/useSessionTimeout';
+
 
 function App() {
   const dispatch = useDispatch()
   const location = useLocation()
-  useSessionTimeout() // Auto logout on inactivity
+
 
   const fetchUser = async() =>{
     const userData = await fetchUserDetails()

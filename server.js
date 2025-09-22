@@ -18,7 +18,7 @@ import newsletterRouter from './src/routes/newsletterRoutes.js';
 import supportRouter from './src/routes/supportRoutes.js';
 import { generalLimiter, authLimiter, paymentLimiter } from './src/middleware/rateLimiter.js';
 import { sanitizeInput } from './src/middleware/inputValidation.js';
-import { sessionManager } from './src/middleware/sessionManager.js';
+
 import mongoSanitize from 'express-mongo-sanitize';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -83,15 +83,15 @@ app.get('/', (req, res) => {
 })
 
 
-app.use('/api/user', authLimiter, sessionManager, userRouter);
+app.use('/api/user', authLimiter, userRouter);
 app.use('/api/category', categoryRouter);
 app.use('/api/file', generalLimiter, uploadRouter)
 app.use('/api/subcategory', subCategoryRouter)
 
 app.use('/api/product', productRouter)
-app.use('/api/cart', sessionManager, cartRouter)
-app.use('/api/order', paymentLimiter, sessionManager, orderRouter)
-app.use('/api/address', sessionManager, addressRouter)
+app.use('/api/cart', cartRouter)
+app.use('/api/order', paymentLimiter, orderRouter)
+app.use('/api/address', addressRouter)
 app.use('/api/admin', generalLimiter, adminRouter)
 app.use('/api/newsletter', generalLimiter, newsletterRouter)
 app.use('/api/support', generalLimiter, supportRouter)
