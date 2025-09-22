@@ -3,7 +3,7 @@ import User from "../models/userModel.js";
 
 export const addToCartItemController = async(req,res)=>{
     try {
-        const  userId = req.userId
+        const userId = req.userId || null // Allow null for guest users
         const { productId } = req.body
         
         if(!productId){
@@ -11,6 +11,16 @@ export const addToCartItemController = async(req,res)=>{
                 message : "Provide productId",
                 error : true,
                 success : false
+            })
+        }
+
+        // For guest users, just return success without saving to database
+        if(!userId){
+            return res.json({
+                message : "Item added to cart. Please login to save your cart.",
+                error : false,
+                success : true,
+                requiresLogin: true
             })
         }
 

@@ -159,8 +159,6 @@ export async function loginUser(req, res) {
         })
       }
 
-
-
       if(user.status !== 'Active'){
         return res.status(400).json({
           message: 'User is not active. Contact Admin',
@@ -179,29 +177,30 @@ export async function loginUser(req, res) {
         })
       }
 
-      // If password is correct, generate and send OTP for 2FA
+      // Generate and send OTP immediately
       const loginOtp = generateOtp();
-      const loginOtpExpiry = new Date(Date.now() + 5 * 60 * 1000); // OTP valid for 5 minutes
+      const loginOtpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
       user.login_otp = loginOtp;
       user.login_otp_expiry = loginOtpExpiry;
       await user.save();
 
-      await sendEmail({
+      // Send email immediately without await to avoid delay
+      sendEmail({
         sendTo: email,
         subject: 'Your Login Confirmation Code',
-        html: loginOtpTemplate({ // You'll create this template
+        html: loginOtpTemplate({
           name: user.name,
           otp: loginOtp
         })
-      });
+      }).catch(err => console.error('Email send error:', err));
 
       return res.json({
         message: 'Authentication successful. A confirmation code has been sent to your email.',
         error: false,
         success: true,
-        requiresTwoFactor: true, // Indicate to the frontend that OTP is needed
-        email: email // Send email back to frontend to prompt for OTP
+        requiresTwoFactor: true,
+        email: email
       });
 
     } else {
