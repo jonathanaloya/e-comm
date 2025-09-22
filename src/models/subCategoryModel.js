@@ -1,4 +1,3 @@
-import { truncates } from "bcryptjs";
 import mongoose from "mongoose";
 
 const subCategorySchema = new mongoose.Schema({

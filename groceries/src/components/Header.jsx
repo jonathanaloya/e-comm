@@ -67,6 +67,7 @@ const Header = () => {
                 height={60}
                 alt="logo"
                 className="hidden lg:block"
+                loading="eager"
               />
 
               <img
@@ -75,6 +76,7 @@ const Header = () => {
                 height={60}
                 alt="logo"
                 className="lg:hidden"
+                loading="eager"
               />
             </Link>
           </div>

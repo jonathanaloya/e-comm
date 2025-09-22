@@ -35,7 +35,7 @@ const addressSchema = new mongoose.Schema({
     },
 
     mobile : {
-        type: Number,
+        type: String,
         default: null
     },
 
@@ -63,6 +63,17 @@ const addressSchema = new mongoose.Schema({
     distance : {
         type: Number,
         default: null // Distance in kilometers from store
+    },
+
+    location_type : {
+        type: String,
+        enum: ['manual', 'gps'],
+        default: 'manual'
+    },
+
+    name : {
+        type: String,
+        default: 'Home' // Address label like Home, Office, etc.
     }
 },{
     timestamps : true

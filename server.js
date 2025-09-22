@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
+import compression from 'compression';
 import connectDB from './src/config/database.js';
 import userRouter from './src/routes/userRoutes.js';
 import cookieParser from 'cookie-parser';
@@ -15,6 +16,10 @@ import addressRouter from './src/routes/addressRoutes.js';
 import adminRouter from './src/routes/adminRoutes.js';
 import newsletterRouter from './src/routes/newsletterRoutes.js';
 import supportRouter from './src/routes/supportRoutes.js';
+import { generalLimiter, authLimiter, paymentLimiter } from './src/middleware/rateLimiter.js';
+import { sanitizeInput } from './src/middleware/inputValidation.js';
+import { sessionManager } from './src/middleware/sessionManager.js';
+import mongoSanitize from 'express-mongo-sanitize';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -36,13 +41,40 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use(compression());
 app.use(cookieParser());
-app.use(express.json());
-app.use(morgan());
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(morgan('combined'));
+app.use(generalLimiter);
+app.use(sanitizeInput);
+app.use(mongoSanitize());
 app.use(helmet({
-  crossOriginResourcePolicy: false
-}
-));
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", 'https://api.flutterwave.com']
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+// Cache control for static assets
+app.use((req, res, next) => {
+  if (req.url.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg)$/)) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+  }
+  next();
+});
 
 // Define routes
 const PORT = process.env.PORT || 5000;
@@ -52,15 +84,15 @@ app.get('/', (req, res) => {
 })
 
 
-app.use('/api/user', userRouter);
+app.use('/api/user', authLimiter, sessionManager, userRouter);
 app.use('/api/category', categoryRouter);
 app.use('/api/file', uploadRouter)
 app.use('/api/subcategory', subCategoryRouter)
 
 app.use('/api/product', productRouter)
-app.use('/api/cart', cartRouter)
-app.use('/api/order', orderRouter)
-app.use('/api/address', addressRouter)
+app.use('/api/cart', sessionManager, cartRouter)
+app.use('/api/order', paymentLimiter, sessionManager, orderRouter)
+app.use('/api/address', sessionManager, addressRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/newsletter', newsletterRouter)
 app.use('/api/support', supportRouter)

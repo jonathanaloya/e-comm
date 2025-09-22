@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Fresh Katale</string>
+    <string name="title_activity_main">Fresh Katale</string>
+    <string name="package_name">com.freshkatale.app</string>
+    <string name="custom_url_scheme">com.freshkatale.app</string>
+</resources>

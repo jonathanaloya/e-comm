@@ -34,12 +34,16 @@ const Home = () => {
               <img
                 src={banner}
                 className='w-full h-full object-cover hidden lg:block'
-                alt='banner' 
+                alt='banner'
+                loading='eager'
+                decoding='async'
               />
               <img
                 src={bannerMobile}
                 className='w-full h-full object-cover lg:hidden'
-                alt='banner' 
+                alt='banner'
+                loading='eager'
+                decoding='async'
               />
           </div>
       </div>
@@ -70,6 +74,8 @@ const Home = () => {
                           src={cat.Image}
                           alt={cat.name}
                           className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200'
+                          loading='lazy'
+                          decoding='async'
                         />
                     </div>
                     <p className='text-sm font-medium text-center text-gray-700 truncate'>{cat.name}</p>
