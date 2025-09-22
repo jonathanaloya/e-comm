@@ -5,7 +5,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 const cartRouter = Router()
 
 cartRouter.post('/create', addToCartItemController)
-cartRouter.get("/get",authMiddleware,getCartItemController)
+cartRouter.get("/get",getCartItemController)
 cartRouter.put('/update-qty',authMiddleware,updateCartItemQtyController)
 cartRouter.delete('/delete-cart-item',authMiddleware,deleteCartItemQtyController)
 

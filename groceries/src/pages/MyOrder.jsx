@@ -114,11 +114,11 @@ const MyOrders = () => {
       </div>
       
       <div className="bg-white shadow-md rounded-lg p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold text-gray-800">My Orders</h1>
           <button
             onClick={fetchOrders}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors w-full sm:w-auto"
           >
             Refresh
           </button>
@@ -141,7 +141,7 @@ const MyOrders = () => {
           {/* Grouped Orders */}
           {groupedOrders.map((orderGroup, index) => (
             <div key={orderGroup.mainOrderId || index} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">
                     Order #{orderGroup.mainOrderId}
@@ -150,7 +150,7 @@ const MyOrders = () => {
                     Placed on {formatDate(orderGroup.createdAt)}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="sm:text-right">
                   <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(orderGroup.order_status)}`}>
                     {getStatusIcon(orderGroup.order_status)}
                     {orderGroup.order_status?.toUpperCase() || 'PENDING'}
@@ -164,14 +164,14 @@ const MyOrders = () => {
               {/* Order Items */}
               <div className="space-y-3 mb-4">
                 {orderGroup.items?.map((item, itemIndex) => (
-                  <div key={item._id || itemIndex} className="flex items-center gap-4 bg-white p-4 rounded-lg">
+                  <div key={item._id || itemIndex} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white p-4 rounded-lg">
                     <img
                       src={item.product_details?.image?.[0] || '/placeholder-image.jpg'}
                       alt={item.product_details?.name}
-                      className="w-16 h-16 object-cover rounded-lg"
+                      className="w-16 h-16 object-cover rounded-lg mx-auto sm:mx-0"
                       onError={(e) => { e.target.src = '/placeholder-image.jpg' }}
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 text-center sm:text-left">
                       <h4 className="font-medium text-gray-800">{item.product_details?.name}</h4>
                       <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                       <p className="text-sm font-medium text-gray-800">UGX {item.totalAmt?.toLocaleString()}</p>
@@ -215,7 +215,7 @@ const MyOrders = () => {
           {/* Individual Orders */}
           {individualOrders.map((order, index) => (
             <div key={order._id || index} className="border border-gray-200 rounded-lg p-6">
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">
                     Order #{order.orderId}
@@ -224,7 +224,7 @@ const MyOrders = () => {
                     Placed on {formatDate(order.createdAt)}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="sm:text-right">
                   <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.order_status)}`}>
                     {getStatusIcon(order.order_status)}
                     {order.order_status?.toUpperCase() || 'PENDING'}
@@ -235,14 +235,14 @@ const MyOrders = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
                 <img
                   src={order.product_details?.image?.[0] || '/placeholder-image.jpg'}
                   alt={order.product_details?.name}
                   className="w-20 h-20 object-cover rounded-lg"
                   onError={(e) => { e.target.src = '/placeholder-image.jpg' }}
                 />
-                <div className="flex-1">
+                <div className="flex-1 text-center sm:text-left">
                   <h4 className="font-medium text-gray-800 mb-1">{order.product_details?.name}</h4>
                   <p className="text-sm text-gray-600 mb-1">Quantity: {order.quantity}</p>
                   <p className="text-lg font-bold text-gray-800">UGX {order.totalAmt?.toLocaleString()}</p>

@@ -67,7 +67,17 @@ export const addToCartItemController = async(req,res)=>{
 
 export const getCartItemController = async(req,res)=>{
     try {
-        const userId = req.userId
+        const userId = req.userId || null
+
+        // For guest users, return empty cart
+        if(!userId){
+            return res.json({
+                data : [],
+                error : false,
+                success : true,
+                message: "Please login to view saved cart items"
+            })
+        }
 
         const cartItem =  await Cart.find({
             userId : userId

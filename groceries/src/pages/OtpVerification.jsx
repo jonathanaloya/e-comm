@@ -67,6 +67,8 @@ function OtpVerification() {
                                     <input 
                                     key={"otp"+index} 
                                     type="text" 
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     id='otp'
                                     ref = {(ref) =>{ 
                                         inputRef.current[index] = ref
@@ -74,8 +76,7 @@ function OtpVerification() {
                                     }}
                                     value={data[index]} 
                                     onChange={(e) => {
-                                        const value = e.target.value 
-                                        console.log("value",value)
+                                        const value = e.target.value.replace(/[^0-9]/g, '')
                                         const newData = [...data]
                                         newData[index] = value
                                         setData(newData)
@@ -83,7 +84,12 @@ function OtpVerification() {
                                         if(value && index < 5){
                                             inputRef.current[index+1].focus()
                                         }
-                                    }} 
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if(e.key === 'Backspace' && !data[index] && index > 0){
+                                            inputRef.current[index-1].focus()
+                                        }
+                                    }}
                                     maxLength={1} className='bg-green-50 w-full max-w-16 p-2 border rounded outline-none focus:border-primary-200 text-center font-semibold'/>
                                 )
                             })
