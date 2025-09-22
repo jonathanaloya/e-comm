@@ -15,23 +15,12 @@ import loginOtpTemplate from '../utilities/loginOtpTemplate.js';
 // Register user
 export async function registerUser(req, res) {
   try {
-    const { name, email, password, recaptchaToken } = req.body; // Expect recaptchaToken
-    if (!name || !email || !password || !recaptchaToken) {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
       return res.status(400).json({
-        message: 'All fields are required, including reCAPTCHA verification',
+        message: 'All fields are required',
         error: true,
         success: false
-      });
-    }
-
-    // Verify reCAPTCHA
-    const recaptchaResult = await verifyRecaptcha(recaptchaToken);
-    if (!recaptchaResult.success) {
-      return res.status(400).json({
-        message: 'reCAPTCHA verification failed. Please try again.',
-        error: true,
-        success: false,
-        recaptchaErrors: recaptchaResult['error-codes']
       });
     }
 
@@ -170,13 +159,7 @@ export async function loginUser(req, res) {
         })
       }
 
-      if(!user.verify_email){
-        return res.status(400).json({
-          message: 'Please verify your email address first.',
-          error: true,
-          success: false
-        })
-      }
+
 
       if(user.status !== 'Active'){
         return res.status(400).json({

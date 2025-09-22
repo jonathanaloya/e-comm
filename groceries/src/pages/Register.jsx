@@ -5,7 +5,6 @@ import Axios from '../utils/Axios'
 import AxiosToastError from '../utils/AxiosToastError'
 import { Link, useNavigate } from 'react-router-dom'
 import SummaryApi from '../common/SummaryApi'
-import ReCaptcha from '../components/ReCaptcha'
 
 function Register() {
     const [ data, setData ] = useState({
@@ -14,7 +13,6 @@ function Register() {
         password: '',
         confirmPassword: ''
     })
-    const [ recaptchaToken, setRecaptchaToken ] = useState('')
 
     const [ showPassword, setShowPassword ] = useState(false)
     const [ showConfirmPassword, setShowConfirmPassword ] = useState(false)
@@ -29,7 +27,7 @@ function Register() {
         })
     }
 
-    const validateValue = Object.values(data).every(el => el) && recaptchaToken
+    const validateValue = Object.values(data).every(el => el)
     const handleSubmit = async(e) => {
         e.preventDefault()
 
@@ -38,15 +36,10 @@ function Register() {
             return
         }
 
-        if(!recaptchaToken){
-            toast.error('Please complete the reCAPTCHA verification')
-            return
-        }
-
         try {
             const response = await Axios({
                 ...SummaryApi.register,
-                data : { ...data, recaptchaToken }
+                data : data
             })
             
             if(response.data.error){
@@ -61,7 +54,6 @@ function Register() {
                     password: '',
                     confirmPassword: ''
                 })
-                setRecaptchaToken('')
             }
 
         } catch (error) {
@@ -113,14 +105,6 @@ function Register() {
                             }
                         </div>
                     </div>
-                </div>
-
-                <div className='grid gap-1'>
-                    <ReCaptcha 
-                        onVerify={setRecaptchaToken}
-                        onExpired={() => setRecaptchaToken('')}
-                        onError={() => setRecaptchaToken('')}
-                    />
                 </div>
 
                 <button disabled={!validateValue} className={` ${validateValue ? 'bg-green-800 hover:bg-green-600' : 'bg-gray-500'} text-white p-2 rounded font-semibold my-3 tracking-wider`}>Register</button>
