@@ -27,8 +27,8 @@ const DisplayCartItem = ({close}) => {
         toast("Please Login")
     }
   return (
-    <section className='bg-neutral-900 fixed top-0 bottom-0 right-0 left-0 bg-opacity-70 z-50'>
-        <div className='bg-white w-full max-w-sm min-h-screen max-h-screen ml-auto'>
+    <section className='bg-neutral-900 fixed top-0 bottom-0 right-0 left-0 bg-opacity-70 z-50 flex justify-end'>
+        <div className='bg-white w-full max-w-sm min-h-screen max-h-screen overflow-hidden flex flex-col'>
             <div className='flex items-center p-4 shadow-md gap-3 justify-between'>
                 <h2 className='font-semibold'>Cart</h2>
                 <Link to={"/"} className='lg:hidden'>
@@ -39,7 +39,7 @@ const DisplayCartItem = ({close}) => {
                 </button>
             </div>
 
-            <div className='min-h-[75vh] lg:min-h-[80vh] h-full max-h-[calc(100vh-150px)] bg-blue-50 p-2 flex flex-col gap-4'>
+            <div className='flex-1 bg-blue-50 p-2 flex flex-col gap-4 overflow-y-auto'>
                 {/***display items */}
                 {
                     cartItem[0] ? (
@@ -48,7 +48,7 @@ const DisplayCartItem = ({close}) => {
                                     <p>Your total savings</p>
                                     <p>{DisplayPriceInShillings(notDiscountTotalPrice - totalPrice )}</p>
                             </div>
-                            <div className='bg-white rounded-lg p-4 grid gap-5 overflow-auto'>
+                            <div className='bg-white rounded-lg p-4 grid gap-5 flex-1 overflow-y-auto'>
                                     {
                                         cartItem[0] && (
                                             cartItem.map((item,index)=>{
@@ -95,12 +95,13 @@ const DisplayCartItem = ({close}) => {
                             </div>
                         </>
                     ) : (
-                        <div className='bg-white flex flex-col justify-center items-center'>
+                        <div className='bg-white flex flex-col justify-center items-center p-8 flex-1'>
                             <img
                                 src={imageEmpty}
-                                className='w-full h-full object-scale-down' 
+                                className='w-48 h-48 object-contain mb-4' 
                             />
-                            <Link onClick={close} to={"/"} className='block bg-green-600 px-4 py-2 text-white rounded'>Shop Now</Link>
+                            <p className='text-gray-600 mb-4 text-center'>Your cart is empty</p>
+                            <Link onClick={close} to={"/"} className='block bg-green-600 px-6 py-3 text-white rounded-lg hover:bg-green-700 transition-colors'>Shop Now</Link>
                         </div>
                     )
                 }
@@ -109,12 +110,12 @@ const DisplayCartItem = ({close}) => {
 
             {
                 cartItem[0] && (
-                    <div className='p-2'>
-                        <div className='bg-green-700 text-neutral-100 px-4 font-bold text-base py-4 static bottom-3 rounded flex items-center gap-4 justify-between'>
+                    <div className='p-2 border-t bg-white'>
+                        <div className='bg-green-700 text-neutral-100 px-4 font-bold text-base py-4 rounded flex items-center gap-4 justify-between'>
                             <div>
                                 {DisplayPriceInShillings(totalPrice)}
                             </div>
-                            <button onClick={redirectToCheckoutPage} className='flex items-center gap-1'>
+                            <button onClick={redirectToCheckoutPage} className='flex items-center gap-1 hover:bg-green-600 px-3 py-1 rounded transition-colors'>
                                 Proceed
                                 <span><FaCaretRight/></span>
                             </button>
