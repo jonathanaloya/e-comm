@@ -27,6 +27,8 @@ import Success from "../pages/Success";
 import Cancel from "../pages/Cancel";
 import FAQ from "../pages/FAQ";
 import ContactSupport from "../pages/ContactSupport";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
+import TermsOfService from "../pages/TermsOfService";
 
 
 
@@ -145,6 +147,14 @@ const router = createBrowserRouter([
             {
                 path: "contact-support",
                 element: <ContactSupport/>
+            },
+            {
+                path: "privacy-policy",
+                element: <PrivacyPolicy/>
+            },
+            {
+                path: "terms-of-service",
+                element: <TermsOfService/>
             }
         ],
     },

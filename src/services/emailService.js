@@ -631,6 +631,104 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
   }
 };
 
+// Send support ticket email to admin
+export const sendSupportTicketEmail = async (ticket) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email service not configured. Skipping support ticket notification.');
+      return { success: false, message: 'Email service not configured' };
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+    const priorityColors = {
+      low: '#4CAF50',
+      medium: '#FF9800', 
+      high: '#F44336'
+    };
+
+    const supportTemplate = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: ${priorityColors[ticket.priority]}; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; }
+            .ticket-details { background: #f9f9f9; padding: 15px; margin: 20px 0; }
+            .priority-badge { background: ${priorityColors[ticket.priority]}; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+            .message-box { background: #fff; border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 8px; }
+            .footer { background: #f1f1f1; padding: 20px; text-align: center; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎫 New Support Ticket</h1>
+              <p>Ticket ID: ${ticket.ticketId}</p>
+            </div>
+            
+            <div class="content">
+              <div class="ticket-details">
+                <h3>Ticket Information:</h3>
+                <p><strong>Ticket ID:</strong> ${ticket.ticketId}</p>
+                <p><strong>Priority:</strong> <span class="priority-badge">${ticket.priority.toUpperCase()}</span></p>
+                <p><strong>Status:</strong> ${ticket.status}</p>
+                <p><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleString()}</p>
+              </div>
+              
+              <div class="ticket-details">
+                <h3>Customer Information:</h3>
+                <p><strong>Name:</strong> ${ticket.name}</p>
+                <p><strong>Email:</strong> ${ticket.email}</p>
+                ${ticket.userId ? `<p><strong>User ID:</strong> ${ticket.userId}</p>` : '<p><em>Guest user</em></p>'}
+              </div>
+              
+              <div class="ticket-details">
+                <h3>Subject:</h3>
+                <p><strong>${ticket.subject}</strong></p>
+              </div>
+              
+              <div class="message-box">
+                <h3>Message:</h3>
+                <p>${ticket.message.replace(/\n/g, '<br>')}</p>
+              </div>
+              
+              <div class="ticket-details">
+                <h3>⚡ Action Required:</h3>
+                <p>Please respond to this support ticket promptly.</p>
+                <p>Reply directly to <strong>${ticket.email}</strong> or use your admin panel.</p>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p>Fresh Katale Support System</p>
+              <p>This is an automated notification for new support tickets</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: `"Fresh Katale Support" <${process.env.EMAIL_USER}>`,
+      to: adminEmail,
+      subject: `🎫 Support Ticket [${ticket.priority.toUpperCase()}] - ${ticket.subject}`,
+      html: supportTemplate,
+      replyTo: ticket.email
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Support ticket email sent to admin:', result.messageId);
+    
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending support ticket email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Test email configuration
 export const testEmailConfiguration = async () => {
   try {

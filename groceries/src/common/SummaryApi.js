@@ -158,6 +158,10 @@ const SummaryApi = {
     getOrderItems : {
         url : '/api/order/order-list',
         method : 'get'
+    },
+    createSupportTicket : {
+        url : '/api/support/create-ticket',
+        method : 'post'
     }
 }
 

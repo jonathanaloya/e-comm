@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { FaHeadset, FaEnvelope, FaWhatsapp, FaMapMarkerAlt, FaClock, FaQuestionCircle } from 'react-icons/fa'
 import { FaPhone } from "react-icons/fa6";
 import { useNavigate } from 'react-router-dom'
-import SupportContactForm from '../components/SupportContactForm'
+import SupportTicketForm from '../components/SupportTicketForm'
 
 const ContactSupport = () => {
   const [activeTab, setActiveTab] = useState('contact-form')
@@ -136,7 +136,7 @@ const ContactSupport = () => {
               <div className="p-6">
                 {activeTab === 'contact-form' && (
                   <div>
-                    <SupportContactForm />
+                    <SupportTicketForm />
                   </div>
                 )}
 
