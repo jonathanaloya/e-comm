@@ -7,9 +7,18 @@ const InstallPrompt = () => {
   const [showPrompt, setShowPrompt] = React.useState(false);
 
   React.useEffect(() => {
-    if (isInstallable) {
-      const timer = setTimeout(() => setShowPrompt(true), 3000);
-      return () => clearTimeout(timer);
+    // Check if app is already installed
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                         window.navigator.standalone || 
+                         document.referrer.includes('android-app://');
+    
+    // Only show prompt if installable and not already installed
+    if (isInstallable && !isStandalone) {
+      const hasSeenPrompt = localStorage.getItem('pwa-install-prompt-seen');
+      if (!hasSeenPrompt) {
+        const timer = setTimeout(() => setShowPrompt(true), 3000);
+        return () => clearTimeout(timer);
+      }
     }
   }, [isInstallable]);
 
@@ -40,7 +49,10 @@ const InstallPrompt = () => {
           Install
         </button>
         <button
-          onClick={() => setShowPrompt(false)}
+          onClick={() => {
+            setShowPrompt(false);
+            localStorage.setItem('pwa-install-prompt-seen', 'true');
+          }}
           className="border border-white/30 px-4 py-2 rounded text-sm"
         >
           Later
