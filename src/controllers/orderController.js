@@ -46,9 +46,30 @@ export async function CashOnDeliveryOrderController(request,response){
         const userId = request.userId // auth middleware 
         const { list_items, totalAmt, addressId, subTotalAmt } = request.body
         
+        // Validate required fields
+        if (!userId || !list_items || !Array.isArray(list_items) || list_items.length === 0 || !addressId) {
+            return response.status(400).json({
+                message: "Missing required fields: userId, list_items, or addressId",
+                error: true,
+                success: false
+            });
+        }
+        
+        // Validate each item in list_items
+        for (const item of list_items) {
+            if (!item.productId || !item.productId._id || !item.price || !item.quantity) {
+                return response.status(400).json({
+                    message: "Invalid item in list_items: missing productId, price, or quantity",
+                    error: true,
+                    success: false
+                });
+            }
+        }
+        
         // Calculate delivery fee for COD orders
-        const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, subTotalAmt || totalAmt);
-        const finalTotalAmt = totalAmt + deliveryFee;
+        const validTotalAmt = Number(totalAmt) || Number(subTotalAmt) || 0;
+        const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, validTotalAmt);
+        const finalTotalAmt = validTotalAmt + deliveryFee;
         
         console.log('COD Order totals:', {
             subTotal: subTotalAmt || totalAmt,
@@ -56,11 +77,12 @@ export async function CashOnDeliveryOrderController(request,response){
             finalTotal: finalTotalAmt
         });
 
-        // It's good practice to generate a unique ID for COD orders too,
-        // and perhaps store the totalAmt/subTotalAmt from the request,
-        // rather than recalculating line by line here if list_items is already aggregated.
-        // However, sticking to the existing logic for now.
         const payload = list_items.map(el => {
+            // Ensure price and quantity are valid numbers
+            const price = Number(el.price) || 0;
+            const quantity = Number(el.quantity) || 1;
+            const itemTotal = price * quantity;
+            
             return({
                 userId : userId,
                 orderId : `ORD-${new mongoose.Types.ObjectId()}`,
@@ -72,10 +94,10 @@ export async function CashOnDeliveryOrderController(request,response){
                 paymentId : "", // No paymentId for COD
                 payment_status : "CASH ON DELIVERY",
                 delivery_address : addressId ,
-                subTotalAmt  : el.price * el.quantity, // Individual item subtotal
-                totalAmt  :  el.price * el.quantity,   // Individual item total
-                deliveryFee: deliveryFee,   // Add delivery fee to COD orders
-                quantity: el.quantity || 1 // Ensure quantity is captured for COD items too
+                subTotalAmt  : itemTotal,
+                totalAmt  : itemTotal,
+                deliveryFee: deliveryFee,
+                quantity: quantity
             })
         })
 
