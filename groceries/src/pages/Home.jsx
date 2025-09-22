@@ -30,7 +30,7 @@ const Home = () => {
   return (
    <section className='bg-white'>
       <div className='container mx-auto'>
-          <div className={`w-full h-48 md:h-64 lg:h-80 bg-blue-100 rounded ${!banner && "animate-pulse my-2" } `}>
+          <div className={`w-full h-64 md:h-80 lg:h-96 bg-blue-100 rounded ${!banner && "animate-pulse my-2" } `}>
               <img
                 src={banner}
                 className='w-full h-full object-cover hidden lg:block'

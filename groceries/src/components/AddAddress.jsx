@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useForm } from "react-hook-form"
 import Axios from '../utils/Axios'
 import SummaryApi from '../common/SummaryApi'
@@ -8,12 +8,67 @@ import { IoClose } from "react-icons/io5";
 import { useGlobalContext } from '../provider/GlobalProvider'
 
 const AddAddress = ({close}) => {
-    const { register, handleSubmit,reset } = useForm()
+    const { register, handleSubmit, reset, setValue } = useForm()
     const { fetchAddress } = useGlobalContext()
+    const [isDetectingLocation, setIsDetectingLocation] = useState(false)
+    const [coordinates, setCoordinates] = useState(null)
+
+    const detectCurrentLocation = () => {
+        setIsDetectingLocation(true)
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const coords = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    }
+                    setCoordinates(coords)
+                    
+                    if (window.google && window.google.maps) {
+                        const geocoder = new google.maps.Geocoder()
+                        const latlng = new google.maps.LatLng(coords.lat, coords.lng)
+                        
+                        geocoder.geocode({ location: latlng }, (results, status) => {
+                            if (status === 'OK' && results[0]) {
+                                const addressComponents = results[0].address_components
+                                const formattedAddress = results[0].formatted_address
+                                
+                                let city = '', country = '', pincode = ''
+                                
+                                addressComponents.forEach(component => {
+                                    const types = component.types
+                                    if (types.includes('locality')) city = component.long_name
+                                    if (types.includes('country')) country = component.long_name
+                                    if (types.includes('postal_code')) pincode = component.long_name
+                                })
+                                
+                                setValue('addressline', formattedAddress)
+                                setValue('city', city)
+                                setValue('country', country)
+                                setValue('pincode', pincode)
+                                
+                                toast.success('Location detected successfully!')
+                            }
+                            setIsDetectingLocation(false)
+                        })
+                    } else {
+                        toast.error('Google Maps not loaded')
+                        setIsDetectingLocation(false)
+                    }
+                },
+                (error) => {
+                    toast.error('Could not detect location. Please enable location services.')
+                    setIsDetectingLocation(false)
+                }
+            )
+        } else {
+            toast.error('Geolocation is not supported by this browser')
+            setIsDetectingLocation(false)
+        }
+    }
 
     const onSubmit = async(data)=>{
-        console.log("data",data)
-    
         try {
             const response = await Axios({
                 ...SummaryApi.createAddress,
@@ -24,7 +79,8 @@ const AddAddress = ({close}) => {
                     address2 : data.address2,
                     country : data.country,
                     pincode : data.pincode,
-                    mobile : data.mobile
+                    mobile : data.mobile,
+                    coordinates: coordinates
                 }
             })
 
@@ -53,13 +109,28 @@ const AddAddress = ({close}) => {
             </div>
             <form className='mt-4 grid gap-4' onSubmit={handleSubmit(onSubmit)}>
                 <div className='grid gap-1'>
-                    <label htmlFor='addressline'>Address Line :</label>
+                    <div className='flex justify-between items-center'>
+                        <label htmlFor='addressline'>Address Line :</label>
+                        <button
+                            type='button'
+                            onClick={detectCurrentLocation}
+                            disabled={isDetectingLocation}
+                            className='text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 disabled:bg-gray-400'
+                        >
+                            {isDetectingLocation ? 'Detecting...' : '📍 Use Current Location'}
+                        </button>
+                    </div>
                     <input
                         type='text'
                         id='addressline' 
                         className='border bg-blue-50 p-2 rounded'
                         {...register("addressline",{required : true})}
                     />
+                    {coordinates && (
+                        <p className='text-xs text-green-600'>
+                            📍 Location detected - Delivery fee will be calculated based on distance
+                        </p>
+                    )}
                 </div>
                 <div className='grid gap-1'>
                     <label htmlFor='city'>City :</label>

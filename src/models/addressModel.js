@@ -47,6 +47,22 @@ const addressSchema = new mongoose.Schema({
     userId : {
         type : mongoose.Schema.ObjectId,
         default : ""
+    },
+
+    coordinates : {
+        lat: {
+            type: Number,
+            default: null
+        },
+        lng: {
+            type: Number,
+            default: null
+        }
+    },
+
+    distance : {
+        type: Number,
+        default: null // Distance in kilometers from store
     }
 },{
     timestamps : true

@@ -500,6 +500,137 @@ export const sendNewsletterConfirmation = async (email, name) => {
   }
 };
 
+// Send admin notification for new orders
+export const sendAdminOrderNotification = async (order, user, deliveryAddress) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email service not configured. Skipping admin notification.');
+      return { success: false, message: 'Email service not configured' };
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+    const itemsHtml = order.items?.map(item => `
+      <tr>
+        <td style="padding: 10px; border: 1px solid #ddd;">${item.product_details.name}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${item.quantity}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">UGX ${item.totalAmt.toLocaleString()}</td>
+      </tr>
+    `).join('') || '';
+
+    const totalAmount = order.totalAmount || order.items?.reduce((sum, item) => sum + item.totalAmt, 0) || 0;
+    const deliveryFee = order.deliveryFee || 0;
+    const distance = deliveryAddress?.distance ? `${Math.ceil(deliveryAddress.distance)}km` : 'N/A';
+    const coordinates = deliveryAddress?.coordinates ? 
+      `https://maps.google.com/maps?q=${deliveryAddress.coordinates.lat},${deliveryAddress.coordinates.lng}` : null;
+
+    const adminTemplate = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+            .header { background: #FF6B35; color: white; padding: 20px; text-align: center; }
+            .urgent { background: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin: 20px 0; }
+            .content { padding: 20px; }
+            .order-details { background: #f9f9f9; padding: 15px; margin: 20px 0; }
+            .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .location-box { background: #e3f2fd; padding: 15px; margin: 20px 0; border-radius: 8px; }
+            .footer { background: #f1f1f1; padding: 20px; text-align: center; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🚨 NEW ORDER RECEIVED</h1>
+              <p>Immediate Action Required</p>
+            </div>
+            
+            <div class="content">
+              <div class="urgent">
+                <h3>⚡ URGENT: New Order for Delivery</h3>
+                <p><strong>Order ID:</strong> ${order.mainOrderId || order.orderId}</p>
+                <p><strong>Payment Method:</strong> ${order.payment_status}</p>
+                <p><strong>Order Time:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+              </div>
+              
+              <div class="order-details">
+                <h3>Customer Information:</h3>
+                <p><strong>Name:</strong> ${user.name}</p>
+                <p><strong>Email:</strong> ${user.email}</p>
+                <p><strong>Phone:</strong> ${deliveryAddress?.mobile || 'Not provided'}</p>
+              </div>
+              
+              <div class="location-box">
+                <h3>📍 Delivery Location & Distance:</h3>
+                <p><strong>Address:</strong> ${deliveryAddress?.address_line || 'Not provided'}</p>
+                <p><strong>City:</strong> ${deliveryAddress?.city || 'Not provided'}</p>
+                <p><strong>Distance from Store:</strong> ${distance}</p>
+                <p><strong>Delivery Fee:</strong> UGX ${deliveryFee.toLocaleString()}</p>
+                ${coordinates ? `<p><strong>📍 View on Map:</strong> <a href="${coordinates}" target="_blank">Open in Google Maps</a></p>` : ''}
+              </div>
+              
+              ${itemsHtml ? `
+                <h3>Items to Prepare:</h3>
+                <table class="table">
+                  <thead>
+                    <tr style="background: #f5f5f5;">
+                      <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Product</th>
+                      <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Quantity</th>
+                      <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${itemsHtml}
+                  </tbody>
+                </table>
+              ` : ''}
+              
+              <div class="order-details">
+                <h3>💰 Order Summary:</h3>
+                <p><strong>Subtotal:</strong> UGX ${(totalAmount - deliveryFee).toLocaleString()}</p>
+                <p><strong>Delivery Fee:</strong> UGX ${deliveryFee.toLocaleString()}</p>
+                <p><strong>Total Amount:</strong> UGX ${totalAmount.toLocaleString()}</p>
+              </div>
+              
+              <div class="urgent">
+                <h3>⏰ Next Steps:</h3>
+                <ol>
+                  <li>Prepare the items listed above</li>
+                  <li>Contact customer at ${deliveryAddress?.mobile || user.email}</li>
+                  <li>Arrange delivery to the specified location</li>
+                  <li>Update order status in admin panel</li>
+                </ol>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p>Fresh Katale Admin System - Order Management</p>
+              <p>This is an automated notification for new orders</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: `"Fresh Katale System" <${process.env.EMAIL_USER}>`,
+      to: adminEmail,
+      subject: `🚨 NEW ORDER: ${order.mainOrderId || order.orderId} - ${order.payment_status} - UGX ${totalAmount.toLocaleString()}`,
+      html: adminTemplate
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Admin order notification sent:', result.messageId);
+    
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending admin order notification:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Test email configuration
 export const testEmailConfiguration = async () => {
   try {

@@ -115,7 +115,7 @@ export async function CashOnDeliveryOrderController(request,response){
         const removeCartItems = await Cart.deleteMany({ userId : userId })
         const updateInUser = await User.updateOne({ _id : userId }, { shopping_cart : []})
 
-        // Send order confirmation email
+        // Send order confirmation email and admin notification
         try {
             const user = await User.findById(userId)
             const address = await (await import('../models/addressModel.js')).default.findById(addressId)
@@ -138,11 +138,17 @@ export async function CashOnDeliveryOrderController(request,response){
                     }))
                 }
                 
+                // Send customer confirmation
                 await sendOrderConfirmationEmail(orderForEmail, user, address)
                 console.log('Order confirmation email sent for COD order:', generatedOrder[0].orderId)
+                
+                // Send admin notification
+                const { sendAdminOrderNotification } = await import('../services/emailService.js')
+                await sendAdminOrderNotification(orderForEmail, user, address)
+                console.log('Admin notification sent for COD order:', generatedOrder[0].orderId)
             }
         } catch (emailError) {
-            console.error('Failed to send order confirmation email:', emailError)
+            console.error('Failed to send order emails:', emailError)
             // Don't fail the order if email fails
         }
 
@@ -248,7 +254,7 @@ function calculateDeliveryFee(addressId, cartTotal = 0) {
   }
 }
 
-// Enhanced delivery fee calculation with address lookup
+// Enhanced delivery fee calculation with distance-based pricing
 export async function calculateDeliveryFeeWithAddress(addressId, cartTotal = 0) {
   try {
     // Import Address model dynamically to avoid circular dependency
@@ -256,7 +262,15 @@ export async function calculateDeliveryFeeWithAddress(addressId, cartTotal = 0) 
     
     if (addressId) {
       const address = await Address.findById(addressId);
-      if (address) {
+      if (address && address.coordinates) {
+        // Use distance-based calculation if coordinates are available
+        const distance = address.distance || calculateDistanceFromCoordinates(address.coordinates);
+        const deliveryFee = Math.ceil(distance) * 1000; // 1000 shillings per km, rounded up
+        
+        console.log(`Distance-based delivery fee: ${distance}km = ${deliveryFee} UGX`);
+        return deliveryFee;
+      } else if (address) {
+        // Fallback to zone-based calculation
         return calculateDeliveryFee(address, cartTotal);
       }
     }
@@ -266,6 +280,25 @@ export async function calculateDeliveryFeeWithAddress(addressId, cartTotal = 0) 
     console.error('Error in delivery fee calculation with address:', error);
     return calculateDeliveryFee(null, cartTotal);
   }
+}
+
+// Calculate distance from store location (Kampala coordinates)
+function calculateDistanceFromCoordinates(userCoordinates) {
+  const storeLocation = { lat: 0.3476, lng: 32.5825 }; // Kampala, Uganda
+  
+  // Haversine formula to calculate distance
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (userCoordinates.lat - storeLocation.lat) * Math.PI / 180;
+  const dLng = (userCoordinates.lng - storeLocation.lng) * Math.PI / 180;
+  
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(storeLocation.lat * Math.PI / 180) * Math.cos(userCoordinates.lat * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+  
+  return distance;
 }
 
 // Format phone number for Uganda mobile money
@@ -604,6 +637,11 @@ export async function verifyPaymentController(request, response) {
                 if (mainOrder) {
                     await sendOrderConfirmationEmail(mainOrder, user, address);
                     console.log('Order confirmation email sent for successful payment:', mainOrder.mainOrderId);
+                    
+                    // Send admin notification
+                    const { sendAdminOrderNotification } = await import('../services/emailService.js')
+                    await sendAdminOrderNotification(mainOrder, user, address)
+                    console.log('Admin notification sent for online payment:', mainOrder.mainOrderId)
                 }
             }
         } catch (emailError) {
@@ -833,14 +871,15 @@ export async function getOrderDetailsController(request,response){
     }
 }
 
-// API endpoint to calculate delivery fee
+// API endpoint to calculate delivery fee with distance
 export async function calculateDeliveryFeeController(request, response) {
     try {
-        const { addressId, cartTotal } = request.body;
+        const { addressId, cartTotal, coordinates } = request.body;
         
         console.log('Delivery fee calculation request:', {
             addressId,
             cartTotal,
+            coordinates,
             userId: request.userId
         });
         
@@ -852,6 +891,19 @@ export async function calculateDeliveryFeeController(request, response) {
             });
         }
 
+        // If coordinates are provided, update the address with coordinates and distance
+        if (coordinates && coordinates.lat && coordinates.lng) {
+            const { default: Address } = await import('../models/addressModel.js');
+            const distance = calculateDistanceFromCoordinates(coordinates);
+            
+            await Address.findByIdAndUpdate(addressId, {
+                coordinates: coordinates,
+                distance: distance
+            });
+            
+            console.log(`Updated address with coordinates and distance: ${distance}km`);
+        }
+
         const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, cartTotal);
         const finalTotal = cartTotal + deliveryFee;
         
@@ -859,7 +911,8 @@ export async function calculateDeliveryFeeController(request, response) {
             addressId,
             cartTotal,
             deliveryFee,
-            finalTotal
+            finalTotal,
+            distance: coordinates ? calculateDistanceFromCoordinates(coordinates) : 'N/A'
         });
         
         return response.json({
@@ -868,6 +921,8 @@ export async function calculateDeliveryFeeController(request, response) {
                 deliveryFee: deliveryFee,
                 cartTotal: cartTotal,
                 finalTotal: finalTotal,
+                distance: coordinates ? Math.ceil(calculateDistanceFromCoordinates(coordinates)) : null,
+                pricePerKm: 1000,
                 isFreeDelivery: deliveryFee === 0
             },
             error: false,

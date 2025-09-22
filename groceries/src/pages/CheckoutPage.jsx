@@ -108,11 +108,18 @@ const CheckoutPage = () => {
         verifyPaymentOnBackend(transaction_id, tx_ref);
       } else if (status === 'cancelled') {
         toast.dismiss();
-        toast.error("Payment was cancelled or failed on Flutterwave.");
-        navigate("/payment-failed", { state: { tx_ref } });
+        toast.error("Payment was cancelled.");
+        // Reset processing state when payment is cancelled
+        setIsProcessing(false);
+        setPaymentMethod('');
+        // Clear URL parameters
+        navigate(location.pathname, { replace: true });
       } else {
         toast.dismiss();
         toast.error("Payment status unknown. Please check your order history.");
+        // Reset processing state for unknown status
+        setIsProcessing(false);
+        setPaymentMethod('');
       }
     }
   }, [location.search, navigate]); // Rerun when search params change
@@ -150,8 +157,11 @@ const CheckoutPage = () => {
 
   // Cash on Delivery handler
   const handleCashOnDelivery = async () => {
+    // Validate address selection first
     if (selectAddress === -1 || !addressList[selectAddress]?._id) {
-      toast.error("Please select an address before proceeding with Cash on Delivery.");
+      toast.error("Please select a delivery address first!");
+      // Scroll to address section
+      document.querySelector('.container')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
     if (cartItemsList.length === 0) {
@@ -199,10 +209,13 @@ const CheckoutPage = () => {
   };
 
   // Flutterwave Payment handlers
-  // This handler is now simplified as the backend initiates the payment redirect
+  // Online payment handler with proper validation
 const handleOnlinePaymentInitiation = async () => {
+  // Validate address selection first
   if (selectAddress === -1 || !addressList[selectAddress]?._id) {
-    toast.error("Please select an address before proceeding with Online Payment.");
+    toast.error("Please select a delivery address first!");
+    // Scroll to address section
+    document.querySelector('.container')?.scrollIntoView({ behavior: 'smooth' });
     return;
   }
 
@@ -258,7 +271,21 @@ const handleOnlinePaymentInitiation = async () => {
     if (responseData.success && responseData.data) {
       toast.dismiss();
       toast.success("Redirecting to payment gateway...");
-      // Note: We don't reset processing state here because user will be redirected
+      
+      // Listen for page visibility change to reset processing state if user returns
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          // Reset processing state when user returns to page
+          setTimeout(() => {
+            setIsProcessing(false);
+            setPaymentMethod('');
+          }, 2000); // Small delay to avoid immediate reset
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Redirect to payment gateway
       window.location.href = responseData.data;
     } else {
       toast.dismiss();
@@ -365,14 +392,16 @@ const handleOnlinePaymentInitiation = async () => {
           </div>
 
           <div className='w-full flex flex-col gap-4 mt-4'>
-            {/* Flutterwave Payment Button (now triggers backend initiation) */}
+            {/* Online Payment Button */}
             <button
               className={`py-2 px-4 font-semibold text-white rounded flex items-center justify-center gap-2 ${
-                isProcessing ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+                isProcessing && paymentMethod === 'ONLINE' ? 'bg-gray-400 cursor-not-allowed' : 
+                selectAddress === -1 ? 'bg-gray-400 cursor-not-allowed' :
+                'bg-green-600 hover:bg-green-700'
               }`}
               onClick={handleOnlinePaymentInitiation}
               disabled={
-                selectAddress === -1 || cartItemsList.length === 0 || finalTotal <= 0 || isProcessing || isCalculatingDelivery
+                selectAddress === -1 || cartItemsList.length === 0 || finalTotal <= 0 || (isProcessing && paymentMethod === 'ONLINE') || isCalculatingDelivery
               }
             >
               {isProcessing && paymentMethod === 'ONLINE' ? (
@@ -380,23 +409,29 @@ const handleOnlinePaymentInitiation = async () => {
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                   Processing...
                 </>
+              ) : selectAddress === -1 ? (
+                'Select Address First'
               ) : (
                 'Pay Online'
               )}
             </button>
-            {/* Cash on Delivery */}
+            {/* Cash on Delivery Button */}
             <button
               className={`py-2 px-4 border-2 font-semibold rounded flex items-center justify-center gap-2 ${
-                isProcessing ? 'border-gray-400 text-gray-400 cursor-not-allowed' : 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white'
+                isProcessing && paymentMethod === 'COD' ? 'border-gray-400 text-gray-400 cursor-not-allowed' :
+                selectAddress === -1 ? 'border-gray-400 text-gray-400 cursor-not-allowed' :
+                'border-green-600 text-green-600 hover:bg-green-600 hover:text-white'
               }`}
               onClick={handleCashOnDelivery}
-              disabled={selectAddress === -1 || cartItemsList.length === 0 || finalTotal <= 0 || isProcessing || isCalculatingDelivery}
+              disabled={selectAddress === -1 || cartItemsList.length === 0 || finalTotal <= 0 || (isProcessing && paymentMethod === 'COD') || isCalculatingDelivery}
             >
               {isProcessing && paymentMethod === 'COD' ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
                   Processing...
                 </>
+              ) : selectAddress === -1 ? (
+                'Select Address First'
               ) : (
                 'Cash on Delivery'
               )}
