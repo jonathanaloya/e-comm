@@ -1,13 +1,25 @@
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Placeholder email function - replace with your preferred email service
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 const sendEmail = async ({ sendTo, subject, html }) => {
     try {
-        console.log('Email would be sent to:', sendTo);
-        console.log('Subject:', subject);
-        // Add your email service implementation here
-        return { success: true };
+        const { data, error } = await resend.emails.send({
+            from: 'Fresh Katale <onboarding@resend.dev>',
+            to: [sendTo],
+            subject: subject,
+            html: html,
+        });
+
+        if (error) {
+            console.error('Resend error:', error);
+            return { error };
+        }
+
+        console.log('Email sent via Resend:', data.id);
+        return { success: true, messageId: data.id };
     } catch (error) {
         console.error('Email error:', error);
         return { error };
