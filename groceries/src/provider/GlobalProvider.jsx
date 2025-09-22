@@ -130,7 +130,7 @@ const GlobalProvider = ({ children }) => {
         dispatch(setOrder(responseData.data));
       }
     } catch (error) {
-      console.log(error);
+      console.log('Order fetch error:', error);
     }
   };
 
@@ -138,7 +138,6 @@ const GlobalProvider = ({ children }) => {
     if (user?._id) {
       fetchCartItem();
       fetchAddress();
-      fetchOrder();
     }
   }, [user]);
 
