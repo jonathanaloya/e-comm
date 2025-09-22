@@ -46,7 +46,6 @@ app.use(cookieParser());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(morgan('combined'));
-app.use(generalLimiter);
 app.use(sanitizeInput);
 app.use(mongoSanitize());
 app.use(helmet({
@@ -86,16 +85,16 @@ app.get('/', (req, res) => {
 
 app.use('/api/user', authLimiter, sessionManager, userRouter);
 app.use('/api/category', categoryRouter);
-app.use('/api/file', uploadRouter)
+app.use('/api/file', generalLimiter, uploadRouter)
 app.use('/api/subcategory', subCategoryRouter)
 
 app.use('/api/product', productRouter)
 app.use('/api/cart', sessionManager, cartRouter)
 app.use('/api/order', paymentLimiter, sessionManager, orderRouter)
 app.use('/api/address', sessionManager, addressRouter)
-app.use('/api/admin', adminRouter)
-app.use('/api/newsletter', newsletterRouter)
-app.use('/api/support', supportRouter)
+app.use('/api/admin', generalLimiter, adminRouter)
+app.use('/api/newsletter', generalLimiter, newsletterRouter)
+app.use('/api/support', generalLimiter, supportRouter)
 
 
 connectDB().then(() => {
