@@ -59,7 +59,7 @@ const ContactSupport = () => {
               className="w-full text-center group"
             >
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
-                <FaPhone className="text-blue-600 text-2xl block md:hidden relative -top-1" />
+                <FaPhone className="text-blue-600 text-2xl" />
               </div>
               <h3 className="font-semibold text-gray-800 mb-2">Call Us</h3>
               <p className="text-gray-600 text-sm mb-4">Speak directly with our team</p>
