@@ -57,11 +57,19 @@ export async function CashOnDeliveryOrderController(request,response){
         
         // Validate each item in list_items
         for (const item of list_items) {
-            if (!item.productId || !item.productId._id || !item.price || !item.quantity) {
+            if (!item.productId || !item.productId._id || (!item.price && !item.productId.price) || !item.quantity) {
+                console.log('Invalid item structure:', JSON.stringify(item, null, 2));
                 return response.status(400).json({
                     message: "Invalid item in list_items: missing productId, price, or quantity",
                     error: true,
-                    success: false
+                    success: false,
+                    debug: {
+                        hasProductId: !!item.productId,
+                        hasProductIdId: !!item.productId?._id,
+                        hasPrice: !!item.price,
+                        hasProductPrice: !!item.productId?.price,
+                        hasQuantity: !!item.quantity
+                    }
                 });
             }
         }
@@ -79,7 +87,7 @@ export async function CashOnDeliveryOrderController(request,response){
 
         const payload = list_items.map(el => {
             // Ensure price and quantity are valid numbers
-            const price = Number(el.price) || 0;
+            const price = Number(el.price) || Number(el.productId?.price) || 0;
             const quantity = Number(el.quantity) || 1;
             const itemTotal = price * quantity;
             
