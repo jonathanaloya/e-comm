@@ -21,7 +21,7 @@ import Category from "../pages/Category";
 import AdminPermission from "../layouts/AdminPermission";
 import ProductListPage from "../pages/ProductListPage";
 import ProductDisplayPage from "../pages/ProductDisplayPage";
-import CartMobile from "../pages/CartMobile";
+import Cart from "../pages/Cart";
 import CheckoutPage from "../pages/CheckoutPage";
 import Success from "../pages/Success";
 import Cancel from "../pages/Cancel";
@@ -126,7 +126,7 @@ const router = createBrowserRouter([
             },
             {
                 path : 'cart',
-                element : <CartMobile/>
+                element : <Cart/>
             },
             {
                 path : "checkout",

@@ -30,10 +30,10 @@ const GlobalProvider = ({ children }) => {
 
       if (responseData.success) {
         dispatch(handleAddItemCart(responseData.data));
-        console.log(responseData);
+        console.log('Cart items loaded:', responseData.data);
       }
     } catch (error) {
-      console.log(error);
+      console.log('Cart fetch error:', error);
     }
   };
 
@@ -135,10 +135,11 @@ const GlobalProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchCartItem();
-    handleLogoutOut();
-    fetchAddress();
-    fetchOrder();
+    if (user?._id) {
+      fetchCartItem();
+      fetchAddress();
+      fetchOrder();
+    }
   }, [user]);
 
   return (
