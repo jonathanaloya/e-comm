@@ -30,15 +30,15 @@ const Home = () => {
   return (
    <section className='bg-white'>
       <div className='container mx-auto'>
-          <div className={`w-full h-full min-h-48 bg-blue-100 rounded ${!banner && "animate-pulse my-2" } `}>
+          <div className={`w-full h-48 md:h-64 lg:h-80 bg-blue-100 rounded ${!banner && "animate-pulse my-2" } `}>
               <img
                 src={banner}
-                className='w-full h-full hidden lg:block'
+                className='w-full h-full object-cover hidden lg:block'
                 alt='banner' 
               />
               <img
                 src={bannerMobile}
-                className='w-full h-full lg:hidden'
+                className='w-full h-full object-cover lg:hidden'
                 alt='banner' 
               />
           </div>
