@@ -68,11 +68,14 @@ function App() {
 }
     
   useEffect(() => {
+    // Always show UI after 100ms regardless of API status
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 100)
+    
     const initializeApp = async () => {
       try {
-        // Set loading to false immediately to show UI
-        setIsLoading(false)
-        // Load data in background
+        // Load data in background without blocking UI
         await Promise.all([
           fetchUser(),
           fetchCategory(),
@@ -84,9 +87,13 @@ function App() {
     }
     
     initializeApp()
+    
+    return () => clearTimeout(timer)
   },[])
 
-  // Remove blocking loading screen
+  if (isLoading) {
+    return <LoadingSpinner />
+  }
 
   return (
     <GlobalProvider> 
