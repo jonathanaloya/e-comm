@@ -184,7 +184,7 @@ const MyOrders = () => {
               <div className="bg-white p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">UGX {(orderGroup.totalAmount - (orderGroup.deliveryFee || 0)).toLocaleString()}</span>
+                  <span className="font-medium">UGX {orderGroup.totalAmount?.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Delivery Fee:</span>
@@ -194,7 +194,7 @@ const MyOrders = () => {
                 </div>
                 <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
                   <span>Total:</span>
-                  <span>UGX {orderGroup.totalAmount?.toLocaleString()}</span>
+                  <span>UGX {(orderGroup.totalAmount + (orderGroup.deliveryFee || 0)).toLocaleString()}</span>
                 </div>
               </div>
 
