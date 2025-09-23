@@ -68,6 +68,9 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Set loading to false immediately to show UI
+        setIsLoading(false)
+        // Load data in background
         await Promise.all([
           fetchUser(),
           fetchCategory(),
@@ -75,17 +78,13 @@ function App() {
         ])
       } catch (error) {
         console.error('App initialization error:', error)
-      } finally {
-        setIsLoading(false)
       }
     }
     
     initializeApp()
   },[])
 
-  if (isLoading) {
-    return <LoadingSpinner />
-  }
+  // Remove blocking loading screen
 
   return (
     <GlobalProvider> 

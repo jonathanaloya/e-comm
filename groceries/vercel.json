@@ -1,7 +1,9 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/((?!.*\\.).*)",
+      "source": "/((?!api|assets|favicon.ico|manifest.json|logo.jpg|sw.js|.*\\.).*)",
       "destination": "/index.html"
     }
   ],
@@ -12,6 +14,10 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
         }
       ]
     }
