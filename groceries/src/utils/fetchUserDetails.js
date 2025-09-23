@@ -8,7 +8,8 @@ const fetchUserDetails = async() => {
         })
         return response.data
     } catch (error) {
-        console.log(error)
+        console.log('User not authenticated:', error.response?.status)
+        return { data: null, error: true }
     }
 }
 
