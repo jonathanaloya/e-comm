@@ -16,12 +16,16 @@ import CartMobileLink from './components/CartMobile';
 import FloatingHelpButton from './components/FloatingHelpButton';
 import InstallPrompt from './components/InstallPrompt';
 import LoadingSpinner from './components/LoadingSpinner';
+import useAutoLogout from './hooks/useAutoLogout';
 
 
 function App() {
   const dispatch = useDispatch()
   const location = useLocation()
   const [isLoading, setIsLoading] = useState(true)
+  
+  // Auto logout hook
+  useAutoLogout()
 
 
   const fetchUser = async() =>{

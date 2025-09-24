@@ -15,7 +15,10 @@ Axios.interceptors.request.use(
     if (accessToken){
         config.headers.Authorization = `Bearer ${accessToken}`
     }
-     
+    
+    // Add CSRF protection
+    config.headers['X-Requested-With'] = 'XMLHttpRequest'
+    
     return config
   }, 
   (error) => {
@@ -31,8 +34,9 @@ Axios.interceptors.request.use(
 
       if(error.response?.status === 401) {
         if (error.response?.data?.sessionExpired) {
-          localStorage.removeItem('accesstoken')
-          localStorage.removeItem('refreshToken')
+          // Clear all auth data securely
+          localStorage.clear()
+          sessionStorage.clear()
           toast.error('Session expired. Please login again.')
           window.location.href = '/login'
           return Promise.reject(error)
