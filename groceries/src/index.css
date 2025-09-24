@@ -4,9 +4,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Browser compatibility fixes */
+* {
+  box-sizing: border-box;
+}
+
 body{
-    font-family: "Lato", sans-serif;
+    font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-weight: 400;
     font-style: normal;
-    @apply bg-gray-100 text-neutral-800
+    @apply bg-gray-100 text-neutral-800;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Flexbox fallbacks */
+.flex {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+/* Grid fallbacks */
+@supports not (display: grid) {
+  .grid {
+    display: block;
+  }
 }
