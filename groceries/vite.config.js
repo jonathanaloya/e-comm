@@ -26,11 +26,5 @@ export default defineConfig({
     target: 'es2015',
     drop: ['console', 'debugger']
   },
-  css: {
-    postcss: {
-      plugins: [
-        require('autoprefixer')
-      ]
-    }
-  }
+
 })

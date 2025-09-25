@@ -14,13 +14,14 @@ import cartRouter from './routes/cartRoutes.js'
 import addressRouter from './routes/addressRoutes.js'
 import orderRouter from './routes/orderRoutes.js'
 import supportRouter from './routes/supportRoutes.js'
+import adminRouter from './routes/adminRoutes.js'
 
 dotenv.config()
 
 const app = express()
 app.use(cors({
     credentials : true,
-    origin : process.env.FRONTEND_URL
+    origin : process.env.FRONTEND_URL?.split(',') || ['http://localhost:3001', 'http://localhost:5173']
 }))
 app.use(express.json())
 app.use(cookieParser())
@@ -46,6 +47,8 @@ app.use('/api/cart',cartRouter)
 app.use('/api/address',addressRouter)
 app.use('/api/order',orderRouter)
 app.use('/api/support',supportRouter)
+app.use('/api/order/admin',adminRouter)
+app.use('/api/user/admin',adminRouter)
 
 connectDB().then(()=>{
     app.listen(PORT,()=>{

@@ -29,6 +29,7 @@ import FAQ from "../pages/FAQ";
 import ContactSupport from "../pages/ContactSupport";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import TermsOfService from "../pages/TermsOfService";
+import OrderTracking from "../pages/OrderTracking";
 
 
 
@@ -108,7 +109,8 @@ const router = createBrowserRouter([
                     {
                         path: "product",
                         element: <AdminPermission ><ProductAdmin /></AdminPermission>
-                    }
+                    },
+
                 ]
             },
             {
@@ -155,6 +157,10 @@ const router = createBrowserRouter([
             {
                 path: "terms-of-service",
                 element: <TermsOfService/>
+            },
+            {
+                path: "track-order/:orderId",
+                element: <OrderTracking/>
             }
         ],
     },

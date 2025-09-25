@@ -162,6 +162,11 @@ const SummaryApi = {
     createSupportTicket : {
         url : '/api/support/create-ticket',
         method : 'post'
+    },
+
+    getOrderTracking : {
+        url : '/api/order/tracking',
+        method : 'get'
     }
 }
 

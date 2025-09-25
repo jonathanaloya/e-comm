@@ -209,6 +209,16 @@ const MyOrders = () => {
                   </p>
                 </div>
               )}
+              
+              {/* Track Order Button */}
+              <div className="mt-4">
+                <a 
+                  href={`/track-order/${orderGroup.mainOrderId}`}
+                  className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Track Order
+                </a>
+              </div>
             </div>
           ))}
 
@@ -260,6 +270,16 @@ const MyOrders = () => {
                   </p>
                 </div>
               )}
+              
+              {/* Track Order Button */}
+              <div className="mt-4">
+                <a 
+                  href={`/track-order/${order.orderId}`}
+                  className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Track Order
+                </a>
+              </div>
             </div>
           ))}
         </div>
