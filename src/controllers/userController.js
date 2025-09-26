@@ -1,16 +1,16 @@
-import { CommandSucceededEvent } from 'mongodb';
-import bcrypt from 'bcryptjs';
-import User from '../models/userModel.js';
-import sendEmail from '../config/sendEmail.js';
-import verifyEmailTemplate from '../utilities/verifyEmailTemplate.js';
-import jwt from 'jsonwebtoken';
-import generateAccessToken from '../utilities/generateAccessToken.js';
-import generateRefreshToken from '../utilities/generateRefreshToken.js';
-import uploadImageCloudinary from '../utilities/updateImageCloudinary.js';
-import generateOtp from '../utilities/generateOtp.js';
-import forgotPasswordTemplate from '../utilities/forgotPasswordTemplate.js';
-import verifyRecaptcha from '../utilities/verifyRecaptcha.js';
-import loginOtpTemplate from '../utilities/loginOtpTemplate.js';
+import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
+import User from '../models/userModel.js'
+import sendEmail from '../config/sendEmail.js'
+import verifyEmailTemplate from '../utilities/verifyEmailTemplate.js'
+import jwt from 'jsonwebtoken'
+import generateAccessToken from '../utilities/generateAccessToken.js'
+import generateRefreshToken from '../utilities/generateRefreshToken.js'
+import uploadImageCloudinary from '../utilities/updateImageCloudinary.js'
+import generateOtp from '../utilities/generateOtp.js'
+import forgotPasswordTemplate from '../utilities/forgotPasswordTemplate.js'
+import verifyRecaptcha from '../utilities/verifyRecaptcha.js'
+import loginOtpTemplate from '../utilities/loginOtpTemplate.js'
 
 // Register user
 export async function registerUser(req, res) {
@@ -85,12 +85,14 @@ export async function verifyRegistrationOtp(req, res) {
       });
     }
 
-    if (user.login_otp !== otp) {
+    // Use secure comparison for OTP
+    if (!otp || !user.login_otp || 
+        !crypto.timingSafeEqual(Buffer.from(user.login_otp), Buffer.from(otp))) {
       return res.status(400).json({
         message: 'Invalid OTP',
         error: true,
         success: false
-      });
+      })
     }
 
     if (new Date() > user.login_otp_expiry) {
@@ -126,7 +128,16 @@ export async function verifyRegistrationOtp(req, res) {
 // Login user
 export async function loginUser(req, res) {
   try {
-    const { email, password, recaptchaToken, otp } = req.body; // Expect recaptchaToken and otp for 2FA
+    const { email, password, recaptchaToken, otp } = req.body
+    
+    // Input validation
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({
+        message: 'Invalid email format',
+        error: true,
+        success: false
+      })
+    }
 
     // --- Phase 1: Initial Login Request (without OTP, but with reCAPTCHA) ---
     if (!otp) { // If OTP is not provided, this is the first step of login
@@ -223,12 +234,14 @@ export async function loginUser(req, res) {
         })
       }
 
-      if (user.login_otp !== otp) {
+      // Use secure comparison to prevent timing attacks
+      if (!otp || !user.login_otp || user.login_otp.length !== otp.length || 
+          !crypto.timingSafeEqual(Buffer.from(user.login_otp), Buffer.from(otp))) {
         return res.status(400).json({
-          message: 'Invalid confirmation code.',
+          message: 'Invalid confirmation code',
           error: true,
           success: false
-        });
+        })
       }
 
       if (new Date() > user.login_otp_expiry) {
@@ -259,10 +272,10 @@ export async function loginUser(req, res) {
       })
 
       const cookiesOption = {
-        httpOnly : true,
-        secure : process.env.NODE_ENV === 'production',
-        sameSite : "None",
-        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours (reduced from 30 days)
       }
 
       res.cookie('accessToken', accesstoken, cookiesOption)
@@ -528,11 +541,13 @@ export async function verifyForgotPasswordOtp(req, res){
       })
     }
 
-    if(user.forgot_password_otp !== otp){
+    // Use secure comparison for OTP
+    if (!otp || !user.forgot_password_otp || 
+        !crypto.timingSafeEqual(Buffer.from(user.forgot_password_otp), Buffer.from(otp))) {
       return res.status(400).json({
-        message : "Invalid OTP",
-        error : true,
-        success : false
+        message: 'Invalid OTP',
+        error: true,
+        success: false
       })
     }
 

@@ -1,5 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 
+// Clear test tokens on app load
+if (typeof window !== 'undefined') {
+  const token = localStorage.getItem('adminToken')
+  if (token === 'test-token') {
+    localStorage.removeItem('adminToken')
+  }
+}
+
 const initialState = {
   user: null,
   isAuthenticated: false,
