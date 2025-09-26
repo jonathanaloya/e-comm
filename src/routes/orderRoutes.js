@@ -1,6 +1,7 @@
 import { Router } from 'express'
-import bodyParser from 'body-parser' // <<< NEW: Import bodyParser for webhook raw body
+import bodyParser from 'body-parser'
 import authMiddleware from '../middleware/authMiddleware.js'
+import { csrfProtection } from '../middleware/csrfProtection.js'
 import {
     CashOnDeliveryOrderController,
     getOrderDetailsController,
@@ -14,8 +15,8 @@ import {
 
 const orderRouter = Router()
 
-orderRouter.post("/cash-on-delivery",authMiddleware, CashOnDeliveryOrderController)
-orderRouter.post('/checkout',authMiddleware, paymentController) // This is your Flutterwave payment initiation
+orderRouter.post("/cash-on-delivery",authMiddleware, csrfProtection, CashOnDeliveryOrderController)
+orderRouter.post('/checkout',authMiddleware, csrfProtection, paymentController)
 orderRouter.get('/verify-payment',authMiddleware, verifyPaymentController)
 // This endpoint requires a specific body-parser setup to get the raw body
 orderRouter.post('/webhook', bodyParser.json({
@@ -40,6 +41,6 @@ orderRouter.post('/webhook', bodyParser.json({
 });
 
 orderRouter.get("/order-list",authMiddleware,getOrderDetailsController)
-orderRouter.post("/calculate-delivery-fee",authMiddleware,calculateDeliveryFeeController)
+orderRouter.post("/calculate-delivery-fee",authMiddleware, csrfProtection, calculateDeliveryFeeController)
 
 export default orderRouter

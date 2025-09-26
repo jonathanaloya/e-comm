@@ -264,7 +264,7 @@ const FAQ = () => {
                     {openItems[faq.id] && (
                       <div className="px-6 pb-4">
                         <div className="border-t border-gray-200 pt-4">
-                          <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                          <div className="text-gray-600 leading-relaxed whitespace-pre-line">{faq.answer}</div>
                         </div>
                       </div>
                     )}
