@@ -5,10 +5,10 @@ import { Navigate } from 'react-router-dom'
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useSelector(state => state.auth)
   
-  // Clear any test authentication on load
+  // Security: Validate token format
   React.useEffect(() => {
     const token = localStorage.getItem('adminToken')
-    if (token === 'test-token') {
+    if (token && token.length < 32) {
       localStorage.removeItem('adminToken')
       window.location.reload()
     }

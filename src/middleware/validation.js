@@ -1,4 +1,5 @@
 import validator from 'validator'
+import crypto from 'crypto'
 
 // Input validation middleware
 export const validateRegistration = (req, res, next) => {
@@ -69,7 +70,9 @@ export const validatePasswordReset = (req, res, next) => {
     errors.push('Password must contain at least one uppercase letter, one lowercase letter, and one number')
   }
 
-  if (newPassword !== confirmPassword) {
+  // Use secure comparison for password matching
+  if (!newPassword || !confirmPassword || 
+      !crypto.timingSafeEqual(Buffer.from(newPassword), Buffer.from(confirmPassword))) {
     errors.push('Passwords do not match')
   }
 

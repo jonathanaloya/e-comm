@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
+import session from 'express-session'
 import morgan from 'morgan'
 import connectDB from './config/database.js'
 import { generalLimiter, securityHeaders, sanitizeInput } from './middleware/security.js'
@@ -34,6 +35,19 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(cookieParser())
+
+// Session configuration for CSRF
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}))
+
 app.use(morgan('combined'))
 
 const PORT = 8080 || process.env.PORT

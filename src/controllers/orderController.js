@@ -1,13 +1,13 @@
-import Flutterwave from "flutterwave-node-v3";
-import Cart from "../models/cartProductModel.js";
-import Order from "../models/orderModel.js";
-import User from "../models/userModel.js";
-import mongoose from "mongoose";
-import { v4 as uuidv4 } from 'uuid';
-import crypto from 'crypto'; // NEW: Import crypto for webhook verification
-import dotenv from 'dotenv';
-import { sendOrderConfirmationEmail } from '../services/emailService.js';
-dotenv.config();
+import Flutterwave from "flutterwave-node-v3"
+import Cart from "../models/cartProductModel.js"
+import Order from "../models/orderModel.js"
+import User from "../models/userModel.js"
+import mongoose from "mongoose"
+import { v4 as uuidv4 } from 'uuid'
+import crypto from 'crypto'
+import dotenv from 'dotenv'
+import { sendOrderConfirmationEmail } from '../services/emailService.js'
+dotenv.config()
 
 // Initialize Flutterwave with error handling
 let flw;
@@ -768,9 +768,11 @@ export async function webhookFlutterwaveController(request, response) {
       .update(JSON.stringify(request.body))
       .digest("hex");
 
-    if (hash !== request.headers["verif-hash"]) {
-      console.warn("Invalid webhook signature received");
-      return response.status(401).json({ message: "Invalid signature" });
+    // Use secure comparison to prevent timing attacks
+    const expectedHash = request.headers["verif-hash"]
+    if (!expectedHash || !crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expectedHash))) {
+      console.warn("Invalid webhook signature received")
+      return response.status(401).json({ message: "Invalid signature" })
     }
 
     const event = request.body;

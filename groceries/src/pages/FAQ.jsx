@@ -32,10 +32,7 @@ const FAQ = () => {
       id: 3,
       category: 'orders',
       question: 'How do I track my order?',
-      answer: `You can track your order by:
-      1. Going to "My Orders" in your account
-      2. Checking the order status updates sent via email and SMS
-      3. Contacting our support team with your order number for real-time updates.`
+      answer: "You can track your order by:\n1. Going to 'My Orders' in your account\n2. Checking the order status updates sent via email and SMS\n3. Contacting our support team with your order number for real-time updates."
     },
     {
       id: 4,

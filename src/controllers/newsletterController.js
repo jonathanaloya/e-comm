@@ -168,16 +168,29 @@ export const getNewsletterSubscribers = async (req, res) => {
       query.isActive = isActive === 'true';
     }
 
-    // Build preferences filter
+    // Build preferences filter with safe parsing
     const prefFilter = {};
     if (preferences) {
-      const prefObj = JSON.parse(preferences);
-      Object.keys(prefObj).forEach(key => {
-        if (prefObj[key] !== undefined) {
-          prefFilter[`preferences.${key}`] = prefObj[key];
+      try {
+        // Validate JSON string before parsing
+        if (typeof preferences === 'string' && preferences.length < 1000) {
+          const prefObj = JSON.parse(preferences);
+          // Only allow specific preference keys to prevent injection
+          const allowedKeys = ['promotions', 'newsletters', 'updates', 'offers'];
+          Object.keys(prefObj).forEach(key => {
+            if (allowedKeys.includes(key) && typeof prefObj[key] === 'boolean') {
+              prefFilter[`preferences.${key}`] = prefObj[key];
+            }
+          });
+          Object.assign(query, prefFilter);
         }
-      });
-      Object.assign(query, prefFilter);
+      } catch (parseError) {
+        return res.status(400).json({
+          message: 'Invalid preferences format',
+          error: true,
+          success: false
+        });
+      }
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);

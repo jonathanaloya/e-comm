@@ -54,20 +54,38 @@ export const useGeolocation = () => {
 
   const reverseGeocode = useCallback(async (lat, lng) => {
     try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
-      );
-      const data = await response.json();
+      // Validate coordinates to prevent SSRF
+      const latitude = parseFloat(lat)
+      const longitude = parseFloat(lng)
+      
+      if (isNaN(latitude) || isNaN(longitude) || 
+          latitude < -90 || latitude > 90 || 
+          longitude < -180 || longitude > 180) {
+        throw new Error('Invalid coordinates')
+      }
+      
+      // Use only trusted Google Maps API endpoint
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+      if (!apiKey) {
+        throw new Error('Google Maps API key not configured')
+      }
+      
+      const url = new URL('https://maps.googleapis.com/maps/api/geocode/json')
+      url.searchParams.set('latlng', `${latitude},${longitude}`)
+      url.searchParams.set('key', apiKey)
+      
+      const response = await fetch(url.toString())
+      const data = await response.json()
       
       if (data.status === 'OK' && data.results[0]) {
-        return parseAddressComponents(data.results[0]);
+        return parseAddressComponents(data.results[0])
       }
-      throw new Error('No address found');
+      throw new Error('No address found')
     } catch (error) {
-      console.error('Reverse geocoding error:', error);
-      return null;
+      console.error('Reverse geocoding error:', error)
+      return null
     }
-  }, []);
+  }, [])
 
   const parseAddressComponents = (result) => {
     const components = result.address_components;
