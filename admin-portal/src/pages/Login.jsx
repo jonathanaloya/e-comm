@@ -21,18 +21,13 @@ const Login = () => {
       if (response.data.success) {
         const { accesstoken, user } = response.data.data
         
-        // Allow any user to access admin (remove role check for now)
-        // if (user.role !== 'ADMIN') {
-        //   toast.error('Access denied. Admin privileges required.')
-        //   return
-        // }
-
         localStorage.setItem('adminToken', accesstoken)
         dispatch(setUser(user))
         toast.success('Login successful')
         navigate('/')
       }
     } catch (error) {
+      console.error('Login error:', error)
       toast.error(error.response?.data?.message || 'Login failed')
     } finally {
       setLoading(false)
@@ -78,6 +73,7 @@ const Login = () => {
                   onChange={(e) => setCredentials({...credentials, password: e.target.value})}
                 />
               </div>
+
             </div>
 
             <button

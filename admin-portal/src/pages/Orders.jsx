@@ -17,6 +17,7 @@ const Orders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true)
+      
       const response = await adminAPI.getAllOrders()
       
       if (response.data.success) {

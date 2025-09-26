@@ -17,6 +17,7 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
+      
       const [ordersRes, usersRes, productsRes] = await Promise.all([
         adminAPI.getAllOrders(),
         adminAPI.getAllUsers(),

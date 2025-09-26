@@ -12,6 +12,7 @@ const Products = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true)
+      
       const response = await adminAPI.getAllProducts()
       
       if (response.data.success) {

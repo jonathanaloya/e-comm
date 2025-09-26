@@ -12,6 +12,7 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true)
+      
       const response = await adminAPI.getAllUsers()
       
       if (response.data.success) {
