@@ -12,7 +12,7 @@ const userRouter = Router()
 // CSRF token endpoint
 userRouter.get('/csrf-token', getCSRFToken)
 
-userRouter.post('/register', csrfProtection, validateRegistration, registerUser)
+userRouter.post('/register', validateRegistration, registerUser)
 
 userRouter.post('/verify-registration-otp', verifyRegistrationOtp);
 
@@ -26,11 +26,11 @@ userRouter.put('/upload-avatar', authMiddleware, csrfProtection, upload.single('
 
 userRouter.put('/update-user', authMiddleware, csrfProtection, updateUserDetails)
 
-userRouter.put('/forgot-password', loginLimiter, csrfProtection, forgotPassword)
+userRouter.put('/forgot-password', loginLimiter, forgotPassword)
 
 userRouter.put('/verify-forgot-password-otp', verifyForgotPasswordOtp);
 
-userRouter.put('/reset-password', loginLimiter, csrfProtection, validatePasswordReset, resetPassword)
+userRouter.put('/reset-password', loginLimiter, validatePasswordReset, resetPassword)
 
 userRouter.post('/refresh-token', refreshToken);
 

@@ -120,26 +120,28 @@ const CheckoutPage = () => {
     const tx_ref = query.get('tx_ref');
     const status = query.get('status'); // Flutterwave also sends a status like 'successful', 'cancelled'
 
+    console.log('Flutterwave redirect params:', { transaction_id, tx_ref, status });
+
     // If we have Flutterwave parameters, it means we've been redirected back
     if (transaction_id && tx_ref) {
-      // It's good practice to clear the URL parameters after processing
-      // navigate(location.pathname, { replace: true }); // uncomment if you want to clear URL params
+      // Clear URL parameters after processing
+      navigate(location.pathname, { replace: true });
 
       if (status === 'successful') {
         toast.loading("Verifying payment...");
         verifyPaymentOnBackend(transaction_id, tx_ref);
-      } else if (status === 'cancelled') {
+      } else if (status === 'cancelled' || !status) {
+        // Handle cancelled payments or when no status is provided (common for cancellations)
         toast.dismiss();
         toast.error("Payment was cancelled.");
         // Reset processing state when payment is cancelled
         setIsProcessing(false);
         setPaymentMethod('');
-        // Clear URL parameters
-        navigate(location.pathname, { replace: true });
       } else {
+        // For any other status, treat as failed/cancelled
         toast.dismiss();
-        toast.error("Payment status unknown. Please check your order history.");
-        // Reset processing state for unknown status
+        toast.error("Payment was not completed. Please try again.");
+        // Reset processing state for unknown/failed status
         setIsProcessing(false);
         setPaymentMethod('');
       }
