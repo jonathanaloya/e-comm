@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FaRegEye, FaRegEyeSlash } from 'react-icons/fa6'
 import toast from 'react-hot-toast'
 import Axios from '../utils/Axios'
 import SummaryApi from '../common/SummaryApi'
 import AxiosToastError from '../utils/AxiosToastError'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import fetchUserDetails from '../utils/fetchUserDetails'
 import { useDispatch } from 'react-redux'
 import { setUserDetails } from '../store/userSlice'
@@ -19,7 +19,11 @@ function Login() {
 
     const [ showPassword, setShowPassword ] = useState(false)
     const navigate = useNavigate()
+    const location = useLocation()
     const dispatch = useDispatch()
+
+    // Get redirect URL from query parameters
+    const redirectTo = new URLSearchParams(location.search).get('redirect') || '/'
     const handleChange = (e) => {
         const { name, value } = e.target
         setData((prev )=>{ 
@@ -52,7 +56,7 @@ function Login() {
                 if(response.data.requiresTwoFactor){
                     toast.success(response.data.message)
                     navigate('/login-otp-verification', {
-                        state: { email: data.email }
+                        state: { email: data.email, redirect: redirectTo }
                     })
                     setData({
                         email: '',
@@ -71,7 +75,7 @@ function Login() {
                         email: '',
                         password: '',
                     })
-                    navigate('/')
+                    navigate(redirectTo)
                 }
             }
 

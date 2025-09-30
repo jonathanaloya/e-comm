@@ -15,6 +15,9 @@ function LoginOtpVerification() {
     const inputRef = useRef([])
     const location = useLocation()
 
+    // Get redirect URL from state, default to home
+    const redirectTo = location?.state?.redirect || '/'
+
     useEffect(() => {
         if(!location?.state?.email){
             navigate('/login')
@@ -45,7 +48,7 @@ function LoginOtpVerification() {
                 dispatch(setUserDetails(userDetails.data))
 
                 setData(["","","","","",""])
-                navigate('/')
+                navigate(redirectTo)
             }
 
         } catch (error) {
