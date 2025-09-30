@@ -37,8 +37,8 @@ export const adminAPI = {
   login: (credentials) => api.post('/api/user/login', credentials),
   
   // Orders
-  getAllOrders: () => api.get('/api/order/admin/all-orders'),
-  updateOrderStatus: (data) => api.put('/api/order/admin/update-status', data),
+  getAllOrders: () => api.get('/api/admin/all-orders'),
+  updateOrderStatus: (data) => api.put('/api/admin/update-status', data),
   
   // Users
   getAllUsers: () => api.get('/api/user/admin/all-users'),
