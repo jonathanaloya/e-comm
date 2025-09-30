@@ -112,8 +112,11 @@ export async function CashOnDeliveryOrderController(request,response){
         const generatedOrder = await Order.insertMany(payload)
 
         ///remove from the cart
+        console.log('COD Order: Clearing cart for userId:', userId)
         const removeCartItems = await Cart.deleteMany({ userId : userId })
+        console.log('COD Order: Cart items deleted:', removeCartItems.deletedCount)
         const updateInUser = await User.updateOne({ _id : userId }, { shopping_cart : []})
+        console.log('COD Order: User shopping_cart cleared')
 
         // Send order confirmation email and admin notification
         try {

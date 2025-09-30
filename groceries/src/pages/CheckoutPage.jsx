@@ -13,9 +13,10 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'; // Added useL
 import FlutterwavePaymentButton from '../components/Flutterwave'; // Updated import
 import fetchUserDetails from '../utils/fetchUserDetails';
 import { setUserDetails } from '../store/userSlice';
+import { useGlobalContext } from '../provider/GlobalProvider';
 
 const CheckoutPage = () => {
-  const { notDiscountTotalPrice, totalPrice, totalQty, fetchCartItem, fetchOrder } = useGlobalContext();
+  const { notDiscountTotalPrice, totalPrice, totalQty, fetchCartItem, fetchOrder, fetchAddress } = useGlobalContext();
   const [openAddress, setOpenAddress] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -48,6 +49,14 @@ const CheckoutPage = () => {
       });
     }
   }, [user, dispatch]);
+
+  // Fetch addresses when component mounts and user is logged in
+  useEffect(() => {
+    if (user?._id && fetchAddress) {
+      console.log('CheckoutPage - Fetching addresses...');
+      fetchAddress();
+    }
+  }, [user?._id, fetchAddress]);
 
   // Function to calculate delivery fee
   const calculateDeliveryFee = async (addressIndex) => {
@@ -137,6 +146,8 @@ const CheckoutPage = () => {
         // Reset processing state when payment is cancelled
         setIsProcessing(false);
         setPaymentMethod('');
+        // Navigate to cancel page
+        navigate('/cancel');
       } else {
         // For any other status, treat as failed/cancelled
         toast.dismiss();
@@ -144,6 +155,8 @@ const CheckoutPage = () => {
         // Reset processing state for unknown/failed status
         setIsProcessing(false);
         setPaymentMethod('');
+        // Navigate to cancel page for failed payments too
+        navigate('/cancel');
       }
     }
   }, [location.search, navigate]); // Rerun when search params change
@@ -218,9 +231,19 @@ const CheckoutPage = () => {
 
       if (responseData.success) {
         toast.success(responseData.message);
-        if (fetchCartItem) fetchCartItem();
-        if (fetchOrder) fetchOrder();
-        navigate('/success', { state: { text: "Order" } });
+
+        // Clear cart and refresh data
+        if (fetchCartItem) {
+          await fetchCartItem();
+        }
+        if (fetchOrder) {
+          await fetchOrder();
+        }
+
+        // Small delay to ensure cart is cleared before navigation
+        setTimeout(() => {
+          navigate('/success', { state: { text: "Order" } });
+        }, 500);
       }
 
     } catch (error) {
@@ -477,7 +500,13 @@ const handleOnlinePaymentInitiation = async () => {
         </div>
       </div>
 
-      {openAddress && <AddAddress close={() => setOpenAddress(false)} />}
+      {openAddress && <AddAddress close={() => {
+        setOpenAddress(false);
+        // Refresh addresses after modal closes
+        if (fetchAddress) {
+          fetchAddress();
+        }
+      }} />}
     </section>
   );
 };

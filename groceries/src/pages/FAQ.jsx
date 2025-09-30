@@ -67,7 +67,7 @@ const FAQ = () => {
       id: 4,
       category: 'delivery',
       question: 'What are your delivery areas?',
-      answer: 'We deliver across Uganda with different delivery zones: \n1.  Kampala and suburbs - UGX 5,000 (Free above UGX 100,000)\n2. Major cities (Jinja, Mbarara, Gulu) - UGX 10,000 (Free above UGX 150,000)\n3. Rural areas - UGX 15,000 (Free above UGX 200,000).'
+      answer: 'We deliver across Uganda with different delivery zones: \n1.  Kampala and suburbs - UGX 5,000 (Free above UGX 100,000)\n2. Major cities (Jinja, Mbarara, Gulu) - UGX 10,000 (Free above UGX 150,000)\n3. Rural areas - UGX 15,000 (Free above UGX 200,000)'
     },
     {
       id: 5,
