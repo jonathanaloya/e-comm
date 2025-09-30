@@ -4,13 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { useGlobalContext } from '../provider/GlobalProvider';
 import { DisplayPriceInShillings } from '../utils/DisplayPriceInShillings';
 import AddAddress from '../components/AddAddress';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import AxiosToastError from '../utils/AxiosToastError';
 import Axios from '../utils/Axios';
 import SummaryApi from '../common/SummaryApi';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation, Link } from 'react-router-dom'; // Added useLocation
 import FlutterwavePaymentButton from '../components/Flutterwave'; // Updated import
+import fetchUserDetails from '../utils/fetchUserDetails';
+import { setUserDetails } from '../store/userSlice';
 
 const CheckoutPage = () => {
   const { notDiscountTotalPrice, totalPrice, totalQty, fetchCartItem, fetchOrder } = useGlobalContext();
@@ -24,10 +26,28 @@ const CheckoutPage = () => {
   const [selectAddress, setSelectAddress] = useState(addressList.length > 0 ? 0 : -1); // Default to first address if available
   const cartItemsList = useSelector(state => state.cartItem.cart);
   const user = useSelector(state => state.user.user);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation(); // To check URL params after redirect
 
-  const isLoggedIn = user?._id;
+  // Check both Redux state and localStorage for authentication
+  const isLoggedIn = user?._id || localStorage.getItem('accesstoken');
+
+  // Fetch user details if we have a token but no user data
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accesstoken');
+    if (accessToken && !user?._id) {
+      console.log('CheckoutPage - Fetching user details...');
+      fetchUserDetails().then(userData => {
+        if (userData && userData.data) {
+          console.log('CheckoutPage - User details loaded:', userData.data);
+          dispatch(setUserDetails(userData.data));
+        }
+      }).catch(error => {
+        console.log('CheckoutPage - Failed to fetch user details:', error);
+      });
+    }
+  }, [user, dispatch]);
 
   // Function to calculate delivery fee
   const calculateDeliveryFee = async (addressIndex) => {
