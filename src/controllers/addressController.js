@@ -45,13 +45,16 @@ export const getAddressController = async(req,res)=>{
         const userId = req.userId // middleware auth
 
         const data = await Address.find({ userId : userId }).sort({ createdAt : -1})
+        console.log('Backend: Fetched addresses for user', userId, ':', data.length, 'addresses')
+        console.log('Backend: Address statuses:', data.map(addr => ({ id: addr._id, status: addr.status })))
+
         return res.json({
             data : data,
             message : "Address Fetched Successfully",
             error : false,
             success : true
         })
-        
+
     } catch (error) {
         return res.status(500).json({
             message : error.message || error ,
@@ -93,12 +96,16 @@ export const updateAddressController = async(req,res)=>{
 
 export const deleteAddresscontroller = async(req,res)=>{
     try {
-        const userId = req.userId // auth middleware    
-        const { _id } = req.body 
+        const userId = req.userId // auth middleware
+        const { _id } = req.body
+
+        console.log('Backend: Disabling address', _id, 'for user', userId)
 
         const disableAddress = await Address.updateOne({ _id : _id, userId},{
             status : false
         })
+
+        console.log('Backend: Address disable result:', disableAddress)
 
         return res.json({
             message : "Address Deleted Successfully",
@@ -107,6 +114,7 @@ export const deleteAddresscontroller = async(req,res)=>{
             data : disableAddress
         })
     } catch (error) {
+        console.error('Backend: Error disabling address:', error)
         return res.status(500).json({
             message : error.message || error,
             error : true,

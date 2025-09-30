@@ -181,13 +181,13 @@ const CheckoutPage = () => {
         navigate("/success", { state: { text: "Order" } }); // Navigate to success page
       } else {
         toast.error(responseData.message || "Payment verification failed.");
-        navigate("/payment-failed", { state: { tx_ref, message: responseData.message } });
+        navigate("/cancel", { state: { tx_ref, message: responseData.message } });
       }
     } catch (error) {
       toast.dismiss();
       console.error("Error verifying payment with backend:", error);
       toast.error("An error occurred during payment verification.");
-      navigate("/payment-failed", { state: { tx_ref, message: "Network error during verification." } });
+      navigate("/cancel", { state: { tx_ref, message: "Network error during verification." } });
     }
   };
 

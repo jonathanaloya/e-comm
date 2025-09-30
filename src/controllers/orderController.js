@@ -364,9 +364,10 @@ export async function paymentController(request, response) {
       });
     }
 
-    // Calculate delivery fee based on address and cart total
-    const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, subTotalAmt || totalAmt);
-    const finalTotalAmt = totalAmt + deliveryFee;
+    // Calculate delivery fee based on subtotal (not the total that may already include delivery)
+    const subTotal = subTotalAmt || totalAmt;
+    const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, subTotal);
+    const finalTotalAmt = subTotal + deliveryFee;
     
     console.log('Order totals:', {
       subTotal: subTotalAmt || totalAmt,
@@ -425,7 +426,7 @@ export async function paymentController(request, response) {
       tx_ref: tx_ref,
       amount: finalTotalAmt, // Use final total including delivery fee
       currency: "UGX",
-      redirect_url: `https://e-comm-rho-five.vercel.app/success`,
+      redirect_url: `${process.env.FRONTEND_URL || 'https://e-comm-rho-five.vercel.app'}/checkout`,
       payment_options: "card,mobilemoneyuganda",
       customer: {
         email: user.email,
@@ -435,23 +436,25 @@ export async function paymentController(request, response) {
       customizations: {
         title: "Fresh Katale",
         description: `Payment for Order ${mainOrderId}`,
+        logo: "https://e-comm-rho-five.vercel.app/logo.jpg"
       },
       meta: {
         mainOrderId: mainOrderId,
         userId: userId.toString(),
-        expectedAmount: totalAmt,
+        expectedAmount: finalTotalAmt,
         expectedCurrency: "UGX"
       }
     };
 
     console.log("Initializing Flutterwave payment with payload:", {
       tx_ref,
-      amount: totalAmt,
+      amount: finalTotalAmt,
       currency: "UGX",
       customer: payload.customer,
       mainOrderId,
       formattedPhone: formatUgandaPhoneNumber(user.mobile),
-      originalPhone: user.mobile
+      originalPhone: user.mobile,
+      redirect_url: payload.redirect_url
     });
 
     // For hosted payments, we'll use direct HTTP API call to Flutterwave

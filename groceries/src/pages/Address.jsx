@@ -19,19 +19,25 @@ const Address = () => {
 
   const handleDisableAddress = async(id)=>{
     try {
+      console.log('Deleting address with ID:', id)
       const response = await Axios({
         ...SummaryApi.disableAddress,
         data : {
           _id : id
         }
       })
+      console.log('Delete response:', response.data)
       if(response.data.success){
         toast.success("Address Deleted Successfully")
-        if(fetchAddress){
-          fetchAddress()
-        }
+        // Add a small delay to ensure backend operation completes
+        setTimeout(() => {
+          if(fetchAddress){
+            fetchAddress()
+          }
+        }, 300)
       }
     } catch (error) {
+      console.error('Error deleting address:', error)
       AxiosToastError(error)
     }
   }
