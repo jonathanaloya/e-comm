@@ -6,11 +6,15 @@ import toast from 'react-hot-toast';
 // CSRF token management
 let csrfToken = null;
 
+// Create a basic axios instance for CSRF token fetching (before Axios is fully defined)
+const basicAxios = axios.create({
+  baseURL: baseURL,
+  withCredentials: true
+});
+
 const fetchCSRFToken = async () => {
   try {
-    const response = await axios.get(`${baseURL}${SummaryApi.csrfToken.url}`, {
-      withCredentials: true
-    });
+    const response = await basicAxios.get(SummaryApi.csrfToken.url);
     if (response.data.success) {
       csrfToken = response.data.csrfToken;
       sessionStorage.setItem('csrfToken', csrfToken);
@@ -79,8 +83,11 @@ Axios.interceptors.request.use(
 
         if (!originRequest._csrfRetry) {
           originRequest._csrfRetry = true;
-          // Fetch new CSRF token and retry
-          await getCSRFToken();
+          // Fetch new CSRF token and update request headers
+          const newToken = await getCSRFToken();
+          if (newToken) {
+            originRequest.headers['x-csrf-token'] = newToken;
+          }
           return Axios(originRequest);
         }
       }
