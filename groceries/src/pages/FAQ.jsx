@@ -15,6 +15,35 @@ const FAQ = () => {
     }))
   }
 
+  // Function to format answers with steps as ordered lists
+  const formatAnswer = (answer) => {
+    // Check if answer contains numbered steps (1), 2), etc.)
+    const hasSteps = /\d+\)/.test(answer)
+
+    if (hasSteps) {
+      // Split answer by numbered steps and create a list
+      const steps = answer.split(/\d+\)\s*/).filter(step => step.trim())
+
+      return (
+        <div className="space-y-3">
+          {steps.map((step, index) => (
+            <div key={index} className="flex gap-3">
+              <span className="font-medium text-primary-600 flex-shrink-0">{index + 1}.</span>
+              <span className="text-gray-600">{step.trim()}</span>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    // For answers without steps, use regular formatting
+    return (
+      <div className="text-gray-600 leading-relaxed whitespace-pre-line">
+        {answer}
+      </div>
+    )
+  }
+
   const faqData = [
     {
       id: 1,
@@ -264,7 +293,7 @@ const FAQ = () => {
                     {openItems[faq.id] && (
                       <div className="px-6 pb-4">
                         <div className="border-t border-gray-200 pt-4">
-                          <div className="text-gray-600 leading-relaxed whitespace-pre-line">{faq.answer}</div>
+                          {formatAnswer(faq.answer)}
                         </div>
                       </div>
                     )}
