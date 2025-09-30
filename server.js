@@ -26,8 +26,7 @@ dotenv.config();
 
 const app = express();
 const allowedOrigins = [
-  'https://e-comm-rho-five.vercel.app',
-  'http://localhost:5173'
+  'https://e-comm-rho-five.vercel.app'
 ];
 
 app.use(cors({

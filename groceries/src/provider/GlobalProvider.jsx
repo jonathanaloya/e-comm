@@ -110,20 +110,16 @@ const GlobalProvider = ({ children }) => {
 
   const fetchAddress = async () => {
     try {
-      console.log('GlobalProvider: Fetching addresses...')
       const response = await Axios({
         ...SummaryApi.getAddress,
       });
 
       const { data: responseData } = response;
-      console.log('GlobalProvider: Address fetch response:', responseData)
 
       if (responseData.success) {
-        console.log('GlobalProvider: Dispatching addresses to Redux:', responseData.data?.length || 0, 'addresses')
         dispatch(handleAddAddress(responseData.data));
       }
     } catch (error) {
-      console.error('GlobalProvider: Address fetch error:', error)
       // AxiosToastError(error)
     }
   };
@@ -138,7 +134,6 @@ const GlobalProvider = ({ children }) => {
         dispatch(setOrder(responseData.data));
       }
     } catch (error) {
-      console.log('Order fetch error:', error);
     }
   };
 
