@@ -16,7 +16,7 @@ import {
 const orderRouter = Router()
 
 orderRouter.post("/cash-on-delivery",authMiddleware, csrfProtection, CashOnDeliveryOrderController)
-orderRouter.post('/checkout', paymentController)
+orderRouter.post('/checkout', authMiddleware, csrfProtection, paymentController)
 orderRouter.get('/verify-payment',authMiddleware, verifyPaymentController)
 // This endpoint requires a specific body-parser setup to get the raw body
 orderRouter.post('/webhook', bodyParser.json({
