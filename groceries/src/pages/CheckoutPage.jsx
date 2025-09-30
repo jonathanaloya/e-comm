@@ -176,8 +176,13 @@ const CheckoutPage = () => {
 
       if (responseData.success) {
         toast.success(responseData.message || "Payment verified and order placed successfully!");
-        if (fetchCartItem) fetchCartItem(); // Refresh cart
-        if (fetchOrder) fetchOrder();       // Refresh order history
+        console.log('Payment successful, refreshing cart and orders...');
+        if (fetchCartItem) {
+          fetchCartItem().then(() => console.log('Cart refreshed after payment'));
+        }
+        if (fetchOrder) {
+          fetchOrder().then(() => console.log('Orders refreshed after payment'));
+        }
         navigate("/success", { state: { text: "Order" } }); // Navigate to success page
       } else {
         toast.error(responseData.message || "Payment verification failed.");

@@ -426,7 +426,7 @@ export async function paymentController(request, response) {
       tx_ref: tx_ref,
       amount: finalTotalAmt, // Use final total including delivery fee
       currency: "UGX",
-      redirect_url: `${process.env.FRONTEND_URL || 'https://e-comm-rho-five.vercel.app'}/checkout`,
+      redirect_url: `${process.env.NODE_ENV === 'production' ? (process.env.FRONTEND_URL || 'https://e-comm-rho-five.vercel.app') : 'http://localhost:5173'}/checkout`,
       payment_options: "card,mobilemoneyuganda",
       customer: {
         email: user.email,
@@ -608,9 +608,13 @@ export async function verifyPaymentController(request, response) {
 
         // Clear user's cart after successful payment
         const userId = pendingOrders[0].userId;
-        await Cart.deleteMany({ userId: userId });
-        await User.updateOne({ _id: userId }, { shopping_cart: [] });
-        console.log(`Cleared cart for user ${userId} after successful payment verification`);
+        console.log(`Clearing cart for user ${userId} after successful payment verification`);
+
+        const cartDeleteResult = await Cart.deleteMany({ userId: userId });
+        console.log(`Deleted ${cartDeleteResult.deletedCount} cart items for user ${userId}`);
+
+        const userUpdateResult = await User.updateOne({ _id: userId }, { shopping_cart: [] });
+        console.log(`Updated user shopping_cart, modified: ${userUpdateResult.modifiedCount}`);
         
         // Send order confirmation email for successful payment
         try {
