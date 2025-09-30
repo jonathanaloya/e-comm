@@ -41,9 +41,16 @@ function Register() {
                 ...SummaryApi.register,
                 data : data
             })
-            
+
             if(response.data.error){
-                toast.error(response.data.message)    
+                // Check if there are specific validation errors
+                if (response.data.errors && response.data.errors.length > 0) {
+                    // Display the first validation error
+                    toast.error(response.data.errors[0])
+                } else {
+                    // Fallback to generic message
+                    toast.error(response.data.message)
+                }
             }
             if(response.data.success){
                 toast.success(response.data.message)
