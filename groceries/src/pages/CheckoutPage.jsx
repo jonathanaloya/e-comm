@@ -9,7 +9,7 @@ import AxiosToastError from '../utils/AxiosToastError';
 import Axios from '../utils/Axios';
 import SummaryApi from '../common/SummaryApi';
 import toast from 'react-hot-toast';
-import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
+import { useNavigate, useLocation, Link } from 'react-router-dom'; // Added useLocation
 import FlutterwavePaymentButton from '../components/Flutterwave'; // Updated import
 
 const CheckoutPage = () => {
