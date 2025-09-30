@@ -5,10 +5,10 @@ import cookieParser from 'cookie-parser'
 
 // Rate limiting
 export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  windowMs: 30 * 60 * 1000, // 30 minutes
+  max: 10, // 10 attempts per window
   message: {
-    message: 'Too many login attempts, please try again later',
+    message: 'Too many login attempts, please try again in 30 minutes',
     error: true,
     success: false
   },
