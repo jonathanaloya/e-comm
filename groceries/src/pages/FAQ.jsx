@@ -67,7 +67,7 @@ const FAQ = () => {
       id: 4,
       category: 'delivery',
       question: 'What are your delivery areas?',
-      answer: 'We deliver across Uganda with different delivery zones: 1) Kampala and suburbs - UGX 5,000 (Free above UGX 100,000), 2) Major cities (Jinja, Mbarara, Gulu) - UGX 10,000 (Free above UGX 150,000), 3) Rural areas - UGX 15,000 (Free above UGX 200,000).'
+      answer: 'We deliver across Uganda with different delivery zones: \n1.  Kampala and suburbs - UGX 5,000 (Free above UGX 100,000)\n2. Major cities (Jinja, Mbarara, Gulu) - UGX 10,000 (Free above UGX 150,000)\n3. Rural areas - UGX 15,000 (Free above UGX 200,000).'
     },
     {
       id: 5,
@@ -85,7 +85,7 @@ const FAQ = () => {
       id: 7,
       category: 'payment',
       question: 'What payment methods do you accept?',
-      answer: 'We accept: 1) Cash on Delivery (COD), 2) Credit/Debit Cards, 3) Mobile Money (MTN, Airtel), 4) Bank transfers. All online payments are secured with encryption.'
+      answer: 'We accept: \n1. Cash on Delivery (COD)\n2. Credit/Debit Cards\n3. Mobile Money (MTN, Airtel)\n4. Bank transfers. All online payments are secured with encryption.'
     },
     {
       id: 8,
@@ -151,7 +151,7 @@ const FAQ = () => {
       id: 18,
       category: 'technical',
       question: 'The website is not working properly. What should I do?',
-      answer: 'Try these steps: 1) Refresh the page, 2) Clear your browser cache and cookies, 3) Try a different browser, 4) Check your internet connection. If issues persist, contact our technical support team.'
+      answer: 'Try these steps: \n1. Refresh the page\n2. Clear your browser cache and cookies\n3. Try a different browser\n4. Check your internet connection. If issues persist, contact our technical support team.'
     },
     {
       id: 19,
