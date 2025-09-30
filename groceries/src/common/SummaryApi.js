@@ -3,6 +3,10 @@
 export const baseURL = "https://cse-341-project1-h1kw.onrender.com"
 
 const SummaryApi = {
+    csrfToken : {
+        url : '/api/user/csrf-token',
+        method : 'get'
+    },
     register : {
         url : '/api/user/register',
         method : 'post'

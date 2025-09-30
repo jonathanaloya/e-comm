@@ -3,6 +3,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import compression from 'compression';
+import session from 'express-session';
 import connectDB from './src/config/database.js';
 import userRouter from './src/routes/userRoutes.js';
 import cookieParser from 'cookie-parser';
@@ -43,6 +44,19 @@ app.use(cors({
 
 app.use(compression());
 app.use(cookieParser());
+
+// Session configuration for CSRF protection
+app.use(session({
+  secret: process.env.JWT_SECRET || 'fallback-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(morgan('combined'));

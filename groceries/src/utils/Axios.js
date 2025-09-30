@@ -3,6 +3,37 @@ import SummaryApi, { baseURL } from "../common/SummaryApi";
 import { refreshTokenIfNeeded } from './tokenManager';
 import toast from 'react-hot-toast';
 
+// CSRF token management
+let csrfToken = null;
+
+const fetchCSRFToken = async () => {
+  try {
+    const response = await axios.get(`${baseURL}${SummaryApi.csrfToken.url}`, {
+      withCredentials: true
+    });
+    if (response.data.success) {
+      csrfToken = response.data.csrfToken;
+      sessionStorage.setItem('csrfToken', csrfToken);
+      return csrfToken;
+    }
+  } catch (error) {
+    console.error('Failed to fetch CSRF token:', error);
+  }
+  return null;
+};
+
+const getCSRFToken = async () => {
+  // Try to get from memory first
+  if (csrfToken) return csrfToken;
+
+  // Try to get from sessionStorage
+  csrfToken = sessionStorage.getItem('csrfToken');
+  if (csrfToken) return csrfToken;
+
+  // Fetch new token
+  return await fetchCSRFToken();
+};
+
 const Axios = axios.create({
     baseURL: baseURL,
     withCredentials : true
@@ -15,12 +46,19 @@ Axios.interceptors.request.use(
     if (accessToken){
         config.headers.Authorization = `Bearer ${accessToken}`
     }
-    
-    // Add CSRF protection
+
+    // Add CSRF protection for non-GET requests
+    if (config.method !== 'get') {
+      const token = await getCSRFToken();
+      if (token) {
+        config.headers['x-csrf-token'] = token;
+      }
+    }
+
     config.headers['X-Requested-With'] = 'XMLHttpRequest'
-    
+
     return config
-  }, 
+  },
   (error) => {
     return Promise.reject(error)
   })
@@ -29,8 +67,23 @@ Axios.interceptors.request.use(
     (response) => {
       return response
     },
-    (error) => {
+    async (error) => {
       let originRequest = error.config
+
+      // Handle CSRF token errors
+      if (error.response?.status === 403 &&
+          error.response?.data?.message === 'Invalid CSRF token') {
+        // Clear invalid token and retry once
+        csrfToken = null;
+        sessionStorage.removeItem('csrfToken');
+
+        if (!originRequest._csrfRetry) {
+          originRequest._csrfRetry = true;
+          // Fetch new CSRF token and retry
+          await getCSRFToken();
+          return Axios(originRequest);
+        }
+      }
 
       if(error.response?.status === 401) {
         if (error.response?.data?.sessionExpired) {
