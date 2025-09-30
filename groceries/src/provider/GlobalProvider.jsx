@@ -23,17 +23,21 @@ const GlobalProvider = ({ children }) => {
 
   const fetchCartItem = async () => {
     try {
+      console.log('GlobalProvider: Fetching cart items...');
       const response = await Axios({
         ...SummaryApi.getCartItem,
       });
       const { data: responseData } = response;
+      console.log('GlobalProvider: Cart fetch response:', responseData);
 
       if (responseData.success) {
+        console.log('GlobalProvider: Setting cart items in Redux:', responseData.data?.length || 0, 'items');
         dispatch(handleAddItemCart(responseData.data));
-        console.log('Cart items loaded:', responseData.data);
+      } else {
+        console.log('GlobalProvider: Cart fetch failed:', responseData.message);
       }
     } catch (error) {
-      console.log('Cart fetch error:', error);
+      console.error('GlobalProvider: Cart fetch error:', error);
     }
   };
 

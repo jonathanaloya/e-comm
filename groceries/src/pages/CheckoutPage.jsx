@@ -290,16 +290,25 @@ const handleOnlinePaymentInitiation = async () => {
     const amountToSend = totalPrice; // Or include shipping if needed
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-    // Map cart items to match backend expectation
-    const listItems = cartItemsList.map(item => ({
-      productId: {
-        _id: item.productId._id.toString(), // ensure string
-        name: item.productId.name,
-        image: Array.isArray(item.productId.image) ? item.productId.image : [item.productId.image]
-      },
-      quantity: Number(item.quantity),
-      price: Number(item.productId.price) // ensure non-zero number
-    }));
+    // Map cart items to match backend expectation with discounted prices
+    const listItems = cartItemsList.map(item => {
+      // Calculate discounted price for each item
+      const originalPrice = Number(item.productId.price) || 0;
+      const discount = Number(item.productId.discount) || 0;
+      const discountedPrice = originalPrice - (originalPrice * discount / 100);
+
+      return {
+        productId: {
+          _id: item.productId._id.toString(), // ensure string
+          name: item.productId.name,
+          image: Array.isArray(item.productId.image) ? item.productId.image : [item.productId.image]
+        },
+        quantity: Number(item.quantity),
+        price: discountedPrice, // Use discounted price
+        originalPrice: originalPrice, // Keep original for reference
+        discount: discount
+      };
+    });
 
 
     const backendResponse = await Axios.post(

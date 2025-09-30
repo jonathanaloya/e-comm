@@ -86,8 +86,8 @@ export async function CashOnDeliveryOrderController(request,response){
         });
 
         const payload = list_items.map(el => {
-            // Ensure price and quantity are valid numbers
-            const price = Number(el.price) || Number(el.productId?.price) || 0;
+            // Use the discounted price sent from frontend, fallback to original price with discount calculation
+            const price = Number(el.price) || (Number(el.productId?.price) - (Number(el.productId?.price) * Number(el.discount || 0) / 100)) || 0;
             const quantity = Number(el.quantity) || 1;
             const itemTotal = price * quantity;
             
@@ -392,30 +392,34 @@ export async function paymentController(request, response) {
 
     // Create individual Order documents per item with unique orderId
     const orderPromises = list_items.map(async (item) => {
-  if (!item.productId || !item.productId._id || !item.productId.name || !item.productId.image || !item.price || !item.quantity) {
-    throw new Error("Invalid product item structure in list_items.");
-  }
+   if (!item.productId || !item.productId._id || !item.productId.name || !item.productId.image || !item.price || !item.quantity) {
+     throw new Error("Invalid product item structure in list_items.");
+   }
 
-  const uniqueOrderId = `ORD-${uuidv4()}`; // Only use UUID
+   // Use discounted price sent from frontend
+   const itemPrice = Number(item.price);
+   const itemTotal = itemPrice * item.quantity;
 
-  return Order.create({
-    userId,
-    orderId: uniqueOrderId,      // guaranteed unique
-    mainOrderId: mainOrderId,    // group ID
-    productId: item.productId._id,
-    product_details: {
-      name: item.productId.name,
-      image: Array.isArray(item.productId.image) ? item.productId.image : [item.productId.image],
-    },
-    delivery_address: addressId,
-    subTotalAmt: item.price * item.quantity,
-    totalAmt: item.price * item.quantity,
-    deliveryFee: deliveryFee, // Add delivery fee to each order item
-    quantity: item.quantity || 1, // Ensure quantity is saved
-    paymentId: tx_ref,
-    payment_status: "pending",
-  });
-    });
+   const uniqueOrderId = `ORD-${uuidv4()}`; // Only use UUID
+
+   return Order.create({
+     userId,
+     orderId: uniqueOrderId,      // guaranteed unique
+     mainOrderId: mainOrderId,    // group ID
+     productId: item.productId._id,
+     product_details: {
+       name: item.productId.name,
+       image: Array.isArray(item.productId.image) ? item.productId.image : [item.productId.image],
+     },
+     delivery_address: addressId,
+     subTotalAmt: itemTotal,  // Use discounted price total
+     totalAmt: itemTotal,     // Use discounted price total
+     deliveryFee: deliveryFee, // Add delivery fee to each order item
+     quantity: item.quantity || 1, // Ensure quantity is saved
+     paymentId: tx_ref,
+     payment_status: "pending",
+   });
+     });
 
 
     const createdOrderDocs = await Promise.all(orderPromises);
