@@ -129,11 +129,11 @@ export async function verifyRegistrationOtp(req, res) {
 export async function loginUser(req, res) {
   try {
     const { email, password, recaptchaToken, otp } = req.body
-    
-    // Input validation
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+
+    // Input validation - email is always required
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({
-        message: 'Invalid email format',
+        message: 'Valid email is required',
         error: true,
         success: false
       })
@@ -141,9 +141,17 @@ export async function loginUser(req, res) {
 
     // --- Phase 1: Initial Login Request (without OTP, but with reCAPTCHA) ---
     if (!otp) { // If OTP is not provided, this is the first step of login
-      if (!email || !password || !recaptchaToken){
+      if (!password) {
         return res.status(400).json({
-          message : "Please provide email, password, and reCAPTCHA verification",
+          message: 'Password is required',
+          error: true,
+          success: false
+        })
+      }
+
+      if (!recaptchaToken){
+        return res.status(400).json({
+          message : "reCAPTCHA verification is required",
           error : true,
           success : false
         })
@@ -216,11 +224,20 @@ export async function loginUser(req, res) {
 
     } else {
       // --- Phase 2: OTP Verification ---
-      if (!email || !otp){
+      if (!otp){
         return res.status(400).json({
-          message : "Please provide email and OTP",
+          message : "OTP is required",
           error : true,
           success : false
+        })
+      }
+
+      // Validate OTP format (should be numeric)
+      if (!/^\d{6}$/.test(otp)) {
+        return res.status(400).json({
+          message: 'OTP must be a 6-digit number',
+          error: true,
+          success: false
         })
       }
 
