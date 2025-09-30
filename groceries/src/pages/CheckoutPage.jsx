@@ -9,7 +9,7 @@ import AxiosToastError from '../utils/AxiosToastError';
 import Axios from '../utils/Axios';
 import SummaryApi from '../common/SummaryApi';
 import toast from 'react-hot-toast';
-import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
+import { useNavigate, useLocation, Link } from 'react-router-dom'; // Added Link
 import FlutterwavePaymentButton from '../components/Flutterwave'; // Updated import
 
 const CheckoutPage = () => {
@@ -23,9 +23,13 @@ const CheckoutPage = () => {
   const addressList = useSelector(state => state.addresses.addressList);
   const [selectAddress, setSelectAddress] = useState(addressList.length > 0 ? 0 : -1); // Default to first address if available
   const cartItemsList = useSelector(state => state.cartItem.cart);
-  const user = useSelector(state => state.user.user);
+  const user = useSelector(state => state.user.user); // This correctly gets the user object
   const navigate = useNavigate();
   const location = useLocation(); // To check URL params after redirect
+
+  // --- Start: Added for Login Prompt ---
+  const isLoggedIn = user?._id; // Simple boolean check for logged-in status
+  // --- End: Added for Login Prompt ---
 
   // Function to calculate delivery fee
   const calculateDeliveryFee = async (addressIndex) => {
@@ -46,7 +50,7 @@ const CheckoutPage = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // This assumes token is present
           },
         }
       );
@@ -62,6 +66,8 @@ const CheckoutPage = () => {
       }
     } catch (error) {
       console.error('Error calculating delivery fee:', error);
+      // Fallback: If no token or server error, assume default delivery fee.
+      // You might want to handle unauthorized errors specifically (e.g., toast.error("Please login to calculate delivery fee."))
       setDeliveryFee(8000); // Default delivery fee on error
       setFinalTotal(totalPrice + 8000);
     } finally {
@@ -73,19 +79,24 @@ const CheckoutPage = () => {
   useEffect(() => {
     if (addressList.length > 0 && selectAddress === -1) {
       setSelectAddress(0);
-      calculateDeliveryFee(0);
+      // Only calculate delivery if logged in, otherwise it might fail without token
+      if (isLoggedIn) calculateDeliveryFee(0);
     }
     if (addressList.length === 0) setSelectAddress(-1);
-  }, [addressList]);
+  }, [addressList, isLoggedIn]); // Add isLoggedIn to dependency array
 
   // Calculate delivery fee when address or total price changes
   useEffect(() => {
-    if (selectAddress !== -1) {
+    if (selectAddress !== -1 && isLoggedIn) { // Only calculate if logged in
       calculateDeliveryFee(selectAddress);
+    } else if (!isLoggedIn) {
+        // Reset delivery fee and final total if not logged in and can't calculate
+        setDeliveryFee(0);
+        setFinalTotal(totalPrice);
     }
-  }, [selectAddress, totalPrice]);
+  }, [selectAddress, totalPrice, isLoggedIn]); // Add isLoggedIn to dependency array
 
-  // Prepare customer info for Flutterwave
+  // Prepare customer info for Flutterwave - ensure these are only used if user is logged in
   const customerEmail = user?.email || "";
   const customerName = user?.name || "";
   const customerPhone = addressList[selectAddress]?.mobile || user?.mobile || "";
@@ -100,33 +111,39 @@ const CheckoutPage = () => {
 
     // If we have Flutterwave parameters, it means we've been redirected back
     if (transaction_id && tx_ref) {
-      // It's good practice to clear the URL parameters after processing
-      // navigate(location.pathname, { replace: true }); // uncomment if you want to clear URL params
-
       if (status === 'successful') {
-        toast.loading("Verifying payment...");
-        verifyPaymentOnBackend(transaction_id, tx_ref);
+        if (isLoggedIn) { // Only verify if logged in
+            toast.loading("Verifying payment...");
+            verifyPaymentOnBackend(transaction_id, tx_ref);
+        } else {
+            toast.dismiss();
+            toast.error("Please log in to finalize payment verification.");
+            navigate('/login?redirect=/checkout' + location.search); // Redirect to login with current search params
+        }
       } else if (status === 'cancelled') {
         toast.dismiss();
         toast.error("Payment was cancelled.");
-        // Reset processing state when payment is cancelled
         setIsProcessing(false);
         setPaymentMethod('');
-        // Clear URL parameters
         navigate(location.pathname, { replace: true });
       } else {
         toast.dismiss();
         toast.error("Payment status unknown. Please check your order history.");
-        // Reset processing state for unknown status
         setIsProcessing(false);
         setPaymentMethod('');
       }
     }
-  }, [location.search, navigate]); // Rerun when search params change
+  }, [location.search, navigate, isLoggedIn]); // Rerun when search params or login status change
 
 
   // Function to call your backend's verification endpoint
   const verifyPaymentOnBackend = async (transaction_id, tx_ref) => {
+    if (!isLoggedIn) {
+        toast.dismiss();
+        toast.error("You must be logged in to verify payment.");
+        navigate('/login?redirect=/checkout' + location.search);
+        return;
+    }
     try {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || process.env.REACT_APP_API_URL;
       const response = await Axios.get(
@@ -157,10 +174,14 @@ const CheckoutPage = () => {
 
   // Cash on Delivery handler
   const handleCashOnDelivery = async () => {
+    if (!isLoggedIn) {
+        toast.error("Please log in to place a Cash on Delivery order.");
+        navigate('/login?redirect=/checkout');
+        return;
+    }
     // Validate address selection first
     if (selectAddress === -1 || !addressList[selectAddress]?._id) {
       toast.error("Please select a delivery address first!");
-      // Scroll to address section
       document.querySelector('.container')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
@@ -208,13 +229,16 @@ const CheckoutPage = () => {
     }
   };
 
-  // Flutterwave Payment handlers
   // Online payment handler with proper validation
 const handleOnlinePaymentInitiation = async () => {
+  if (!isLoggedIn) {
+        toast.error("Please log in to proceed with online payment.");
+        navigate('/login?redirect=/checkout');
+        return;
+  }
   // Validate address selection first
   if (selectAddress === -1 || !addressList[selectAddress]?._id) {
     toast.error("Please select a delivery address first!");
-    // Scroll to address section
     document.querySelector('.container')?.scrollIntoView({ behavior: 'smooth' });
     return;
   }
@@ -319,7 +343,8 @@ const handleOnlinePaymentInitiation = async () => {
                     value={index}
                     onChange={() => {
                       setSelectAddress(index);
-                      calculateDeliveryFee(index);
+                      // Only calculate delivery if logged in
+                      if (isLoggedIn) calculateDeliveryFee(index);
                     }}
                     name='address'
                     checked={selectAddress === index}
@@ -337,9 +362,17 @@ const handleOnlinePaymentInitiation = async () => {
             )) : (
               <p className="text-center text-gray-500 py-4">No addresses found. Please add one.</p>
             )}
-            <div onClick={() => setOpenAddress(true)} className='h-16 bg-blue-50 border-2 border-dashed flex justify-center items-center cursor-pointer text-green-600 hover:text-green-700 hover:border-green-700'>
-              Add new address
-            </div>
+            {/* Show Add new address button only if logged in or allow guest address? */}
+            {isLoggedIn && ( // Only show "Add new address" if logged in
+              <div onClick={() => setOpenAddress(true)} className='h-16 bg-blue-50 border-2 border-dashed flex justify-center items-center cursor-pointer text-green-600 hover:text-green-700 hover:border-green-700'>
+                Add new address
+              </div>
+            )}
+             {!isLoggedIn && (
+                <div className='h-16 bg-gray-100 border-2 border-dashed flex justify-center items-center text-gray-400'>
+                    Log in to add new address
+                </div>
+            )}
           </div>
         </div>
 
@@ -366,8 +399,10 @@ const handleOnlinePaymentInitiation = async () => {
               <p className='flex items-center gap-2'>
                 {isCalculatingDelivery ? (
                   <span className="text-sm">Calculating...</span>
-                ) : deliveryFee === 0 ? (
+                ) : deliveryFee === 0 && isLoggedIn ? ( // Display "Free" only if logged in and calculated
                   <span className="text-green-600 font-medium">Free</span>
+                ) : !isLoggedIn ? (
+                  <span className="text-gray-500">Log in to calculate</span>
                 ) : (
                   <span>{DisplayPriceInShillings(deliveryFee)}</span>
                 )}
@@ -387,50 +422,68 @@ const handleOnlinePaymentInitiation = async () => {
           </div>
 
           <div className='w-full flex flex-col gap-4 mt-4'>
-            {/* Online Payment Button */}
-            <button
-              className={`py-2 px-4 font-semibold text-white rounded flex items-center justify-center gap-2 ${
-                isProcessing && paymentMethod === 'ONLINE' ? 'bg-gray-400 cursor-not-allowed' : 
-                selectAddress === -1 ? 'bg-gray-400 cursor-not-allowed' :
-                'bg-green-600 hover:bg-green-700'
-              }`}
-              onClick={handleOnlinePaymentInitiation}
-              disabled={
-                selectAddress === -1 || cartItemsList.length === 0 || finalTotal <= 0 || (isProcessing && paymentMethod === 'ONLINE') || isCalculatingDelivery
-              }
-            >
-              {isProcessing && paymentMethod === 'ONLINE' ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                  Processing...
-                </>
-              ) : selectAddress === -1 ? (
-                'Select Address First'
-              ) : (
-                'Pay Online'
-              )}
-            </button>
-            {/* Cash on Delivery Button */}
-            <button
-              className={`py-2 px-4 border-2 font-semibold rounded flex items-center justify-center gap-2 ${
-                isProcessing && paymentMethod === 'COD' ? 'border-gray-400 text-gray-400 cursor-not-allowed' :
-                selectAddress === -1 ? 'border-gray-400 text-gray-400 cursor-not-allowed' :
-                'border-green-600 text-green-600 hover:bg-green-600 hover:text-white'
-              }`}
-              onClick={handleCashOnDelivery}
-              disabled={selectAddress === -1 || cartItemsList.length === 0 || finalTotal <= 0 || (isProcessing && paymentMethod === 'COD') || isCalculatingDelivery}
-            >
-              {isProcessing && paymentMethod === 'COD' ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
-                  Processing...
-                </>
-              ) : selectAddress === -1 ? (
-                'Select Address First'
-              ) : (
-                'Cash on Delivery'
-              )}
-            </button>
+            {/* Conditional rendering for Login Prompt or Payment Buttons */}
+            {!isLoggedIn ? (
+              <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded" role="alert">
+                <p className="font-bold mb-2">Almost there!</p>
+                <p>To finalize your order and proceed with payment, please log in to your account.</p>
+                <Link
+                  to="/login?redirect=/checkout" // Redirect back to checkout after login
+                  className="mt-4 w-full block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors"
+                >
+                  Continue to Login
+                </Link>
+                {/* Optional: Add a guest checkout option if you implement it */}
+                {/* <p className="text-sm mt-2 text-center">Or <Link to="/guest-checkout" className="underline">continue as guest</Link></p> */}
+              </div>
+            ) : (
+              <>
+                {/* Online Payment Button */}
+                <button
+                  className={`py-2 px-4 font-semibold text-white rounded flex items-center justify-center gap-2 ${
+                    isProcessing && paymentMethod === 'ONLINE' ? 'bg-gray-400 cursor-not-allowed' :
+                    selectAddress === -1 ? 'bg-gray-400 cursor-not-allowed' :
+                    'bg-green-600 hover:bg-green-700'
+                  }`}
+                  onClick={handleOnlinePaymentInitiation}
+                  disabled={
+                    selectAddress === -1 || cartItemsList.length === 0 || finalTotal <= 0 || (isProcessing && paymentMethod === 'ONLINE') || isCalculatingDelivery
+                  }
+                >
+                  {isProcessing && paymentMethod === 'ONLINE' ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      Processing...
+                    </>
+                  ) : selectAddress === -1 ? (
+                    'Select Address First'
+                  ) : (
+                    'Pay Online'
+                  )}
+                </button>
+                {/* Cash on Delivery Button */}
+                <button
+                  className={`py-2 px-4 border-2 font-semibold rounded flex items-center justify-center gap-2 ${
+                    isProcessing && paymentMethod === 'COD' ? 'border-gray-400 text-gray-400 cursor-not-allowed' :
+                    selectAddress === -1 ? 'border-gray-400 text-gray-400 cursor-not-allowed' :
+                    'border-green-600 text-green-600 hover:bg-green-600 hover:text-white'
+                  }`}
+                  onClick={handleCashOnDelivery}
+                  disabled={selectAddress === -1 || cartItemsList.length === 0 || finalTotal <= 0 || (isProcessing && paymentMethod === 'COD') || isCalculatingDelivery}
+                >
+                  {isProcessing && paymentMethod === 'COD' ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                      Processing...
+                    </>
+                  ) : selectAddress === -1 ? (
+                    'Select Address First'
+                  ) : (
+                    'Cash on Delivery'
+                  )}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
