@@ -17,14 +17,16 @@ const DisplayCartItem = ({close}) => {
     const navigate = useNavigate()
 
     const redirectToCheckoutPage = ()=>{
-        if(user?._id){
+        if(user._id){
+            navigate("/checkout")
+            return
+        }else{
             navigate("/checkout")
             if(close){
                 close()
             }
             return
         }
-        toast("Please Login")
     }
   return (
     <section className='bg-neutral-900 fixed top-0 bottom-0 right-0 left-0 bg-opacity-70 z-50 flex justify-end'>

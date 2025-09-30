@@ -302,11 +302,6 @@ const handleOnlinePaymentInitiation = async () => {
   }
 };
 
-
-
-
-
-
   return (
     <section className='bg-blue-50'>
       <div className='container mx-auto p-4 flex flex-col lg:flex-row w-full gap-5 justify-between'>
