@@ -40,7 +40,7 @@ orderRouter.post('/webhook', bodyParser.json({
     await webhookFlutterwaveController(req, res); // Call your controller function
 });
 
-orderRouter.get("/order-list", authMiddleware, getOrderDetailsController)
-orderRouter.post("/calculate-delivery-fee",authMiddleware, csrfProtection, calculateDeliveryFeeController)
+orderRouter.get("/order-list", getOrderDetailsController)
+orderRouter.post("/calculate-delivery-fee", calculateDeliveryFeeController)
 
 export default orderRouter
