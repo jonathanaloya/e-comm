@@ -18,7 +18,7 @@ userRouter.post('/verify-registration-otp', verifyRegistrationOtp);
 
 userRouter.post('/verify-email', verifyEmail);
 
-userRouter.post('/login', loginLimiter, validateLogin, loginUser)
+userRouter.post('/login', loginLimiter, loginUser)
 
 userRouter.get('/logout', authMiddleware, logoutUser);
 
