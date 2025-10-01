@@ -37,11 +37,16 @@ const authMiddleware = (req, res, next) => {
     next()
 
   } catch (error) {
-    // Don't expose internal error details
+    // Check if it's a token expiration error
+    const isTokenExpired = error.name === 'TokenExpiredError' ||
+                          error.message?.includes('expired') ||
+                          error.message?.includes('jwt expired');
+
     return res.status(401).json({
-      message: 'Authentication failed',
+      message: isTokenExpired ? 'Session expired. Please login again.' : 'Authentication failed',
       error: true,
-      success: false
+      success: false,
+      sessionExpired: isTokenExpired
     })
   }
 };
