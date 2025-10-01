@@ -102,8 +102,11 @@ export async function CashOnDeliveryOrderController(request,response){
         const generatedOrder = await Order.insertMany(payload)
 
         ///remove from the cart
+        console.log('COD Order: Clearing cart for userId:', userId)
         const removeCartItems = await Cart.deleteMany({ userId : userId })
+        console.log('COD Order: Cart items deleted:', removeCartItems.deletedCount)
         const updateInUser = await User.updateOne({ _id : userId }, { shopping_cart : []})
+        console.log('COD Order: User shopping_cart cleared')
 
         // Send order confirmation email and admin notification
         try {
@@ -547,10 +550,13 @@ export async function verifyPaymentController(request, response) {
 
         // Clear user's cart after successful payment
         const userId = pendingOrders[0].userId;
+        console.log('Online Payment: Clearing cart for userId:', userId);
 
         const cartDeleteResult = await Cart.deleteMany({ userId: userId });
+        console.log('Online Payment: Cart items deleted:', cartDeleteResult.deletedCount);
 
         const userUpdateResult = await User.updateOne({ _id: userId }, { shopping_cart: [] });
+        console.log('Online Payment: User shopping_cart cleared');
         
         // Send order confirmation email for successful payment
         try {
@@ -727,8 +733,11 @@ export async function webhookFlutterwaveController(request, response) {
         
         // Clear user's cart if payment is successful
         if (meta?.userId) {
-          await Cart.deleteMany({ userId: meta.userId });
+          console.log('Webhook: Clearing cart for userId:', meta.userId);
+          const webhookCartDelete = await Cart.deleteMany({ userId: meta.userId });
+          console.log('Webhook: Cart items deleted:', webhookCartDelete.deletedCount);
           await User.updateOne({ _id: meta.userId }, { shopping_cart: [] });
+          console.log('Webhook: User shopping_cart cleared');
         }
       } else {
         const updateResult = await Order.updateMany(

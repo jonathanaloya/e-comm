@@ -29,15 +29,21 @@ const GlobalProvider = ({ children }) => {
       });
       const { data: responseData } = response;
       console.log('GlobalProvider: Cart fetch response:', responseData);
+      console.log('GlobalProvider: Cart data received:', responseData.data);
 
       if (responseData.success) {
         console.log('GlobalProvider: Setting cart items in Redux:', responseData.data?.length || 0, 'items');
-        dispatch(handleAddItemCart(responseData.data));
+        dispatch(handleAddItemCart(responseData.data || []));
+        console.log('GlobalProvider: Cart items set in Redux successfully');
       } else {
         console.log('GlobalProvider: Cart fetch failed:', responseData.message);
+        // Ensure empty cart on failure
+        dispatch(handleAddItemCart([]));
       }
     } catch (error) {
       console.error('GlobalProvider: Cart fetch error:', error);
+      // Ensure empty cart on error
+      dispatch(handleAddItemCart([]));
     }
   };
 

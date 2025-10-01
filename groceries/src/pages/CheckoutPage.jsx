@@ -13,6 +13,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'; // Added useL
 import FlutterwavePaymentButton from '../components/Flutterwave'; // Updated import
 import fetchUserDetails from '../utils/fetchUserDetails';
 import { setUserDetails } from '../store/userSlice';
+import { handleAddItemCart } from '../store/cartProduct';
 import { useGlobalContext } from '../provider/GlobalProvider';
 
 const CheckoutPage = () => {
@@ -176,7 +177,11 @@ const CheckoutPage = () => {
 
       if (responseData.success) {
         toast.success(responseData.message || "Payment verified and order placed successfully!");
-        console.log('Payment successful, refreshing cart and orders...');
+        console.log('Payment successful, clearing cart and refreshing data...');
+
+        // Immediately clear cart in Redux state
+        dispatch(handleAddItemCart([]));
+
         if (fetchCartItem) {
           fetchCartItem().then(() => console.log('Cart refreshed after payment'));
         }
@@ -237,7 +242,11 @@ const CheckoutPage = () => {
       if (responseData.success) {
         toast.success(responseData.message);
 
-        // Clear cart and refresh data
+        // Immediately clear cart in Redux state
+        console.log('COD: Clearing cart in Redux state');
+        dispatch(handleAddItemCart([]));
+
+        // Refresh data from backend (cart should already be empty)
         if (fetchCartItem) {
           await fetchCartItem();
         }
