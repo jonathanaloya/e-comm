@@ -6,7 +6,7 @@ export const generalLimiter = rateLimit({
   max: 5000, // limit each IP to 5000 requests per windowMs
   message: {
     error: true,
-    message: 'Too many requests, please try again later.'
+    message: 'Too many requests, please try again in 15 minutes.'
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -18,7 +18,7 @@ export const authLimiter = rateLimit({
   max: 50, // limit each IP to 50 requests per windowMs
   message: {
     error: true,
-    message: 'Too many authentication attempts, please try again later.'
+    message: 'Too many authentication attempts, please try again in 15 minutes.'
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -30,7 +30,7 @@ export const paymentLimiter = rateLimit({
   max: 10, // limit each IP to 10 payment requests per 5 minutes
   message: {
     error: true,
-    message: 'Too many payment attempts, please try again later.'
+    message: 'Too many payment attempts, please try again in 5 minutes.'
   },
   standardHeaders: true,
   legacyHeaders: false,

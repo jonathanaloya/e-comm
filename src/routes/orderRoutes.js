@@ -27,15 +27,10 @@ orderRouter.post('/webhook', bodyParser.json({
     const secretHash = process.env.FLUTTERWAVE_WEBHOOK_SECRET || process.env.FLW_SECRET_HASH;
     const signature = req.headers['verif-hash']; // Flutterwave webhook signature header
 
-    console.log("Received Flutterwave webhook. Attempting verification...");
-
     // First, verify the webhook signature using the utility from orderController
     if (!signature || !verifyFlutterwaveWebhook(signature, secretHash, req.rawBody)) {
-        console.warn('Invalid Flutterwave webhook signature received. Request rejected.');
         return res.status(401).send('Invalid webhook signature');
     }
-
-    console.log('Flutterwave webhook signature verified successfully. Calling controller...');
     // If verification passes, pass control to the webhookFlutterwaveController
     await webhookFlutterwaveController(req, res); // Call your controller function
 });

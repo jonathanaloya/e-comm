@@ -18,14 +18,11 @@ try {
   } else if (Flutterwave.default && typeof Flutterwave.default === 'function') {
     flw = new Flutterwave.default(process.env.FLUTTERWAVE_PUBLIC_KEY, process.env.FLUTTERWAVE_SECRET_KEY);
   } else {
-    console.error('Flutterwave constructor not found:', typeof Flutterwave);
   }
   
   if (flw) {
-    console.log('Flutterwave initialized successfully');
   }
 } catch (error) {
-  console.error('Failed to initialize Flutterwave:', error);
 }
 
 // Utility function for Flutterwave webhook signature verification
@@ -58,7 +55,6 @@ export async function CashOnDeliveryOrderController(request,response){
         // Validate each item in list_items
         for (const item of list_items) {
             if (!item.productId || !item.productId._id || (!item.price && !item.productId.price) || !item.quantity) {
-                console.log('Invalid item structure:', JSON.stringify(item, null, 2));
                 return response.status(400).json({
                     message: "Invalid item in list_items: missing productId, price, or quantity",
                     error: true,
@@ -78,12 +74,6 @@ export async function CashOnDeliveryOrderController(request,response){
         const validTotalAmt = Number(totalAmt) || Number(subTotalAmt) || 0;
         const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, validTotalAmt);
         const finalTotalAmt = validTotalAmt + deliveryFee;
-        
-        console.log('COD Order totals:', {
-            subTotal: subTotalAmt || totalAmt,
-            deliveryFee: deliveryFee,
-            finalTotal: finalTotalAmt
-        });
 
         const payload = list_items.map(el => {
             // Use the discounted price sent from frontend, fallback to original price with discount calculation
@@ -112,11 +102,8 @@ export async function CashOnDeliveryOrderController(request,response){
         const generatedOrder = await Order.insertMany(payload)
 
         ///remove from the cart
-        console.log('COD Order: Clearing cart for userId:', userId)
         const removeCartItems = await Cart.deleteMany({ userId : userId })
-        console.log('COD Order: Cart items deleted:', removeCartItems.deletedCount)
         const updateInUser = await User.updateOne({ _id : userId }, { shopping_cart : []})
-        console.log('COD Order: User shopping_cart cleared')
 
         // Send order confirmation email and admin notification
         try {
@@ -142,16 +129,12 @@ export async function CashOnDeliveryOrderController(request,response){
                 }
                 
                 // Send customer confirmation
-                await sendOrderConfirmationEmail(orderForEmail, user, address)
-                console.log('Order confirmation email sent for COD order:', generatedOrder[0].orderId)
-                
+                await sendOrderConfirmationEmail(orderForEmail, user, address)                
                 // Send admin notification
                 const { sendAdminOrderNotification } = await import('../services/emailService.js')
                 await sendAdminOrderNotification(orderForEmail, user, address)
-                console.log('Admin notification sent for COD order:', generatedOrder[0].orderId)
             }
         } catch (emailError) {
-            console.error('Failed to send order emails:', emailError)
             // Don't fail the order if email fails
         }
 
@@ -280,7 +263,6 @@ function calculateDeliveryFee(addressId, cartTotal = 0) {
     
     return rate.fee;
   } catch (error) {
-    console.error('Error calculating delivery fee:', error);
     return deliveryRates.default.fee;
   }
 }
@@ -296,14 +278,12 @@ export async function calculateDeliveryFeeWithAddress(addressId, cartTotal = 0) 
       if (address) {
         // Use zone-based calculation (like Jumia)
         const deliveryFee = calculateDeliveryFee(address, cartTotal);
-        console.log(`Zone-based delivery fee: ${deliveryFee} UGX for cart total: ${cartTotal} UGX`);
         return deliveryFee;
       }
     }
     
     return calculateDeliveryFee(null, cartTotal);
   } catch (error) {
-    console.error('Error in delivery fee calculation with address:', error);
     return calculateDeliveryFee(null, cartTotal);
   }
 }
@@ -337,7 +317,6 @@ function formatUgandaPhoneNumber(phoneNumber) {
   }
   
   // Fallback to default
-  console.warn('Could not format phone number:', phoneNumber, 'using default');
   return "256700000000";
 }
 
@@ -345,7 +324,6 @@ export async function paymentController(request, response) {
   try {
     // Check if Flutterwave is properly initialized
     if (!flw) {
-      console.error('Flutterwave not initialized. Check environment variables.');
       return response.status(500).json({
         message: "Payment service not available. Please contact support.",
         error: true,
@@ -368,12 +346,6 @@ export async function paymentController(request, response) {
     const subTotal = subTotalAmt || totalAmt;
     const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, subTotal);
     const finalTotalAmt = subTotal + deliveryFee;
-    
-    console.log('Order totals:', {
-      subTotal: subTotalAmt || totalAmt,
-      deliveryFee: deliveryFee,
-      finalTotal: finalTotalAmt
-    });
 
     const user = await User.findById(userId);
     if (!user) {
@@ -423,14 +395,13 @@ export async function paymentController(request, response) {
 
 
     const createdOrderDocs = await Promise.all(orderPromises);
-    console.log(`Created ${createdOrderDocs.length} order documents for mainOrderId: ${mainOrderId}`);
 
     // Prepare payload for Flutterwave v3 payments API (hosted payment)
     const payload = {
       tx_ref: tx_ref,
       amount: finalTotalAmt, // Use final total including delivery fee
       currency: "UGX",
-      redirect_url: `${process.env.NODE_ENV === 'production' ? (process.env.FRONTEND_URL || 'https://e-comm-rho-five.vercel.app') : 'http://localhost:5173'}/checkout`,
+      redirect_url: `${process.env.NODE_ENV === 'production' ? (process.env.FRONTEND_URL || 'https://e-comm-rho-five.vercel.app') : 'https://localhost:5173'}/checkout`,
       payment_options: "card,mobilemoneyuganda",
       customer: {
         email: user.email,
@@ -449,17 +420,6 @@ export async function paymentController(request, response) {
         expectedCurrency: "UGX"
       }
     };
-
-    console.log("Initializing Flutterwave payment with payload:", {
-      tx_ref,
-      amount: finalTotalAmt,
-      currency: "UGX",
-      customer: payload.customer,
-      mainOrderId,
-      formattedPhone: formatUgandaPhoneNumber(user.mobile),
-      originalPhone: user.mobile,
-      redirect_url: payload.redirect_url
-    });
 
     // For hosted payments, we'll use direct HTTP API call to Flutterwave
     // since the Node.js SDK doesn't have a direct hosted payment method
@@ -480,21 +440,14 @@ export async function paymentController(request, response) {
       
       responseData = flutterwaveResponse.data;
     } catch (axiosError) {
-      console.error('Flutterwave API error:', axiosError.response?.data || axiosError.message);
       return response.status(500).json({
         message: axiosError.response?.data?.message || "Failed to connect to payment service",
         error: true,
         success: false,
       });
     }
-    console.log("Flutterwave response:", {
-      status: responseData?.status,
-      hasLink: !!responseData?.data?.link,
-      message: responseData?.message
-    });
 
     if (responseData && responseData.status === "success" && responseData.data?.link) {
-      console.log(`Payment initiation successful for mainOrderId: ${mainOrderId}, tx_ref: ${tx_ref}`);
       return response.status(200).json({
         message: "Payment initiated successfully",
         success: true,
@@ -505,11 +458,6 @@ export async function paymentController(request, response) {
       });
     } else {
       // Mark orders as failed if Flutterwave initiation fails
-      console.error("Payment initiation failed:", {
-        responseData,
-        tx_ref,
-        mainOrderId
-      });
       await Order.updateMany(
         { paymentId: tx_ref },
         { payment_status: "failed" }
@@ -522,7 +470,6 @@ export async function paymentController(request, response) {
       });
     }
   } catch (error) {
-    console.error("Payment initiation error:", error);
     return response.status(500).json({
       message: error.message || "An unexpected error occurred during payment initiation",
       error: true,
@@ -549,7 +496,6 @@ export async function verifyPaymentController(request, response) {
     const pendingOrders = await Order.find({ paymentId: tx_ref });
 
     if (!pendingOrders || pendingOrders.length === 0) {
-      console.warn("No pending orders found for tx_ref:", tx_ref);
       return response.status(404).json({
         message: "No pending orders found for this transaction reference.",
         success: false,
@@ -560,7 +506,6 @@ export async function verifyPaymentController(request, response) {
     // Check if any of these orders are already successful (to prevent double processing)
     const alreadySuccessful = pendingOrders.some(order => order.payment_status === "successful");
     if (alreadySuccessful) {
-        console.log("Payment already verified for tx_ref:", tx_ref);
         return response.status(200).json({
             message: "Payment already successfully verified.",
             success: true,
@@ -569,18 +514,8 @@ export async function verifyPaymentController(request, response) {
         });
     }
 
-
-    console.log(`Verifying payment with Flutterwave - transaction_id: ${transaction_id}, tx_ref: ${tx_ref}`);
     const verifyResponse = await flw.Transaction.verify({ id: transaction_id });
     const paymentData = verifyResponse.data; // This is the actual transaction data from Flutterwave
-    
-    console.log("Flutterwave verification response:", {
-      status: verifyResponse.status,
-      paymentStatus: paymentData?.status,
-      amount: paymentData?.amount,
-      currency: paymentData?.currency,
-      tx_ref: paymentData?.tx_ref
-    });
 
     if (verifyResponse.status === "success" && paymentData && paymentData.status === "successful") {
       // --- IMPORTANT SECURITY CHECKS ---
@@ -612,13 +547,10 @@ export async function verifyPaymentController(request, response) {
 
         // Clear user's cart after successful payment
         const userId = pendingOrders[0].userId;
-        console.log(`Clearing cart for user ${userId} after successful payment verification`);
 
         const cartDeleteResult = await Cart.deleteMany({ userId: userId });
-        console.log(`Deleted ${cartDeleteResult.deletedCount} cart items for user ${userId}`);
 
         const userUpdateResult = await User.updateOne({ _id: userId }, { shopping_cart: [] });
-        console.log(`Updated user shopping_cart, modified: ${userUpdateResult.modifiedCount}`);
         
         // Send order confirmation email for successful payment
         try {
@@ -656,16 +588,13 @@ export async function verifyPaymentController(request, response) {
                 const mainOrder = Object.values(groupedForEmail)[0];
                 if (mainOrder) {
                     await sendOrderConfirmationEmail(mainOrder, user, address);
-                    console.log('Order confirmation email sent for successful payment:', mainOrder.mainOrderId);
                     
                     // Send admin notification
                     const { sendAdminOrderNotification } = await import('../services/emailService.js')
                     await sendAdminOrderNotification(mainOrder, user, address)
-                    console.log('Admin notification sent for online payment:', mainOrder.mainOrderId)
                 }
             }
         } catch (emailError) {
-            console.error('Failed to send order confirmation email for payment:', emailError);
             // Don't fail the payment verification if email fails
         }
 
@@ -686,12 +615,6 @@ export async function verifyPaymentController(request, response) {
           { paymentId: tx_ref },
           { payment_status: "failed" }
         );
-        console.warn("Payment verification failed (security check): Amount, currency, or tx_ref mismatch.", {
-          flutterwaveData: paymentData,
-          expectedAmount: expectedTotalAmountForCart,
-          expectedCurrency: expectedCurrency,
-          tx_refSent: tx_ref,
-        });
         return response.status(400).json({
           message: "Payment verification failed: Amount, currency, or transaction reference mismatch.",
           success: false,
@@ -705,7 +628,6 @@ export async function verifyPaymentController(request, response) {
         { paymentId: tx_ref },
         { payment_status: "failed" }
       );
-      console.warn("Payment not successful according to Flutterwave:", paymentData);
       return response.status(400).json({
         message: "Payment verification failed (Flutterwave status not successful)",
         success: false,
@@ -713,9 +635,7 @@ export async function verifyPaymentController(request, response) {
         flutterwaveData: paymentData,
       });
     }
-  } catch (error) {
-    console.error("Payment verification error:", error);
-    // If an error occurs, it's safer to mark as failed or investigate manually
+  } catch (error) {    // If an error occurs, it's safer to mark as failed or investigate manually
     // If you encounter an error here, the payment status for orders might still be 'pending'
     // You might want to add a retry mechanism or alert for such cases.
     await Order.updateMany(
@@ -785,22 +705,14 @@ export async function webhookFlutterwaveController(request, response) {
     // Use secure comparison to prevent timing attacks
     const expectedHash = request.headers["verif-hash"]
     if (!expectedHash || !crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expectedHash))) {
-      console.warn("Invalid webhook signature received")
       return response.status(401).json({ message: "Invalid signature" })
     }
 
     const event = request.body;
-    console.log("Flutterwave Webhook Event:", event);
 
     if (event.event === "charge.completed") {
       const data = event.data;
       const { status, id, tx_ref, flw_ref, meta } = data;
-
-      console.log("Processing charge.completed event:", {
-        status,
-        tx_ref,
-        mainOrderId: meta?.mainOrderId
-      });
 
       if (status === "successful") {
         // Update orders using tx_ref (paymentId) instead of orderId
@@ -812,26 +724,22 @@ export async function webhookFlutterwaveController(request, response) {
             invoice_receipt: flw_ref,
           }
         );
-        console.log(`Updated ${updateResult.modifiedCount} orders to successful status`);
         
         // Clear user's cart if payment is successful
         if (meta?.userId) {
           await Cart.deleteMany({ userId: meta.userId });
           await User.updateOne({ _id: meta.userId }, { shopping_cart: [] });
-          console.log(`Cleared cart for user ${meta.userId}`);
         }
       } else {
         const updateResult = await Order.updateMany(
           { paymentId: tx_ref },
           { payment_status: "failed" }
         );
-        console.log(`Updated ${updateResult.modifiedCount} orders to failed status`);
       }
     }
 
     return response.status(200).json({ status: "ok" });
   } catch (error) {
-    console.error("Webhook error:", error);
     return response.status(500).json({ message: "Webhook processing failed" });
   }
 }
@@ -898,13 +806,6 @@ export async function calculateDeliveryFeeController(request, response) {
     try {
         const { addressId, cartTotal, coordinates } = request.body;
         
-        console.log('Delivery fee calculation request:', {
-            addressId,
-            cartTotal,
-            coordinates,
-            userId: request.userId
-        });
-        
         if (!addressId || cartTotal === undefined) {
             return response.status(400).json({
                 message: "Address ID and cart total are required",
@@ -921,19 +822,10 @@ export async function calculateDeliveryFeeController(request, response) {
                 coordinates: coordinates
             });
             
-            console.log('Updated address with coordinates');
         }
 
         const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, cartTotal);
         const finalTotal = cartTotal + deliveryFee;
-        
-        console.log('Delivery fee calculation result:', {
-            addressId,
-            cartTotal,
-            deliveryFee,
-            finalTotal,
-            distance: coordinates ? calculateDistanceFromCoordinates(coordinates) : 'N/A'
-        });
         
         return response.json({
             message: "Delivery fee calculated successfully",
@@ -947,7 +839,6 @@ export async function calculateDeliveryFeeController(request, response) {
             success: true
         });
     } catch (error) {
-        console.error('Error in delivery fee calculation:', error);
         return response.status(500).json({
             message: error.message || "Failed to calculate delivery fee",
             error: true,
