@@ -12,17 +12,28 @@ dotenv.config()
 // Initialize Flutterwave with error handling
 let flw;
 try {
+  console.log('Initializing Flutterwave SDK...');
+  console.log('FLUTTERWAVE_PUBLIC_KEY present:', !!process.env.FLUTTERWAVE_PUBLIC_KEY);
+  console.log('FLUTTERWAVE_SECRET_KEY present:', !!process.env.FLUTTERWAVE_SECRET_KEY);
+
   // Try different initialization approaches
   if (typeof Flutterwave === 'function') {
     flw = new Flutterwave(process.env.FLUTTERWAVE_PUBLIC_KEY, process.env.FLUTTERWAVE_SECRET_KEY);
+    console.log('Flutterwave initialized with direct constructor');
   } else if (Flutterwave.default && typeof Flutterwave.default === 'function') {
     flw = new Flutterwave.default(process.env.FLUTTERWAVE_PUBLIC_KEY, process.env.FLUTTERWAVE_SECRET_KEY);
+    console.log('Flutterwave initialized with default export');
   } else {
+    console.error('Flutterwave constructor not found');
   }
-  
+
   if (flw) {
+    console.log('Flutterwave SDK initialized successfully');
+  } else {
+    console.error('Failed to initialize Flutterwave SDK');
   }
 } catch (error) {
+  console.error('Error initializing Flutterwave:', error);
 }
 
 // Utility function for Flutterwave webhook signature verification
@@ -399,12 +410,21 @@ export async function paymentController(request, response) {
 
     const createdOrderDocs = await Promise.all(orderPromises);
 
+    // Always redirect to Vercel site for consistency
+    const baseUrl = process.env.FRONTEND_URL || 'https://e-comm-rho-five.vercel.app';
+
+    console.log('Payment redirect URL: Always using Vercel site', {
+      baseUrl,
+      finalRedirectUrl: `${baseUrl}/checkout`,
+      requestOrigin: request.headers.origin
+    });
+
     // Prepare payload for Flutterwave v3 payments API (hosted payment)
     const payload = {
       tx_ref: tx_ref,
       amount: finalTotalAmt, // Use final total including delivery fee
       currency: "UGX",
-      redirect_url: `${process.env.FRONTEND_URL || 'https://e-comm-rho-five.vercel.app'}/checkout`,
+      redirect_url: `${baseUrl}/checkout`,
       payment_options: "card,mobilemoneyuganda",
       customer: {
         email: user.email,
@@ -427,7 +447,14 @@ export async function paymentController(request, response) {
     // For hosted payments, we'll use direct HTTP API call to Flutterwave
     // since the Node.js SDK doesn't have a direct hosted payment method
     const axios = await import('axios');
-    
+
+    console.log('Flutterwave API call details:', {
+      url: 'https://api.flutterwave.com/v3/payments',
+      hasSecretKey: !!process.env.FLUTTERWAVE_SECRET_KEY,
+      secretKeyPrefix: process.env.FLUTTERWAVE_SECRET_KEY?.substring(0, 10),
+      payloadKeys: Object.keys(payload)
+    });
+
     let responseData;
     try {
       const flutterwaveResponse = await axios.default.post(
@@ -440,9 +467,19 @@ export async function paymentController(request, response) {
           }
         }
       );
-      
+
       responseData = flutterwaveResponse.data;
+      console.log('Flutterwave API response:', {
+        status: responseData?.status,
+        hasLink: !!responseData?.data?.link,
+        message: responseData?.message
+      });
     } catch (axiosError) {
+      console.error('Flutterwave API error:', {
+        status: axiosError.response?.status,
+        message: axiosError.response?.data?.message,
+        fullError: axiosError.message
+      });
       return response.status(500).json({
         message: axiosError.response?.data?.message || "Failed to connect to payment service",
         error: true,
