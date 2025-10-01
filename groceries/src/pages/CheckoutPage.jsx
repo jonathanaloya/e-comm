@@ -1,7 +1,6 @@
 // src/pages/CheckoutPage.jsx
 
 import React, { useState, useEffect } from 'react';
-import { useGlobalContext } from '../provider/GlobalProvider';
 import { DisplayPriceInShillings } from '../utils/DisplayPriceInShillings';
 import AddAddress from '../components/AddAddress';
 import { useSelector, useDispatch } from 'react-redux';
