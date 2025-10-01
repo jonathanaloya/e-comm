@@ -329,8 +329,8 @@ const handleOnlinePaymentInitiation = async () => {
         totalAmt: finalTotal, // Use final total including delivery fee
         customerEmail: customerEmail,
         customerName: customerName,
-        customerPhone: customerPhone,
-        redirect_url: window.location.origin + '/checkout'
+        customerPhone: customerPhone
+        // Removed redirect_url to let backend control the redirect destination
       },
       { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
     );
