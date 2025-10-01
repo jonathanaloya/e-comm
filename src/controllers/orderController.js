@@ -401,7 +401,7 @@ export async function paymentController(request, response) {
       tx_ref: tx_ref,
       amount: finalTotalAmt, // Use final total including delivery fee
       currency: "UGX",
-      redirect_url: `${process.env.NODE_ENV === 'production' ? (process.env.FRONTEND_URL || 'https://e-comm-rho-five.vercel.app') : 'https://localhost:5173'}/checkout`,
+      redirect_url: `${process.env.FRONTEND_URL || 'https://e-comm-rho-five.vercel.app'}/checkout`,
       payment_options: "card,mobilemoneyuganda",
       customer: {
         email: user.email,
