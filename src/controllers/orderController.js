@@ -510,8 +510,7 @@ export async function paymentController(request, response) {
     const createdOrderDocs = await Promise.all(orderPromises);
 
     // Always redirect to Vercel site for consistency
-    const baseUrl =
-      process.env.FRONTEND_URL || "https://e-comm-rho-five.vercel.app";
+    const baseUrl = "https://e-comm-rho-five.vercel.app";
 
     console.log("Payment redirect URL: Always using Vercel site", {
       baseUrl,
