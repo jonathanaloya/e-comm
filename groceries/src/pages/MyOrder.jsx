@@ -23,12 +23,6 @@ const MyOrders = () => {
   const [groupedOrders, setGroupedOrders] = useState([]);
   const [individualOrders, setIndividualOrders] = useState([]);
 
-  // Add this function to clear cart after successful order fetch
-  const clearCart = () => {
-    dispatch(handleAddItemCart([])); // Clear Redux cart
-    localStorage.removeItem("cart"); // If you use localStorage for cart
-  };
-
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -49,8 +43,6 @@ const MyOrders = () => {
         // Set grouped and individual orders for display
         setGroupedOrders(orderData.groupedOrders || []);
         setIndividualOrders(orderData.individualOrders || []);
-        // Clear cart after successful order fetch
-        clearCart();
       }
     } catch (error) {
       AxiosToastError(error);
