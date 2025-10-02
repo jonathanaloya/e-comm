@@ -163,20 +163,18 @@ const CheckoutPage = () => {
         // Handle cancelled payments or when no status is provided (common for cancellations)
         toast.dismiss();
         toast.error("Payment was cancelled.");
-        // Reset processing state when payment is cancelled
         setIsProcessing(false);
         setPaymentMethod("");
-        // Navigate to cancel page
-        navigate("/cancel");
+        // Redirect to Vercel cancel page
+        window.location.href = "https://e-comm-rho-five.vercel.app/cancel";
       } else {
         // For any other status, treat as failed/cancelled
         toast.dismiss();
         toast.error("Payment was not completed. Please try again.");
-        // Reset processing state for unknown/failed status
         setIsProcessing(false);
         setPaymentMethod("");
-        // Navigate to cancel page for failed payments too
-        navigate("/cancel");
+        // Redirect to Vercel cancel page for failed payments too
+        window.location.href = "https://e-comm-rho-five.vercel.app/cancel";
       }
     }
   }, [location.search, navigate]); // Rerun when search params change

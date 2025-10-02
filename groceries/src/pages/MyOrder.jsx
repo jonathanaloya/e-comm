@@ -183,9 +183,15 @@ const MyOrders = () => {
                     <thead>
                       <tr className="bg-gray-100">
                         <th className="px-2 py-2 whitespace-nowrap">Image</th>
-                        <th className="px-2 py-2 whitespace-nowrap">Product Name</th>
-                        <th className="px-2 py-2 whitespace-nowrap">Product #</th>
-                        <th className="px-2 py-2 whitespace-nowrap">Quantity</th>
+                        <th className="px-2 py-2 whitespace-nowrap">
+                          Product Name
+                        </th>
+                        <th className="px-2 py-2 whitespace-nowrap">
+                          Product #
+                        </th>
+                        <th className="px-2 py-2 whitespace-nowrap">
+                          Quantity
+                        </th>
                         <th className="px-2 py-2 whitespace-nowrap">Price</th>
                       </tr>
                     </thead>
@@ -239,7 +245,7 @@ const MyOrders = () => {
                       {orderGroup.items?.reduce(
                         (sum, item) => sum + item.quantity,
                         0
-                      ) || 0} {" "}
+                      ) || 0}{" "}
                       {orderGroup.items?.reduce(
                         (sum, item) => sum + item.quantity,
                         0
