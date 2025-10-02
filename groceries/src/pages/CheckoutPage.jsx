@@ -275,6 +275,7 @@ const CheckoutPage = () => {
         toast.success(responseData.message);
 
         dispatch(handleAddItemCart([]));
+        localStorage.removeItem("cart");
 
         // Refresh data from backend (cart should already be empty)
         if (fetchCartItem) {

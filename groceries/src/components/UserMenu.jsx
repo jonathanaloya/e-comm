@@ -27,7 +27,8 @@ const UserMenu = ({close}) => {
             dispatch(logout())
             localStorage.clear()
             toast.success(response.data.message)
-            navigate("/")
+            // Force reload to guarantee UI resets
+            window.location.href = "/login";
           }
         } catch (error) {
           AxiosToastError(error)
