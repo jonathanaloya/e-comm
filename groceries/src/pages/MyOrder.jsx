@@ -332,7 +332,7 @@ const MyOrders = () => {
                 </div>
               </div>
 
-              {/* Receipt Table for Single Item */}
+              {/* Receipt Table for Order Items (support multiple products) */}
               <div className="overflow-x-auto mb-4">
                 <table className="min-w-full text-left border">
                   <thead>
@@ -345,49 +345,72 @@ const MyOrders = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td className="px-2 py-2">
-                        <img
-                          src={
-                            order.product_details?.image?.[0] ||
-                            "/placeholder-image.jpg"
-                          }
-                          alt={order.product_details?.name}
-                          className="w-12 h-12 object-cover rounded"
-                          onError={(e) => {
-                            e.target.src = "/placeholder-image.jpg";
-                          }}
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        {order.product_details?.name}
-                      </td>
-                      <td className="px-2 py-2">
-                        {order.product_details?.productNumber ||
-                          order.product_details?._id ||
-                          "-"}
-                      </td>
-                      <td className="px-2 py-2">{order.quantity}</td>
-                      <td className="px-2 py-2">
-                        UGX {order.totalAmt?.toLocaleString()}
-                      </td>
-                    </tr>
+                    {(order.items || [order]).map((item, itemIndex) => (
+                      <tr key={item._id || itemIndex} className="border-b">
+                        <td className="px-2 py-2">
+                          <img
+                            src={
+                              item.product_details?.image?.[0] ||
+                              "/placeholder-image.jpg"
+                            }
+                            alt={item.product_details?.name}
+                            className="w-12 h-12 object-cover rounded"
+                            onError={(e) => {
+                              e.target.src = "/placeholder-image.jpg";
+                            }}
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          {item.product_details?.name}
+                        </td>
+                        <td className="px-2 py-2">
+                          {item.product_details?.productNumber ||
+                            item.product_details?._id ||
+                            "-"}
+                        </td>
+                        <td className="px-2 py-2">{item.quantity}</td>
+                        <td className="px-2 py-2">
+                          UGX {item.totalAmt?.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Order Summary */}
+              {/* Order Summary (single total for all items) */}
               <div className="bg-white p-4 rounded-lg mb-2">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Items total:</span>
                   <span className="font-medium">
-                    UGX {order.totalAmt?.toLocaleString()}
+                    UGX{" "}
+                    {(
+                      (order.items
+                        ? order.items.reduce(
+                            (sum, item) => sum + (item.totalAmt || 0),
+                            0
+                          )
+                        : order.totalAmt) || 0
+                    ).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Quantity total:</span>
                   <span className="font-medium">
-                    {order.quantity} {order.quantity > 1 ? "items" : "item"}
+                    {(order.items
+                      ? order.items.reduce(
+                          (sum, item) => sum + (item.quantity || 0),
+                          0
+                        )
+                      : order.quantity) || 0}{" "}
+                    {((order.items
+                      ? order.items.reduce(
+                          (sum, item) => sum + (item.quantity || 0),
+                          0
+                        )
+                      : order.quantity) || 0) > 1
+                      ? "items"
+                      : "item"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
@@ -403,7 +426,12 @@ const MyOrders = () => {
                   <span>
                     UGX{" "}
                     {(
-                      order.totalAmt + (order.deliveryFee || 0)
+                      ((order.items
+                        ? order.items.reduce(
+                            (sum, item) => sum + (item.totalAmt || 0),
+                            0
+                          )
+                        : order.totalAmt) || 0) + (order.deliveryFee || 0)
                     ).toLocaleString()}
                   </span>
                 </div>
