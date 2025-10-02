@@ -71,7 +71,7 @@ export async function CashOnDeliveryOrderController(request,response){
             })
         })
 
-        const generatedOrder = await OrderModel.insertMany(payload)
+        const generatedOrder = await Order.insertMany(payload)
 
         ///remove from the cart
         const removeCartItems = await CartProductModel.deleteMany({ userId : userId })
