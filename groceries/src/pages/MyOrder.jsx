@@ -178,89 +178,93 @@ const MyOrders = () => {
 
               {/* Receipt Table for Order Items */}
               <div className="overflow-x-auto mb-4">
-                <table className="min-w-full text-left border">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="px-2 py-2">Image</th>
-                      <th className="px-2 py-2">Product Name</th>
-                      <th className="px-2 py-2">Product #</th>
-                      <th className="px-2 py-2">Quantity</th>
-                      <th className="px-2 py-2">Price</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orderGroup.items?.map((item, itemIndex) => (
-                      <tr key={item._id || itemIndex} className="border-b">
-                        <td className="px-2 py-2">
-                          <img
-                            src={
-                              item.product_details?.image?.[0] ||
-                              "/placeholder-image.jpg"
-                            }
-                            alt={item.product_details?.name}
-                            className="w-12 h-12 object-cover rounded"
-                            onError={(e) => {
-                              e.target.src = "/placeholder-image.jpg";
-                            }}
-                          />
-                        </td>
-                        <td className="px-2 py-2">
-                          {item.product_details?.name}
-                        </td>
-                        <td className="px-2 py-2">
-                          {item.product_details?.productNumber ||
-                            item.product_details?._id ||
-                            "-"}
-                        </td>
-                        <td className="px-2 py-2">{item.quantity}</td>
-                        <td className="px-2 py-2">
-                          UGX {item.totalAmt?.toLocaleString()}
-                        </td>
+                <div className="w-full overflow-x-auto">
+                  <table className="min-w-full text-left border text-xs sm:text-sm">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="px-2 py-2 whitespace-nowrap">Image</th>
+                        <th className="px-2 py-2 whitespace-nowrap">Product Name</th>
+                        <th className="px-2 py-2 whitespace-nowrap">Product #</th>
+                        <th className="px-2 py-2 whitespace-nowrap">Quantity</th>
+                        <th className="px-2 py-2 whitespace-nowrap">Price</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {orderGroup.items?.map((item, itemIndex) => (
+                        <tr key={item._id || itemIndex} className="border-b">
+                          <td className="px-2 py-2">
+                            <img
+                              src={
+                                item.product_details?.image?.[0] ||
+                                "/placeholder-image.jpg"
+                              }
+                              alt={item.product_details?.name}
+                              className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded"
+                              onError={(e) => {
+                                e.target.src = "/placeholder-image.jpg";
+                              }}
+                            />
+                          </td>
+                          <td className="px-2 py-2">
+                            {item.product_details?.name}
+                          </td>
+                          <td className="px-2 py-2">
+                            {item.product_details?.productNumber ||
+                              item.product_details?._id ||
+                              "-"}
+                          </td>
+                          <td className="px-2 py-2">{item.quantity}</td>
+                          <td className="px-2 py-2">
+                            UGX {item.totalAmt?.toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* Order Summary */}
               <div className="bg-white p-4 rounded-lg mb-2">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Items total:</span>
-                  <span className="font-medium">
-                    UGX {orderGroup.totalAmount?.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Quantity total:</span>
-                  <span className="font-medium">
-                    {orderGroup.items?.reduce(
-                      (sum, item) => sum + item.quantity,
-                      0
-                    ) || 0}{" "}
-                    {orderGroup.items?.reduce(
-                      (sum, item) => sum + item.quantity,
-                      0
-                    ) > 1
-                      ? "items"
-                      : "item"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Delivery Charge:</span>
-                  <span className="font-medium">
-                    {orderGroup.deliveryFee === 0
-                      ? "Free"
-                      : `UGX ${orderGroup.deliveryFee?.toLocaleString()}`}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
-                  <span>Grand total:</span>
-                  <span>
-                    UGX{" "}
-                    {(
-                      orderGroup.totalAmount + (orderGroup.deliveryFee || 0)
-                    ).toLocaleString()}
-                  </span>
+                <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-4 mb-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Items total:</span>
+                    <span className="font-medium">
+                      UGX {orderGroup.totalAmount?.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Quantity total:</span>
+                    <span className="font-medium">
+                      {orderGroup.items?.reduce(
+                        (sum, item) => sum + item.quantity,
+                        0
+                      ) || 0} {" "}
+                      {orderGroup.items?.reduce(
+                        (sum, item) => sum + item.quantity,
+                        0
+                      ) > 1
+                        ? "items"
+                        : "item"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Delivery Charge:</span>
+                    <span className="font-medium">
+                      {orderGroup.deliveryFee === 0
+                        ? "Free"
+                        : `UGX ${orderGroup.deliveryFee?.toLocaleString()}`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-lg font-bold border-t pt-2 sm:col-span-2">
+                    <span>Grand total:</span>
+                    <span>
+                      UGX{" "}
+                      {(
+                        orderGroup.totalAmount + (orderGroup.deliveryFee || 0)
+                      ).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               </div>
 

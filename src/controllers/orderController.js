@@ -964,8 +964,13 @@ export async function getOrderDetailsController(request, response) {
             deliveryFee: order.deliveryFee || 0,
           };
         }
-        groupedOrders[order.mainOrderId].items.push(order);
-        groupedOrders[order.mainOrderId].totalAmount += order.totalAmt;
+        // Push each product in order.items to the grouped items array
+        if (Array.isArray(order.items)) {
+          order.items.forEach((item) => {
+            groupedOrders[order.mainOrderId].items.push(item);
+            groupedOrders[order.mainOrderId].totalAmount += item.itemTotal || 0;
+          });
+        }
       } else {
         ungroupedOrders.push(order);
       }
