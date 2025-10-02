@@ -222,10 +222,35 @@ const MyOrders = () => {
                           </td>
                           <td className="px-2 py-2">{item.quantity}</td>
                           <td className="px-2 py-2 hidden xs:table-cell">
-                            UGX {item.price?.toLocaleString()}
+                            {item.discount && item.discount > 0 ? (
+                              <span>
+                                <span className="line-through text-gray-400 mr-1">
+                                  UGX {item.originalPrice?.toLocaleString()}
+                                </span>
+                                <span className="text-red-600 font-bold">
+                                  UGX {item.price?.toLocaleString()}
+                                </span>
+                                <span className="ml-1 text-xs text-green-600">
+                                  (-{item.discount}% off)
+                                </span>
+                              </span>
+                            ) : (
+                              <span>UGX {item.price?.toLocaleString()}</span>
+                            )}
                           </td>
                           <td className="px-2 py-2">
                             UGX {item.itemTotal?.toLocaleString()}
+                            {item.discount &&
+                            item.discount > 0 &&
+                            item.originalPrice ? (
+                              <span className="block text-xs text-green-600">
+                                You saved UGX{" "}
+                                {(
+                                  item.originalPrice * item.quantity -
+                                  item.price * item.quantity
+                                ).toLocaleString()}
+                              </span>
+                            ) : null}
                           </td>
                         </tr>
                       ))}
@@ -383,16 +408,43 @@ const MyOrders = () => {
                         </td>
                         <td className="px-2 py-2">{item.quantity}</td>
                         <td className="px-2 py-2 hidden xs:table-cell">
-                          UGX{" "}
-                          {item.price?.toLocaleString() ||
-                            item.unitPrice?.toLocaleString() ||
-                            "-"}
+                          {item.discount && item.discount > 0 ? (
+                            <span>
+                              <span className="line-through text-gray-400 mr-1">
+                                UGX {item.originalPrice?.toLocaleString()}
+                              </span>
+                              <span className="text-red-600 font-bold">
+                                UGX {item.price?.toLocaleString()}
+                              </span>
+                              <span className="ml-1 text-xs text-green-600">
+                                (-{item.discount}% off)
+                              </span>
+                            </span>
+                          ) : (
+                            <span>
+                              UGX{" "}
+                              {item.price?.toLocaleString() ||
+                                item.unitPrice?.toLocaleString() ||
+                                "-"}
+                            </span>
+                          )}
                         </td>
                         <td className="px-2 py-2">
                           UGX{" "}
                           {item.itemTotal?.toLocaleString() ||
                             item.totalAmt?.toLocaleString() ||
                             "-"}
+                          {item.discount &&
+                          item.discount > 0 &&
+                          item.originalPrice ? (
+                            <span className="block text-xs text-green-600">
+                              You saved UGX{" "}
+                              {(
+                                item.originalPrice * item.quantity -
+                                item.price * item.quantity
+                              ).toLocaleString()}
+                            </span>
+                          ) : null}
                         </td>
                       </tr>
                     ))}
@@ -406,13 +458,13 @@ const MyOrders = () => {
                   <span className="text-gray-600">Items total:</span>
                   <span className="font-medium">
                     UGX{" "}
-                    {(
-                      (order.items
-                        ? order.items.reduce(
-                            (sum, item) => sum + (item.totalAmt || 0),
-                            0
-                          )
-                        : order.totalAmt) || 0
+                    {(order.items
+                      ? order.items.reduce(
+                          (sum, item) =>
+                            sum + (item.itemTotal || item.totalAmt || 0),
+                          0
+                        )
+                      : order.itemTotal || order.totalAmt || 0
                     ).toLocaleString()}
                   </span>
                 </div>
@@ -448,12 +500,14 @@ const MyOrders = () => {
                   <span>
                     UGX{" "}
                     {(
-                      ((order.items
+                      (order.items
                         ? order.items.reduce(
-                            (sum, item) => sum + (item.totalAmt || 0),
+                            (sum, item) =>
+                              sum + (item.itemTotal || item.totalAmt || 0),
                             0
                           )
-                        : order.totalAmt) || 0) + (order.deliveryFee || 0)
+                        : order.itemTotal || order.totalAmt || 0) +
+                      (order.deliveryFee || 0)
                     ).toLocaleString()}
                   </span>
                 </div>
