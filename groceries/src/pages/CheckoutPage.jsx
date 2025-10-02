@@ -202,71 +202,39 @@ const CheckoutPage = () => {
 
 
   // Cash on Delivery handler
-  const handleCashOnDelivery = async () => {
-    // Validate address selection first
-    if (selectAddress === -1 || !addressList[selectAddress]?._id) {
-      toast.error("Please select a delivery address first!");
-      // Scroll to address section
-      document.querySelector('.container')?.scrollIntoView({ behavior: 'smooth' });
-      return;
-    }
-    if (cartItemsList.length === 0) {
-      toast.error("Your cart is empty!");
-      return;
-    }
-    if (finalTotal <= 0) {
-      toast.error("Total amount must be greater than zero.");
-      return;
-    }
+  const handleCashOnDelivery = async() => {
+      try {
+          const response = await Axios({
+            ...SummaryApi.CashOnDeliveryOrder,
+            data : {
+              list_items : cartItemsList,
+              addressId : addressList[selectAddress]?._id,
+              subTotalAmt : totalPrice,
+              totalAmt :  totalPrice,
+            }
+          })
 
-    setIsProcessing(true);
-    setPaymentMethod('COD');
-    toast.loading("Processing your order...");
+          const { data : responseData } = response
 
-    try {
-      const response = await Axios({
-        ...SummaryApi.CashOnDeliveryOrder,
-        data: {
-          list_items: cartItemsList,
-          addressId: addressList[selectAddress]._id,
-          subTotalAmt: totalPrice,
-          totalAmt: finalTotal, // Use final total including delivery fee
-          paymentMethod: "Cash on Delivery", // Explicitly set payment method
-        }
-      });
+          if(responseData.success){
+              toast.success(responseData.message)
+              if(fetchCartItem){
+                fetchCartItem()
+              }
+              if(fetchOrder){
+                fetchOrder()
+              }
+              navigate('/success',{
+                state : {
+                  text : "Order"
+                }
+              })
+          }
 
-      const { data: responseData } = response;
-      toast.dismiss();
-
-      if (responseData.success) {
-        toast.success(responseData.message);
-
-        // Immediately clear cart in Redux state
-        console.log('COD: Clearing cart in Redux state');
-        dispatch(handleAddItemCart([]));
-
-        // Refresh data from backend (cart should already be empty)
-        if (fetchCartItem) {
-          await fetchCartItem();
-        }
-        if (fetchOrder) {
-          await fetchOrder();
-        }
-
-        // Small delay to ensure cart is cleared before navigation
-        setTimeout(() => {
-          navigate('/success', { state: { text: "Order" } });
-        }, 500);
+      } catch (error) {
+        AxiosToastError(error)
       }
-
-    } catch (error) {
-      toast.dismiss();
-      AxiosToastError(error);
-    } finally {
-      setIsProcessing(false);
-      setPaymentMethod('');
-    }
-  };
+  }
 
   // Flutterwave Payment handlers
   // Online payment handler with proper validation

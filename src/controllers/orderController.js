@@ -52,46 +52,9 @@ export function verifyFlutterwaveWebhook(signature, secretHash, rawBody) {
 export async function CashOnDeliveryOrderController(request,response){
     try {
         const userId = request.userId // auth middleware 
-        const { list_items, totalAmt, addressId, subTotalAmt } = request.body
-        
-        // Validate required fields
-        if (!userId || !list_items || !Array.isArray(list_items) || list_items.length === 0 || !addressId) {
-            return response.status(400).json({
-                message: "Missing required fields: userId, list_items, or addressId",
-                error: true,
-                success: false
-            });
-        }
-        
-        // Validate each item in list_items
-        for (const item of list_items) {
-            if (!item.productId || !item.productId._id || (!item.price && !item.productId.price) || !item.quantity) {
-                return response.status(400).json({
-                    message: "Invalid item in list_items: missing productId, price, or quantity",
-                    error: true,
-                    success: false,
-                    debug: {
-                        hasProductId: !!item.productId,
-                        hasProductIdId: !!item.productId?._id,
-                        hasPrice: !!item.price,
-                        hasProductPrice: !!item.productId?.price,
-                        hasQuantity: !!item.quantity
-                    }
-                });
-            }
-        }
-        
-        // Calculate delivery fee for COD orders
-        const validTotalAmt = Number(totalAmt) || Number(subTotalAmt) || 0;
-        const deliveryFee = await calculateDeliveryFeeWithAddress(addressId, validTotalAmt);
-        const finalTotalAmt = validTotalAmt + deliveryFee;
+        const { list_items, totalAmt, addressId,subTotalAmt } = request.body 
 
         const payload = list_items.map(el => {
-            // Use the discounted price sent from frontend, fallback to original price with discount calculation
-            const price = Number(el.price) || (Number(el.productId?.price) - (Number(el.productId?.price) * Number(el.discount || 0) / 100)) || 0;
-            const quantity = Number(el.quantity) || 1;
-            const itemTotal = price * quantity;
-            
             return({
                 userId : userId,
                 orderId : `ORD-${new mongoose.Types.ObjectId()}`,
@@ -100,57 +63,19 @@ export async function CashOnDeliveryOrderController(request,response){
                     name : el.productId.name,
                     image : el.productId.image
                 } ,
-                paymentId : "", // No paymentId for COD
+                paymentId : "",
                 payment_status : "CASH ON DELIVERY",
                 delivery_address : addressId ,
-                subTotalAmt  : itemTotal,
-                totalAmt  : itemTotal,
-                deliveryFee: deliveryFee,
-                quantity: quantity
+                subTotalAmt  : subTotalAmt,
+                totalAmt  :  totalAmt,
             })
         })
 
-        const generatedOrder = await Order.insertMany(payload)
+        const generatedOrder = await OrderModel.insertMany(payload)
 
         ///remove from the cart
-        console.log('COD Order: Clearing cart for userId:', userId)
-        const removeCartItems = await Cart.deleteMany({ userId : userId })
-        console.log('COD Order: Cart items deleted:', removeCartItems.deletedCount)
-        const updateInUser = await User.updateOne({ _id : userId }, { shopping_cart : []})
-        console.log('COD Order: User shopping_cart cleared')
-
-        // Send order confirmation email and admin notification
-        try {
-            const user = await User.findById(userId)
-            const address = await (await import('../models/addressModel.js')).default.findById(addressId)
-            
-            if (user && user.email) {
-                const orderForEmail = {
-                    mainOrderId: generatedOrder[0].orderId,
-                    orderId: generatedOrder[0].orderId,
-                    createdAt: new Date(),
-                    payment_status: 'CASH ON DELIVERY',
-                    order_status: 'confirmed',
-                    totalAmount: finalTotalAmt,
-                    deliveryFee: deliveryFee,
-                    items: generatedOrder.map(order => ({
-                        product_details: order.product_details,
-                        quantity: order.quantity,
-                        totalAmt: order.totalAmt,
-                        name: order.product_details.name,
-                        price: order.totalAmt / order.quantity
-                    }))
-                }
-                
-                // Send customer confirmation
-                await sendOrderConfirmationEmail(orderForEmail, user, address)                
-                // Send admin notification
-                const { sendAdminOrderNotification } = await import('../services/emailService.js')
-                await sendAdminOrderNotification(orderForEmail, user, address)
-            }
-        } catch (emailError) {
-            // Don't fail the order if email fails
-        }
+        const removeCartItems = await CartProductModel.deleteMany({ userId : userId })
+        const updateInUser = await UserModel.updateOne({ _id : userId }, { shopping_cart : []})
 
         return response.json({
             message : "Order successfully",
