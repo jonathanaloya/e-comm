@@ -970,8 +970,13 @@ export async function getOrderDetailsController(request, response) {
         // Push each product in order.items to the grouped items array
         if (Array.isArray(order.items)) {
           order.items.forEach((item) => {
-            groupedOrders[order.mainOrderId].items.push(item);
-            groupedOrders[order.mainOrderId].totalAmount += item.itemTotal || 0;
+            groupedOrders[order.mainOrderId].items.push({
+              ...item._doc,
+              price: item.price ?? item.itemTotal / (item.quantity || 1),
+              itemTotal: item.itemTotal ?? item.price * item.quantity,
+            });
+            groupedOrders[order.mainOrderId].totalAmount +=
+              item.itemTotal || item.price * item.quantity || 0;
           });
         }
       } else {
