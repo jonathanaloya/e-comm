@@ -183,7 +183,11 @@ const MyOrders = () => {
               {/* Order Summary */}
               <div className="bg-white p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="text-gray-600">Number of products:</span>
+                  <span className="font-medium">{orderGroup.items?.reduce((sum, item) => sum + item.quantity, 0) || 0}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Amount with discount:</span>
                   <span className="font-medium">UGX {orderGroup.totalAmount?.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
@@ -256,6 +260,28 @@ const MyOrders = () => {
                   <h4 className="font-medium text-gray-800 mb-1">{order.product_details?.name}</h4>
                   <p className="text-sm text-gray-600 mb-1">Quantity: {order.quantity}</p>
                   <p className="text-lg font-bold text-gray-800">UGX {order.totalAmt?.toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Order Summary */}
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Number of products:</span>
+                  <span className="font-medium">{order.quantity}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Amount with discount:</span>
+                  <span className="font-medium">UGX {order.totalAmt?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Delivery Fee:</span>
+                  <span className="font-medium">
+                    {order.deliveryFee === 0 ? 'Free' : `UGX ${order.deliveryFee?.toLocaleString()}`}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
+                  <span>Total:</span>
+                  <span>UGX {(order.totalAmt + (order.deliveryFee || 0)).toLocaleString()}</span>
                 </div>
               </div>
 
