@@ -14,6 +14,7 @@ import {
   FaTimesCircle,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { handleAddItemCart } from "../store/cartProduct";
 
 const MyOrders = () => {
   const dispatch = useDispatch();
@@ -21,6 +22,12 @@ const MyOrders = () => {
   const [loading, setLoading] = useState(false);
   const [groupedOrders, setGroupedOrders] = useState([]);
   const [individualOrders, setIndividualOrders] = useState([]);
+
+  // Add this function to clear cart after successful order fetch
+  const clearCart = () => {
+    dispatch(handleAddItemCart([])); // Clear Redux cart
+    localStorage.removeItem("cart"); // If you use localStorage for cart
+  };
 
   const fetchOrders = async () => {
     try {
@@ -42,6 +49,8 @@ const MyOrders = () => {
         // Set grouped and individual orders for display
         setGroupedOrders(orderData.groupedOrders || []);
         setIndividualOrders(orderData.individualOrders || []);
+        // Clear cart after successful order fetch
+        clearCart();
       }
     } catch (error) {
       AxiosToastError(error);
