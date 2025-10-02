@@ -362,43 +362,23 @@ const MyOrders = () => {
                   </p>
                 </div>
               </div>
-            <div
-              key={order._id || index}
-              className="border border-gray-200 rounded-lg p-6 bg-gray-50"
-            >
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Order #{order.orderId}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Placed on {formatDate(order.createdAt)}
-                  </p>
-                </div>
-                <div className="sm:text-right">
-                  <div
-                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                      order.order_status
-                    )}`}
-                  >
-                    {getStatusIcon(order.order_status)}
-                    {order.order_status?.toUpperCase() || "PENDING"}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Payment: {" "}
-                    <span className="font-medium">{order.payment_status}</span>
-                  </p>
-                </div>
-              </div>
+
+              {/* Receipt Table for Order Items (support multiple products) */}
               <div className="overflow-x-auto mb-4">
                 <table className="min-w-full text-left border text-xs sm:text-sm">
                   <thead>
                     <tr className="bg-gray-100">
                       <th className="px-2 py-2 whitespace-nowrap">Image</th>
-                      <th className="px-2 py-2 whitespace-nowrap">Product Name</th>
-                      <th className="px-2 py-2 whitespace-nowrap hidden xs:table-cell">Product #</th>
+                      <th className="px-2 py-2 whitespace-nowrap">
+                        Product Name
+                      </th>
+                      <th className="px-2 py-2 whitespace-nowrap hidden xs:table-cell">
+                        Product #
+                      </th>
                       <th className="px-2 py-2 whitespace-nowrap">Qty</th>
-                      <th className="px-2 py-2 whitespace-nowrap hidden xs:table-cell">Unit Price</th>
+                      <th className="px-2 py-2 whitespace-nowrap hidden xs:table-cell">
+                        Unit Price
+                      </th>
                       <th className="px-2 py-2 whitespace-nowrap">Total</th>
                     </tr>
                   </thead>
@@ -407,36 +387,80 @@ const MyOrders = () => {
                       <tr key={item._id || itemIndex} className="border-b">
                         <td className="px-2 py-2">
                           <img
-                            src={item.product_details?.image?.[0] || "/placeholder-image.jpg"}
+                            src={
+                              item.product_details?.image?.[0] ||
+                              "/placeholder-image.jpg"
+                            }
                             alt={item.product_details?.name}
                             className="w-8 h-8 sm:w-12 sm:h-12 object-cover rounded"
-                            onError={(e) => { e.target.src = "/placeholder-image.jpg"; }}
+                            onError={(e) => {
+                              e.target.src = "/placeholder-image.jpg";
+                            }}
                           />
                         </td>
-                        <td className="px-2 py-2 max-w-[120px] truncate">{item.product_details?.name}</td>
-                        <td className="px-2 py-2 hidden xs:table-cell">{item.product_details?.productNumber || item.product_details?._id || "-"}</td>
+                        <td className="px-2 py-2 max-w-[120px] truncate">
+                          {item.product_details?.name}
+                        </td>
+                        <td className="px-2 py-2 hidden xs:table-cell">
+                          {item.product_details?.productNumber ||
+                            item.product_details?._id ||
+                            "-"}
+                        </td>
                         <td className="px-2 py-2">{item.quantity}</td>
                         <td className="px-2 py-2 hidden xs:table-cell">
-                          {((item.discount ?? item.product_details?.discount) > 0) ? (
+                          {(item.discount ?? item.product_details?.discount) >
+                          0 ? (
                             <span>
                               <span className="line-through text-gray-400 mr-1">
-                                UGX {(item.originalPrice ?? item.product_details?.price)?.toLocaleString()}
+                                UGX{" "}
+                                {(
+                                  item.originalPrice ??
+                                  item.product_details?.price
+                                )?.toLocaleString()}
                               </span>
                               <span className="text-red-600 font-bold">
-                                UGX {(item.price ?? item.product_details?.price)?.toLocaleString()}
+                                UGX{" "}
+                                {(
+                                  item.price ?? item.product_details?.price
+                                )?.toLocaleString()}
                               </span>
                               <span className="ml-1 text-xs text-green-600">
-                                (-{item.discount ?? item.product_details?.discount}% off)
+                                (-
+                                {item.discount ??
+                                  item.product_details?.discount}
+                                % off)
                               </span>
                             </span>
                           ) : (
-                            <span>UGX {(item.price ?? item.product_details?.price)?.toLocaleString() || item.unitPrice?.toLocaleString() || '-'}</span>
+                            <span>
+                              UGX{" "}
+                              {(
+                                item.price ?? item.product_details?.price
+                              )?.toLocaleString() ||
+                                item.unitPrice?.toLocaleString() ||
+                                "-"}
+                            </span>
                           )}
                         </td>
                         <td className="px-2 py-2">
-                          UGX {item.itemTotal?.toLocaleString() || item.totalAmt?.toLocaleString() || '-'}
-                          {((item.discount ?? item.product_details?.discount) > 0 && (item.originalPrice ?? item.product_details?.price)) ? (
-                            <span className="block text-xs text-green-600">You saved UGX {(((item.originalPrice ?? item.product_details?.price) * item.quantity - (item.price ?? item.product_details?.price) * item.quantity).toLocaleString())}</span>
+                          UGX{" "}
+                          {item.itemTotal?.toLocaleString() ||
+                            item.totalAmt?.toLocaleString() ||
+                            "-"}
+                          {(item.discount ?? item.product_details?.discount) >
+                            0 &&
+                          (item.originalPrice ??
+                            item.product_details?.price) ? (
+                            <span className="block text-xs text-green-600">
+                              You saved UGX{" "}
+                              {(
+                                (item.originalPrice ??
+                                  item.product_details?.price) *
+                                  item.quantity -
+                                (item.price ?? item.product_details?.price) *
+                                  item.quantity
+                              ).toLocaleString()}
+                            </span>
                           ) : null}
                         </td>
                       </tr>
@@ -444,6 +468,8 @@ const MyOrders = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Order Summary (single total for all items) */}
               <div className="bg-white p-4 rounded-lg mb-2">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Items total:</span>
@@ -467,7 +493,8 @@ const MyOrders = () => {
                           (sum, item) => sum + (item.quantity || 0),
                           0
                         )
-                      : order.quantity) || 0} {((order.items
+                      : order.quantity) || 0}{" "}
+                    {((order.items
                       ? order.items.reduce(
                           (sum, item) => sum + (item.quantity || 0),
                           0
@@ -489,18 +516,21 @@ const MyOrders = () => {
                   <span>Grand total:</span>
                   <span>
                     UGX{" "}
-                    {(order.items
-                      ? order.items.reduce(
-                          (sum, item) =>
-                            sum + (item.itemTotal || item.totalAmt || 0),
-                          0
-                        )
-                      : order.itemTotal || order.totalAmt || 0) +
-                    (order.deliveryFee || 0)
+                    {(
+                      (order.items
+                        ? order.items.reduce(
+                            (sum, item) =>
+                              sum + (item.itemTotal || item.totalAmt || 0),
+                            0
+                          )
+                        : order.itemTotal || order.totalAmt || 0) +
+                      (order.deliveryFee || 0)
                     ).toLocaleString()}
                   </span>
                 </div>
               </div>
+
+              {/* Delivery Address */}
               {order.delivery_address && (
                 <div className="mt-2 p-4 bg-white rounded-lg">
                   <h5 className="font-medium text-gray-800 mb-2">
@@ -516,6 +546,8 @@ const MyOrders = () => {
                   </p>
                 </div>
               )}
+
+              {/* Track Order Button */}
               <div className="mt-4">
                 <a
                   href={`/track-order/${order.orderId}`}
@@ -525,16 +557,11 @@ const MyOrders = () => {
                 </a>
               </div>
             </div>
-                  </div>
-                </div>
-                </a>
-              </div>
-            </div>
           ))}
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default MyOrders;
