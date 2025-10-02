@@ -161,43 +161,24 @@ const MyOrders = () => {
                 </div>
               </div>
 
-              {/* Order Items */}
-              <div className="space-y-3 mb-4">
-                {orderGroup.items?.map((item, itemIndex) => (
-                  <div key={item._id || itemIndex} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white p-4 rounded-lg">
-                    <img
-                      src={item.product_details?.image?.[0] || '/placeholder-image.jpg'}
-                      alt={item.product_details?.name}
-                      className="w-16 h-16 object-cover rounded-lg mx-auto sm:mx-0"
-                      onError={(e) => { e.target.src = '/placeholder-image.jpg' }}
-                    />
-                    <div className="flex-1 text-center sm:text-left">
-                      <h4 className="font-medium text-gray-800">{item.product_details?.name}</h4>
-                      <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                      <p className="text-sm font-medium text-gray-800">UGX {item.totalAmt?.toLocaleString()}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
               {/* Order Summary */}
               <div className="bg-white p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Number of products:</span>
-                  <span className="font-medium">{orderGroup.items?.reduce((sum, item) => sum + item.quantity, 0) || 0}</span>
-                </div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Amount with discount:</span>
+                  <span className="text-gray-600">Items total:</span>
                   <span className="font-medium">UGX {orderGroup.totalAmount?.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Delivery Fee:</span>
+                  <span className="text-gray-600">Quantity total:</span>
+                  <span className="font-medium">{orderGroup.items?.reduce((sum, item) => sum + item.quantity, 0) || 0} {orderGroup.items?.reduce((sum, item) => sum + item.quantity, 0) > 1 ? 'items' : 'item'}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Delivery Charge:</span>
                   <span className="font-medium">
                     {orderGroup.deliveryFee === 0 ? 'Free' : `UGX ${orderGroup.deliveryFee?.toLocaleString()}`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
-                  <span>Total:</span>
+                  <span>Grand total:</span>
                   <span>UGX {(orderGroup.totalAmount + (orderGroup.deliveryFee || 0)).toLocaleString()}</span>
                 </div>
               </div>
@@ -249,38 +230,24 @@ const MyOrders = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
-                <img
-                  src={order.product_details?.image?.[0] || '/placeholder-image.jpg'}
-                  alt={order.product_details?.name}
-                  className="w-20 h-20 object-cover rounded-lg"
-                  onError={(e) => { e.target.src = '/placeholder-image.jpg' }}
-                />
-                <div className="flex-1 text-center sm:text-left">
-                  <h4 className="font-medium text-gray-800 mb-1">{order.product_details?.name}</h4>
-                  <p className="text-sm text-gray-600 mb-1">Quantity: {order.quantity}</p>
-                  <p className="text-lg font-bold text-gray-800">UGX {order.totalAmt?.toLocaleString()}</p>
-                </div>
-              </div>
-
               {/* Order Summary */}
               <div className="bg-gray-50 p-4 rounded-lg mb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Number of products:</span>
-                  <span className="font-medium">{order.quantity}</span>
-                </div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Amount with discount:</span>
+                  <span className="text-gray-600">Items total:</span>
                   <span className="font-medium">UGX {order.totalAmt?.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Delivery Fee:</span>
+                  <span className="text-gray-600">Quantity total:</span>
+                  <span className="font-medium">{order.quantity} {order.quantity > 1 ? 'items' : 'item'}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Delivery Charge:</span>
                   <span className="font-medium">
                     {order.deliveryFee === 0 ? 'Free' : `UGX ${order.deliveryFee?.toLocaleString()}`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
-                  <span>Total:</span>
+                  <span>Grand total:</span>
                   <span>UGX {(order.totalAmt + (order.deliveryFee || 0)).toLocaleString()}</span>
                 </div>
               </div>
