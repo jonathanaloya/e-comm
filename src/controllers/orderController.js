@@ -166,19 +166,19 @@ export async function CashOnDeliveryOrderController(request, response) {
 
       if (user && user.email) {
         const orderForEmail = {
-          mainOrderId: generatedOrder[0].orderId,
-          orderId: generatedOrder[0].orderId,
-          createdAt: new Date(),
-          payment_status: "CASH ON DELIVERY",
+          mainOrderId: generatedOrder.orderId,
+          orderId: generatedOrder.orderId,
+          createdAt: generatedOrder.createdAt,
+          payment_status: generatedOrder.payment_status,
           order_status: "confirmed",
-          totalAmount: finalTotalAmt,
-          deliveryFee: deliveryFee,
-          items: generatedOrder.map((order) => ({
-            product_details: order.product_details,
-            quantity: order.quantity,
-            totalAmt: order.totalAmt,
-            name: order.product_details.name,
-            price: order.totalAmt / order.quantity,
+          totalAmount: generatedOrder.totalAmt,
+          deliveryFee: generatedOrder.deliveryFee,
+          items: generatedOrder.items.map((item) => ({
+            product_details: item.product_details,
+            quantity: item.quantity,
+            totalAmt: item.itemTotal,
+            name: item.product_details.name,
+            price: item.price,
           })),
         };
 
