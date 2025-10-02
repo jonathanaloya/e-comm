@@ -940,7 +940,11 @@ export async function getOrderDetailsController(request, response) {
   try {
     const userId = request.userId; // order id
 
-    const orderlist = await Order.find({ userId: userId })
+    // Only show orders that are not failed or cancelled
+    const orderlist = await Order.find({
+      userId: userId,
+      payment_status: { $nin: ["failed", "cancelled"] },
+    })
       .sort({ createdAt: -1 })
       .populate("delivery_address")
       .populate("items.productId", "name price image category");
