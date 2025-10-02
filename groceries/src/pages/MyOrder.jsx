@@ -186,18 +186,14 @@ const MyOrders = () => {
                         <th className="px-2 py-2 whitespace-nowrap">
                           Product Name
                         </th>
-                        <th className="px-2 py-2 whitespace-nowrap">
+                        <th className="px-2 py-2 whitespace-nowrap hidden xs:table-cell">
                           Product #
                         </th>
-                        <th className="px-2 py-2 whitespace-nowrap">
-                          Quantity
-                        </th>
-                        <th className="px-2 py-2 whitespace-nowrap">
+                        <th className="px-2 py-2 whitespace-nowrap">Qty</th>
+                        <th className="px-2 py-2 whitespace-nowrap hidden xs:table-cell">
                           Unit Price
                         </th>
-                        <th className="px-2 py-2 whitespace-nowrap">
-                          Total Price
-                        </th>
+                        <th className="px-2 py-2 whitespace-nowrap">Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -210,22 +206,22 @@ const MyOrders = () => {
                                 "/placeholder-image.jpg"
                               }
                               alt={item.product_details?.name}
-                              className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded"
+                              className="w-8 h-8 sm:w-12 sm:h-12 object-cover rounded"
                               onError={(e) => {
                                 e.target.src = "/placeholder-image.jpg";
                               }}
                             />
                           </td>
-                          <td className="px-2 py-2">
+                          <td className="px-2 py-2 max-w-[120px] truncate">
                             {item.product_details?.name}
                           </td>
-                          <td className="px-2 py-2">
+                          <td className="px-2 py-2 hidden xs:table-cell">
                             {item.product_details?.productNumber ||
                               item.product_details?._id ||
                               "-"}
                           </td>
                           <td className="px-2 py-2">{item.quantity}</td>
-                          <td className="px-2 py-2">
+                          <td className="px-2 py-2 hidden xs:table-cell">
                             UGX {item.price?.toLocaleString()}
                           </td>
                           <td className="px-2 py-2">
@@ -344,14 +340,18 @@ const MyOrders = () => {
 
               {/* Receipt Table for Order Items (support multiple products) */}
               <div className="overflow-x-auto mb-4">
-                <table className="min-w-full text-left border">
+                <table className="min-w-full text-left border text-xs sm:text-sm">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="px-2 py-2">Image</th>
-                      <th className="px-2 py-2">Product Name</th>
-                      <th className="px-2 py-2">Product #</th>
-                      <th className="px-2 py-2">Quantity</th>
-                      <th className="px-2 py-2">Price</th>
+                      <th className="px-2 py-2 whitespace-nowrap">Image</th>
+                      <th className="px-2 py-2 whitespace-nowrap">
+                        Product Name
+                      </th>
+                      <th className="px-2 py-2 whitespace-nowrap hidden xs:table-cell">
+                        Product #
+                      </th>
+                      <th className="px-2 py-2 whitespace-nowrap">Qty</th>
+                      <th className="px-2 py-2 whitespace-nowrap">Total</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -364,16 +364,16 @@ const MyOrders = () => {
                               "/placeholder-image.jpg"
                             }
                             alt={item.product_details?.name}
-                            className="w-12 h-12 object-cover rounded"
+                            className="w-8 h-8 sm:w-12 sm:h-12 object-cover rounded"
                             onError={(e) => {
                               e.target.src = "/placeholder-image.jpg";
                             }}
                           />
                         </td>
-                        <td className="px-2 py-2">
+                        <td className="px-2 py-2 max-w-[120px] truncate">
                           {item.product_details?.name}
                         </td>
-                        <td className="px-2 py-2">
+                        <td className="px-2 py-2 hidden xs:table-cell">
                           {item.product_details?.productNumber ||
                             item.product_details?._id ||
                             "-"}
