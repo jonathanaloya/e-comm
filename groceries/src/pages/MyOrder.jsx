@@ -226,7 +226,7 @@ const MyOrders = () => {
                           </td>
                           <td className="px-2 py-2">{item.quantity}</td>
                           <td className="px-2 py-2">
-                            UGX {item.price?.toLocaleString()}
+                            UGX {item.totalAmt?.toLocaleString()}
                           </td>
                           <td className="px-2 py-2">
                             UGX {item.itemTotal?.toLocaleString()}
