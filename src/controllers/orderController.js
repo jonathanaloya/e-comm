@@ -943,7 +943,7 @@ export async function getOrderDetailsController(request, response) {
     const orderlist = await Order.find({ userId: userId })
       .sort({ createdAt: -1 })
       .populate("delivery_address")
-      .populate("productId", "name price image category");
+      .populate("items.productId", "name price image category");
 
     // Group orders by mainOrderId for better display
     const groupedOrders = {};
