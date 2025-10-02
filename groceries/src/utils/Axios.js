@@ -1,7 +1,7 @@
 import axios from "axios";
 import SummaryApi, { baseURL } from "../common/SummaryApi";
-import { refreshTokenIfNeeded } from './tokenManager';
-import toast from 'react-hot-toast';
+import { refreshTokenIfNeeded } from "./tokenManager";
+import toast from "react-hot-toast";
 
 // CSRF token management
 let csrfToken = null;
@@ -9,7 +9,7 @@ let csrfToken = null;
 // Create a basic axios instance for CSRF token fetching (before Axios is fully defined)
 const basicAxios = axios.create({
   baseURL: baseURL,
-  withCredentials: true
+  withCredentials: true,
 });
 
 const fetchCSRFToken = async () => {
@@ -17,11 +17,11 @@ const fetchCSRFToken = async () => {
     const response = await basicAxios.get(SummaryApi.csrfToken.url);
     if (response.data.success) {
       csrfToken = response.data.csrfToken;
-      sessionStorage.setItem('csrfToken', csrfToken);
+      sessionStorage.setItem("csrfToken", csrfToken);
       return csrfToken;
     }
   } catch (error) {
-    console.error('Failed to fetch CSRF token:', error);
+    console.error("Failed to fetch CSRF token:", error);
   }
   return null;
 };
@@ -31,7 +31,7 @@ const getCSRFToken = async () => {
   if (csrfToken) return csrfToken;
 
   // Try to get from sessionStorage
-  csrfToken = sessionStorage.getItem('csrfToken');
+  csrfToken = sessionStorage.getItem("csrfToken");
   if (csrfToken) return csrfToken;
 
   // Fetch new token
@@ -39,101 +39,108 @@ const getCSRFToken = async () => {
 };
 
 const Axios = axios.create({
-    baseURL: baseURL,
-    withCredentials : true
-})
+  baseURL: baseURL,
+  withCredentials: true,
+});
 
 // Add a request interceptor
 Axios.interceptors.request.use(
-    async (config)=> {
-    const accessToken = await refreshTokenIfNeeded() || localStorage.getItem('accesstoken')
-    if (accessToken){
-        config.headers.Authorization = `Bearer ${accessToken}`
+  async (config) => {
+    const accessToken =
+      (await refreshTokenIfNeeded()) || localStorage.getItem("accesstoken");
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
     // Add CSRF protection for non-GET requests
-    if (config.method !== 'get') {
+    if (config.method !== "get") {
       const token = await getCSRFToken();
       if (token) {
-        config.headers['x-csrf-token'] = token;
+        config.headers["x-csrf-token"] = token;
       }
     }
 
-    config.headers['X-Requested-With'] = 'XMLHttpRequest'
+    config.headers["X-Requested-With"] = "XMLHttpRequest";
 
-    return config
+    return config;
   },
   (error) => {
-    return Promise.reject(error)
-  })
+    return Promise.reject(error);
+  }
+);
 
-  Axios.interceptors.response.use(
-    (response) => {
-      return response
-    },
-    async (error) => {
-      let originRequest = error.config
+Axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    let originRequest = error.config;
 
-      // Handle CSRF token errors
-      if (error.response?.status === 403 &&
-          error.response?.data?.message === 'Invalid CSRF token') {
-        // Clear invalid token and retry once
-        csrfToken = null;
-        sessionStorage.removeItem('csrfToken');
+    // Handle CSRF token errors
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.message === "Invalid CSRF token"
+    ) {
+      csrfToken = null;
+      sessionStorage.removeItem("csrfToken");
 
-        if (!originRequest._csrfRetry) {
-          originRequest._csrfRetry = true;
-          // Fetch new CSRF token and update request headers
-          const newToken = await getCSRFToken();
-          if (newToken) {
-            originRequest.headers['x-csrf-token'] = newToken;
-          }
-          return Axios(originRequest);
+      if (!originRequest._csrfRetry) {
+        originRequest._csrfRetry = true;
+        const newToken = await getCSRFToken();
+        if (newToken) {
+          originRequest.headers["x-csrf-token"] = newToken;
         }
+        return Axios(originRequest);
       }
-
-      if(error.response?.status === 401) {
-        if (error.response?.data?.sessionExpired) {
-          // Clear all auth data securely
-          localStorage.clear()
-          sessionStorage.clear()
-          toast.error('Session expired. Please login again.')
-          window.location.href = '/login'
-          return Promise.reject(error)
-        }
-        
-        if (!originRequest.retry) {
-            originRequest.retry = true
-            const refreshToken = localStorage.getItem('refreshToken')
-
-            if (refreshToken) {
-                const newAccessToken = refreshAccessToken(refreshToken)
-                if (newAccessToken) {
-                    originRequest.headers.Authorization = `Bearer ${newAccessToken}`
-                    return Axios(originRequest)
-                }
-            }
-        }
-      }
-
-      return Promise.reject(error)
     }
-  
-)
+
+    if (error.response?.status === 401) {
+      if (error.response?.data?.sessionExpired) {
+        // Call backend logout to clear cookies/session
+        try {
+          await Axios.get("/api/user/logout");
+        } catch (e) {}
+        // Clear all auth data securely
+        localStorage.clear();
+        sessionStorage.clear();
+        document.cookie = "accessToken=; Max-Age=0; path=/;";
+        document.cookie = "refreshToken=; Max-Age=0; path=/;";
+        toast.error("Session expired. Please login again.");
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
+      if (!originRequest.retry) {
+        originRequest.retry = true;
+        const refreshToken = localStorage.getItem("refreshToken");
+
+        if (refreshToken) {
+          const newAccessToken = await refreshAccessToken(refreshToken);
+          if (newAccessToken) {
+            originRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            return Axios(originRequest);
+          }
+        }
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 const refreshAccessToken = async (refreshToken) => {
-    try {
-        const response = await Axios({
-            ...SummaryApi.refreshToken,
-            headers : {
-                Authorization : `Bearer ${refreshToken}`
-            }
-        })
-        const accessToken = response.data.data.accessToken
-        localStorage.setItem('accesstoken', accessToken)
-        return accessToken
-    } catch (error) {
-        console.log(error)
-    }
-}
-export default Axios
+  try {
+    const response = await Axios({
+      ...SummaryApi.refreshToken,
+      headers: {
+        Authorization: `Bearer ${refreshToken}`,
+      },
+    });
+    const accessToken = response.data.data.accessToken;
+    localStorage.setItem("accesstoken", accessToken);
+    return accessToken;
+  } catch (error) {
+    console.log(error);
+  }
+};
+export default Axios;
