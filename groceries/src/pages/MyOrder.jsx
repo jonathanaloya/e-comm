@@ -351,6 +351,9 @@ const MyOrders = () => {
                         Product #
                       </th>
                       <th className="px-2 py-2 whitespace-nowrap">Qty</th>
+                      <th className="px-2 py-2 whitespace-nowrap hidden xs:table-cell">
+                        Unit Price
+                      </th>
                       <th className="px-2 py-2 whitespace-nowrap">Total</th>
                     </tr>
                   </thead>
@@ -379,8 +382,17 @@ const MyOrders = () => {
                             "-"}
                         </td>
                         <td className="px-2 py-2">{item.quantity}</td>
+                        <td className="px-2 py-2 hidden xs:table-cell">
+                          UGX{" "}
+                          {item.price?.toLocaleString() ||
+                            item.unitPrice?.toLocaleString() ||
+                            "-"}
+                        </td>
                         <td className="px-2 py-2">
-                          UGX {item.totalAmt?.toLocaleString()}
+                          UGX{" "}
+                          {item.itemTotal?.toLocaleString() ||
+                            item.totalAmt?.toLocaleString() ||
+                            "-"}
                         </td>
                       </tr>
                     ))}
