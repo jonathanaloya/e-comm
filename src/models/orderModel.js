@@ -1,88 +1,110 @@
 import mongoose from "mongoose";
 
-const orderSchema = new mongoose.Schema({
-    userId : {
-        type: mongoose.Schema.ObjectId,
-        ref: 'User'
+const orderSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
     },
 
-    orderId : {
-        type: String,
-        required: [true, "Provide orderId"],
-        unique: true
+    orderId: {
+      type: String,
+      required: [true, "Provide orderId"],
+      unique: true,
     },
 
-    productId : {
-        type: mongoose.Schema.ObjectId,
-        ref: 'product'
-    },
-
-    product_details: {
-        name: {
-            type: String,
-            required: true
+    items: [
+      {
+        productId: {
+          type: mongoose.Schema.ObjectId,
+          ref: "product",
+          required: true,
         },
-        image: { // This is an array of image URLs
-            type: [String], // Specifies an array of strings
-            required: true
-        }
-    },
-    paymentId : {
-        type: String,
-        default: ""
-    },
-
-    payment_status : {
-        type: String,
-        default: ""
-    },
-
-    delivery_address : {
-        type: mongoose.Schema.ObjectId,
-        ref: 'address'
-    },
-
-    subTotalAmt : {
-        type: Number,
-        default: 0
-    },
-
-    totalAmt : {
-        type: Number,
-        default: 0
-    },
-
-    deliveryFee : {
-        type: Number,
-        default: 0
+        product_details: {
+          name: {
+            type: String,
+            required: true,
+          },
+          image: {
+            type: [String],
+            required: true,
+          },
+        },
+        price: {
+          type: Number,
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          min: 1,
+        },
+        itemTotal: {
+          type: Number,
+          required: true,
+        },
+      },
+    ],
+    paymentId: {
+      type: String,
+      default: "",
     },
 
-    quantity : {
-        type: Number,
-        required: true,
-        default: 1,
-        min: 1
+    payment_status: {
+      type: String,
+      default: "",
     },
 
-    mainOrderId : {
-        type: String,
-        default: ""
+    delivery_address: {
+      type: mongoose.Schema.ObjectId,
+      ref: "address",
     },
 
-    order_status : {
-        type: String,
-        enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
-        default: 'pending'
+    subTotalAmt: {
+      type: Number,
+      default: 0,
     },
 
-    invoice_receipt : {
-        type: String,
-        default:""
-    }
-}, {
-    timestamps: true
-})
+    totalAmt: {
+      type: Number,
+      default: 0,
+    },
 
-const Order = mongoose.model('order', orderSchema)
+    deliveryFee: {
+      type: Number,
+      default: 0,
+    },
 
-export default Order
+    // quantity is now per item in items array
+
+    mainOrderId: {
+      type: String,
+      default: "",
+    },
+
+    order_status: {
+      type: String,
+      enum: [
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
+      default: "pending",
+    },
+
+    invoice_receipt: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const Order = mongoose.model("order", orderSchema);
+
+export default Order;
