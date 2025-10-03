@@ -2,6 +2,10 @@ import axios from "axios";
 import SummaryApi, { baseURL } from "../common/SummaryApi";
 import { refreshTokenIfNeeded } from "./tokenManager";
 import toast from "react-hot-toast";
+import { logout } from "../store/userSlice";
+import { handleAddItemCart } from "../store/cartProduct";
+import { setOrder } from "../store/orderSlice";
+import store from "../store";
 
 // CSRF token management
 let csrfToken = null;
@@ -100,6 +104,10 @@ Axios.interceptors.response.use(
         try {
           await Axios.get("/api/user/logout");
         } catch (e) {}
+        // Clear Redux state
+        store.dispatch(logout());
+        store.dispatch(handleAddItemCart([]));
+        store.dispatch(setOrder([]));
         // Clear all auth data securely
         localStorage.clear();
         sessionStorage.clear();
