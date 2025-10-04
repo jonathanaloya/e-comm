@@ -27,25 +27,35 @@ function Register() {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  // Password strength checker
-  const isStrongPassword = (password) => {
-    // At least 8 chars, one number, one special char
-    return /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,}$/.test(
-      password
-    );
+  // Password strength checker with detailed feedback
+  const getPasswordErrors = (password) => {
+    const errors = [];
+    if (password.length < 8) {
+      errors.push("Password must be at least 8 characters.");
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push("Password must include at least one number.");
+    }
+    if (!/[!@#$%^&*]/.test(password)) {
+      errors.push("Password must include at least one special character.");
+    }
+    return errors;
   };
 
   const validateFields = () => {
     const newErrors = {};
     if (!data.name) newErrors.name = "Name is required.";
     if (!data.email) newErrors.email = "Email is required.";
-    if (!data.password) newErrors.password = "Password is required.";
+    if (!data.password) {
+      newErrors.password = "Password is required.";
+    } else {
+      const passwordErrors = getPasswordErrors(data.password);
+      if (passwordErrors.length > 0) {
+        newErrors.password = passwordErrors.join(" ");
+      }
+    }
     if (!data.confirmPassword)
       newErrors.confirmPassword = "Please confirm your password.";
-    if (data.password && !isStrongPassword(data.password)) {
-      newErrors.password =
-        "Password must be at least 8 characters, include a number and a special character.";
-    }
     if (
       data.password &&
       data.confirmPassword &&
