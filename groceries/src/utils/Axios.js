@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { logout } from "../store/userSlice";
 import { handleAddItemCart } from "../store/cartProduct";
 import { setOrder } from "../store/orderSlice";
-import store from "../store";
+import { store } from "../store/store";
 
 // CSRF token management
 let csrfToken = null;
