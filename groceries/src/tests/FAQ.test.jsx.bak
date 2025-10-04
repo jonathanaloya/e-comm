@@ -1,0 +1,90 @@
+import { render, screen, fireEvent } from '@testing-library/react'
+import { BrowserRouter } from 'react-router-dom'
+import { describe, it, expect } from 'vitest'
+import FAQ from '../pages/FAQ'
+
+const renderWithRouter = (component) => {
+  return render(
+    <BrowserRouter>
+      {component}
+    </BrowserRouter>
+  )
+}
+
+describe('FAQ Component', () => {
+  it('renders FAQ page with title', () => {
+    renderWithRouter(<FAQ />)
+    
+    expect(screen.getByText('Frequently Asked Questions')).toBeInTheDocument()
+    expect(screen.getByText('Find quick answers to common questions about Fresh Katale grocery delivery')).toBeInTheDocument()
+  })
+
+  it('displays search input', () => {
+    renderWithRouter(<FAQ />)
+    
+    const searchInput = screen.getByPlaceholderText('Search for answers...')
+    expect(searchInput).toBeInTheDocument()
+  })
+
+  it('shows all categories', () => {
+    renderWithRouter(<FAQ />)
+    
+    expect(screen.getByText('All Questions')).toBeInTheDocument()
+    expect(screen.getByText('Orders')).toBeInTheDocument()
+    expect(screen.getByText('Delivery')).toBeInTheDocument()
+    expect(screen.getByText('Payment')).toBeInTheDocument()
+    expect(screen.getByText('Products')).toBeInTheDocument()
+  })
+
+  it('filters FAQs by search term', () => {
+    renderWithRouter(<FAQ />)
+    
+    const searchInput = screen.getByPlaceholderText('Search for answers...')
+    fireEvent.change(searchInput, { target: { value: 'order' } })
+    
+    // Should show questions containing 'order'
+    expect(screen.getByText('How do I place an order?')).toBeInTheDocument()
+    expect(screen.getByText('How do I track my order?')).toBeInTheDocument()
+  })
+
+  it('expands FAQ item when clicked', () => {
+    renderWithRouter(<FAQ />)
+    
+    const faqQuestion = screen.getByText('How do I place an order?')
+    fireEvent.click(faqQuestion)
+    
+    // Should show the answer
+    expect(screen.getByText(/To place an order:/)).toBeInTheDocument()
+  })
+
+  it('filters by category', () => {
+    renderWithRouter(<FAQ />)
+    
+    const ordersCategory = screen.getByText('Orders')
+    fireEvent.click(ordersCategory)
+    
+    // Should show only order-related questions
+    expect(screen.getByText('How do I place an order?')).toBeInTheDocument()
+    expect(screen.getByText('How do I track my order?')).toBeInTheDocument()
+  })
+
+  it('shows no results message when search has no matches', () => {
+    renderWithRouter(<FAQ />)
+    
+    const searchInput = screen.getByPlaceholderText('Search for answers...')
+    fireEvent.change(searchInput, { target: { value: 'nonexistent query' } })
+    
+    expect(screen.getByText('No results found')).toBeInTheDocument()
+  })
+
+  it('preserves line breaks in answers', () => {
+    renderWithRouter(<FAQ />)
+    
+    const trackOrderQuestion = screen.getByText('How do I track my order?')
+    fireEvent.click(trackOrderQuestion)
+    
+    // The answer should be displayed with proper line breaks
+    const answerElement = screen.getByText(/You can track your order by:/)
+    expect(answerElement).toHaveClass('whitespace-pre-line')
+  })
+})

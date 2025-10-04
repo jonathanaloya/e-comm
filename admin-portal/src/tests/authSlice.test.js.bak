@@ -1,0 +1,59 @@
+import { describe, it, expect, beforeEach } from 'vitest'
+import { configureStore } from '@reduxjs/toolkit'
+import authReducer, { setUser, setLoading, logout } from '../store/authSlice'
+
+describe('Auth Slice', () => {
+  let store
+
+  beforeEach(() => {
+    store = configureStore({
+      reducer: {
+        auth: authReducer
+      }
+    })
+  })
+
+  it('should have correct initial state', () => {
+    const state = store.getState().auth
+    expect(state.user).toBeNull()
+    expect(state.isAuthenticated).toBe(false)
+    expect(state.loading).toBe(false)
+  })
+
+  it('should handle setUser action', () => {
+    const user = { id: 1, name: 'Admin', email: 'admin@test.com' }
+    
+    store.dispatch(setUser(user))
+    
+    const state = store.getState().auth
+    expect(state.user).toEqual(user)
+    expect(state.isAuthenticated).toBe(true)
+  })
+
+  it('should handle setLoading action', () => {
+    store.dispatch(setLoading(true))
+    
+    const state = store.getState().auth
+    expect(state.loading).toBe(true)
+  })
+
+  it('should handle logout action', () => {
+    // First set a user
+    const user = { id: 1, name: 'Admin', email: 'admin@test.com' }
+    store.dispatch(setUser(user))
+    
+    // Then logout
+    store.dispatch(logout())
+    
+    const state = store.getState().auth
+    expect(state.user).toBeNull()
+    expect(state.isAuthenticated).toBe(false)
+  })
+
+  it('should set isAuthenticated to false when user is null', () => {
+    store.dispatch(setUser(null))
+    
+    const state = store.getState().auth
+    expect(state.isAuthenticated).toBe(false)
+  })
+})

@@ -1,0 +1,96 @@
+import request from 'supertest'
+import app from '../app.js'
+import Notification from '../models/notificationModel.js'
+import { createNotification } from '../controllers/notificationController.js'
+
+describe('Notification Tests', () => {
+  describe('createNotification function', () => {
+    it('should create a notification successfully', async () => {
+      const notification = await createNotification(
+        'order',
+        'New Order',
+        'Test order message',
+        { orderId: 'TEST-123' },
+        'high'
+      )
+
+      expect(notification).toBeTruthy()
+      expect(notification.type).toBe('order')
+      expect(notification.title).toBe('New Order')
+      expect(notification.priority).toBe('high')
+      expect(notification.isRead).toBe(false)
+    })
+
+    it('should handle invalid notification type', async () => {
+      const notification = await createNotification(
+        'invalid_type',
+        'Test',
+        'Test message'
+      )
+
+      expect(notification).toBeNull()
+    })
+  })
+
+  describe('GET /api/notifications/get', () => {
+    beforeEach(async () => {
+      // Create test notifications
+      await Notification.create([
+        {
+          type: 'order',
+          title: 'New Order 1',
+          message: 'Order from customer 1',
+          priority: 'high',
+          isRead: false
+        },
+        {
+          type: 'support',
+          title: 'Support Ticket',
+          message: 'Customer needs help',
+          priority: 'medium',
+          isRead: true
+        },
+        {
+          type: 'user_registration',
+          title: 'New User',
+          message: 'User registered',
+          priority: 'low',
+          isRead: false
+        }
+      ])
+    })
+
+    it('should require admin authentication', async () => {
+      const response = await request(app)
+        .get('/api/notifications/get')
+        .expect(401)
+
+      expect(response.body.success).toBe(false)
+    })
+
+    // Note: Admin authentication tests would require proper JWT setup
+  })
+
+  describe('Notification filtering', () => {
+    beforeEach(async () => {
+      await Notification.create([
+        { type: 'order', title: 'Order 1', message: 'Message 1', priority: 'high' },
+        { type: 'order', title: 'Order 2', message: 'Message 2', priority: 'medium' },
+        { type: 'support', title: 'Support 1', message: 'Message 3', priority: 'low' }
+      ])
+    })
+
+    it('should filter notifications by type', async () => {
+      const orderNotifications = await Notification.find({ type: 'order' })
+      expect(orderNotifications).toHaveLength(2)
+
+      const supportNotifications = await Notification.find({ type: 'support' })
+      expect(supportNotifications).toHaveLength(1)
+    })
+
+    it('should filter notifications by read status', async () => {
+      const unreadNotifications = await Notification.find({ isRead: false })
+      expect(unreadNotifications).toHaveLength(3)
+    })
+  })
+})

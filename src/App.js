@@ -8,9 +8,9 @@ import connectDB from './config/database.js'
 import { generalLimiter, securityHeaders, sanitizeInput } from './middleware/security.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import userRouter from './routes/userRoutes.js'
-import categoryRouter from './routes/categoryRoutes.js'
-import uploadRouter from './routes/uploadRoutes.js'
-import subCategoryRouter from './routes/subCategoryRoutes.js'
+import categoryRouter from './routes/category.js'
+import uploadRouter from './routes/upload.js'
+import subCategoryRouter from './routes/subCategory.js'
 import productRouter from './routes/productRoutes.js'
 import cartRouter from './routes/cartRoutes.js'
 import addressRouter from './routes/addressRoutes.js'
@@ -74,13 +74,17 @@ app.use('/api/user/admin',adminRouter)
 app.use(notFoundHandler)
 app.use(errorHandler)
 
-connectDB().then(()=>{
-    app.listen(PORT,()=>{
-        console.log(`Server is running on port ${PORT}`)
+// Only connect to DB and start server if this file is run directly
+// Export app for testing
+if (process.env.NODE_ENV !== 'test') {
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`)
     })
-}).catch(err => {
+  }).catch(err => {
     console.error('Failed to connect to database:', err)
     process.exit(1)
-})
+  })
+}
 
 export default app

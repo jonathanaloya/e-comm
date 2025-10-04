@@ -1,0 +1,117 @@
+import request from 'supertest'
+import app from '../app.js'
+import Product from '../models/productModel.js'
+import Category from '../models/categoryModel.js'
+
+describe('Product Tests', () => {
+  let categoryId
+
+  beforeEach(async () => {
+    // Create a test category
+    const category = new Category({
+      name: 'Test Category',
+      image: 'test-image.jpg'
+    })
+    const savedCategory = await category.save()
+    categoryId = savedCategory._id
+  })
+
+  describe('POST /api/product/get', () => {
+    it('should get products successfully', async () => {
+      // Create test products
+      await Product.create([
+        {
+          name: 'Test Product 1',
+          image: ['test1.jpg'],
+          category: [categoryId],
+          price: 1000,
+          discount: 0,
+          stock: 10
+        },
+        {
+          name: 'Test Product 2',
+          image: ['test2.jpg'],
+          category: [categoryId],
+          price: 2000,
+          discount: 10,
+          stock: 5
+        }
+      ])
+
+      const response = await request(app)
+        .post('/api/product/get')
+        .send({})
+        .expect(200)
+
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(2)
+      expect(response.body.data[0].name).toBe('Test Product 1')
+    })
+
+    it('should handle pagination', async () => {
+      // Create multiple products
+      const products = Array.from({ length: 15 }, (_, i) => ({
+        name: `Product ${i + 1}`,
+        image: [`test${i + 1}.jpg`],
+        category: [categoryId],
+        price: 1000 + i * 100,
+        discount: 0,
+        stock: 10
+      }))
+      await Product.create(products)
+
+      const response = await request(app)
+        .post('/api/product/get')
+        .send({ page: 1, limit: 10 })
+        .expect(200)
+
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(10)
+      expect(response.body.totalPage).toBeGreaterThan(1)
+    })
+  })
+
+  describe('POST /api/product/search', () => {
+    beforeEach(async () => {
+      await Product.create([
+        {
+          name: 'Fresh Apples',
+          image: ['apple.jpg'],
+          category: [categoryId],
+          price: 500,
+          discount: 0,
+          stock: 20
+        },
+        {
+          name: 'Green Bananas',
+          image: ['banana.jpg'],
+          category: [categoryId],
+          price: 300,
+          discount: 5,
+          stock: 15
+        }
+      ])
+    })
+
+    it('should search products by name', async () => {
+      const response = await request(app)
+        .post('/api/product/search')
+        .send({ search: 'apple' })
+        .expect(200)
+
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(1)
+      expect(response.body.data[0].name).toBe('Fresh Apples')
+    })
+
+    it('should return empty array for no matches', async () => {
+      const response = await request(app)
+        .post('/api/product/search')
+        .send({ search: 'nonexistent' })
+        .expect(200)
+
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(0)
+    })
+  })
+})

@@ -1,0 +1,89 @@
+import request from 'supertest'
+import app from '../app.js'
+import User from '../models/userModel.js'
+
+describe('Authentication Tests', () => {
+  describe('POST /api/user/register', () => {
+    it('should register a new user successfully', async () => {
+      const userData = {
+        name: 'Test User',
+        email: 'test@example.com',
+        password: 'Password123!'
+      }
+
+      const response = await request(app)
+        .post('/api/user/register')
+        .send(userData)
+        .expect(200)
+
+      expect(response.body.success).toBe(true)
+      expect(response.body.message).toContain('registered successfully')
+      expect(response.body.data.email).toBe(userData.email)
+    })
+
+    it('should reject registration with invalid email', async () => {
+      const userData = {
+        name: 'Test User',
+        email: 'invalid-email',
+        password: 'Password123!'
+      }
+
+      const response = await request(app)
+        .post('/api/user/register')
+        .send(userData)
+        .expect(400)
+
+      expect(response.body.success).toBe(false)
+      expect(response.body.errors).toContain('Valid email is required')
+    })
+
+    it('should reject registration with weak password', async () => {
+      const userData = {
+        name: 'Test User',
+        email: 'test@example.com',
+        password: '123'
+      }
+
+      const response = await request(app)
+        .post('/api/user/register')
+        .send(userData)
+        .expect(400)
+
+      expect(response.body.success).toBe(false)
+      expect(response.body.errors).toContain('Password must be at least 8 characters long')
+    })
+  })
+
+  describe('POST /api/user/login', () => {
+    beforeEach(async () => {
+      // Create a test user
+      const user = new User({
+        name: 'Test User',
+        email: 'test@example.com',
+        password: '$2a$10$hash', // Mock hashed password
+        verify_email: true
+      })
+      await user.save()
+    })
+
+    it('should require email and password', async () => {
+      const response = await request(app)
+        .post('/api/user/login')
+        .send({})
+        .expect(400)
+
+      expect(response.body.success).toBe(false)
+      expect(response.body.errors).toContain('Valid email is required')
+    })
+  })
+
+  describe('GET /api/user/logout', () => {
+    it('should logout user successfully', async () => {
+      const response = await request(app)
+        .get('/api/user/logout')
+        .expect(401) // Should be unauthorized without token
+
+      expect(response.body.success).toBe(false)
+    })
+  })
+})
