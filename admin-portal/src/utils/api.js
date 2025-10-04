@@ -1,7 +1,7 @@
 import axios from 'axios'
 import toast from 'react-hot-toast'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cse-341-project1-h1kw.onrender.com'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://e-comm-rho-five.vercel.app/'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
