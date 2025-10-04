@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { NavLink } from 'react-router-dom'
 import { FaHome, FaShoppingCart, FaUsers, FaBox, FaSignOutAlt } from 'react-icons/fa'
 import { useDispatch } from 'react-redux'
@@ -5,10 +6,10 @@ import { logout } from '../store/authSlice'
 
 const Sidebar = () => {
   const dispatch = useDispatch()
-
+  const navigate = useNavigate()
   const handleLogout = () => {
     dispatch(logout())
-    window.location.href = '/login'
+    navigate('/login', { replace: true })
   }
 
   const navItems = [
