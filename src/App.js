@@ -74,17 +74,10 @@ app.use('/api/user/admin',adminRouter)
 app.use(notFoundHandler)
 app.use(errorHandler)
 
-// Only connect to DB and start server if this file is run directly
-// Export app for testing
-if (process.env.NODE_ENV !== 'test') {
-  connectDB().then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`)
-    })
-  }).catch(err => {
-    console.error('Failed to connect to database:', err)
-    process.exit(1)
-  })
-}
+// Connect to database
+connectDB().catch(err => {
+  console.error('Failed to connect to database:', err)
+  process.exit(1)
+})
 
 export default app

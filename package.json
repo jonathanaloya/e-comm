@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node ./src/index.js",
     "dev": "nodemon src/index.js",
     "build": "echo 'No build step required for backend'",
     "test": "jest --config jest.config.cjs",
