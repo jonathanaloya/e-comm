@@ -81,9 +81,13 @@ function Register() {
         ...SummaryApi.register,
         data: data,
       });
+      // Only show backend error if frontend validation passed and backend error is not generic
       if (response.data.error) {
-        // Only show backend error if all fields passed frontend validation
-        if (response.data.errors && response.data.errors.length > 0) {
+        if (
+          response.data.errors &&
+          response.data.errors.length > 0 &&
+          response.data.errors[0] !== "validation failed"
+        ) {
           toast.error(response.data.errors[0]);
         } else if (
           response.data.message &&
