@@ -15,15 +15,15 @@ import CartMobileLink from "./components/CartMobile";
 import FloatingHelpButton from "./components/FloatingHelpButton";
 import InstallPrompt from "./components/InstallPrompt";
 import LoadingSpinner from "./components/LoadingSpinner";
-import { useSessionTimeout } from "./hooks/useSessionTimeout";
+import { useAutoLogout } from "./hooks/useAutoLogout";
 
 function App() {
   const dispatch = useDispatch();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Session timeout hook - automatically handles logout on inactivity and session expiry
-  useSessionTimeout();
+  // Auto logout hook - automatically logs out inactive users
+  useAutoLogout();
 
   const fetchUser = async () => {
     const userData = await fetchUserDetails();

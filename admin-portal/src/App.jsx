@@ -2,8 +2,11 @@ import { Outlet } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
+import { useAutoLogout } from './hooks/useAutoLogout'
 
 function App() {
+  useAutoLogout();
+  
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />

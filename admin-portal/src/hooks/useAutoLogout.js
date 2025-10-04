@@ -17,7 +17,7 @@ export const useAutoLogout = () => {
         if (isAuthenticated) {
             timeoutRef.current = setTimeout(() => {
                 dispatch(logout());
-                alert('Session expired due to inactivity');
+                alert('Admin session expired due to inactivity');
             }, INACTIVITY_TIME);
         }
     };
