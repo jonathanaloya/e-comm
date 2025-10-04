@@ -71,7 +71,8 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateFields()) {
+    const valid = validateFields();
+    if (!valid) {
       toast.error("Please fix the errors in the form.");
       return;
     }
@@ -81,11 +82,16 @@ function Register() {
         data: data,
       });
       if (response.data.error) {
+        // Only show backend error if all fields passed frontend validation
         if (response.data.errors && response.data.errors.length > 0) {
           toast.error(response.data.errors[0]);
-        } else {
+        } else if (
+          response.data.message &&
+          response.data.message !== "validation failed"
+        ) {
           toast.error(response.data.message);
         }
+        // If backend returns generic 'validation failed', ignore it (frontend already showed errors)
       }
       if (response.data.success) {
         toast.success(response.data.message);
