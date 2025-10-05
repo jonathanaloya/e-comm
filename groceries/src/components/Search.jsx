@@ -137,7 +137,7 @@ const Search = () => {
                             1000,
                             'Search for all your "dairy products"',
                             1000,
-                            'search for your "breads and pastries"',
+                            'search for your "bread and pastries"',
                             1000,
                             'Search for your "grains and cereals"',
                             1000,
