@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../store/authSlice';
+import { logout } from '../store/userSlice';
 
 const INACTIVITY_TIME = 30 * 60 * 1000; // 30 minutes
 
 export const useAutoLogout = () => {
     const dispatch = useDispatch();
-    const { isAuthenticated } = useSelector(state => state.auth);
+    const user = useSelector(state => state.user);
+    const isAuthenticated = user._id;
     const timeoutRef = useRef(null);
 
     const resetTimer = () => {
