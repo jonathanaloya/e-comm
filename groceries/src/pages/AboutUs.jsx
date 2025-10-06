@@ -8,18 +8,55 @@ const AboutUs = () => {
         
         <div className="space-y-6 text-gray-700 leading-relaxed">
           <p className="text-lg">
-            Welcome to Fresh Katale, your trusted partner in bringing the freshest, highest-quality groceries 
-            directly to your doorstep. We are passionate about connecting communities with nutritious, 
-            farm-fresh produce and essential household items.
+            Welcome to Fresh Katale, your go-to online marketplace for fresh, high-quality produce and everyday essentials. We are dedicated to connecting farmers, suppliers, and consumers by providing a seamless shopping experience that guarantees convenience, affordability, and freshness.
+          </p>
+          <p>
+            At Fresh Katale, we believe in supporting local farmers and businesses while ensuring that households have access to nutritious and affordable food. Our platform offers a wide variety of fresh fruits, vegetables, dairy products, meats, grains, and other essential groceries—delivered straight to your doorstep.
           </p>
 
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h2 className="text-2xl font-semibold text-green-600 mb-3">Our Mission</h2>
+              <p>
+                To revolutionize grocery shopping in Uganda by providing an efficient and reliable online marketplace that guarantees fresh, high-quality products at competitive prices.
+              </p>
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-green-600 mb-3">Our Vision</h2>
+              <p>
+                To become Uganda's leading online grocery platform, empowering communities with convenient access to fresh, affordable, and quality food while supporting local farmers and sustainable practices.
+              </p>
+            </div>
+          </div>
+
           <div>
-            <h2 className="text-2xl font-semibold text-green-600 mb-3">Our Mission</h2>
-            <p>
-              At Fresh Katale, our mission is to revolutionize the way people shop for groceries by providing 
-              convenient, reliable, and affordable access to fresh produce and quality products. We believe 
-              that everyone deserves access to nutritious food that supports healthy living.
-            </p>
+            <h2 className="text-2xl font-semibold text-green-600 mb-6 text-center">Our Values</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-green-50 p-4 rounded-lg text-center">
+                <h3 className="font-semibold text-green-700 mb-2">Quality</h3>
+                <p className="text-sm">We never compromise on the quality of products we deliver to our customers.</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg text-center">
+                <h3 className="font-semibold text-green-700 mb-2">Integrity</h3>
+                <p className="text-sm">We conduct business with honesty, transparency, and ethical practices.</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg text-center">
+                <h3 className="font-semibold text-green-700 mb-2">Innovation</h3>
+                <p className="text-sm">We continuously improve our platform and services to better serve our customers.</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg text-center">
+                <h3 className="font-semibold text-green-700 mb-2">Community</h3>
+                <p className="text-sm">We support local farmers and businesses to strengthen our communities.</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg text-center">
+                <h3 className="font-semibold text-green-700 mb-2">Sustainability</h3>
+                <p className="text-sm">We promote eco-friendly practices and responsible consumption.</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg text-center">
+                <h3 className="font-semibold text-green-700 mb-2">Excellence</h3>
+                <p className="text-sm">We strive for excellence in every aspect of our service delivery.</p>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -56,8 +93,8 @@ const AboutUs = () => {
           </div>
 
           <div>
-            <h2 className="text-2xl font-semibold text-green-600 mb-3">Our Commitment</h2>
-            <p>
+            <h2 className="text-2xl font-semibold text-green-600 mb-6 text-center">Our Commitment</h2>
+            <p className="text-center">
               Fresh Katale is committed to building lasting relationships with our customers by consistently 
               delivering exceptional service and quality products. We continuously strive to improve our 
               offerings and expand our reach to serve more communities.
