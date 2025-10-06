@@ -24,7 +24,7 @@ const AboutUs = () => {
             <div>
               <h2 className="text-2xl font-semibold text-green-600 mb-3">Our Vision</h2>
               <p>
-                To become Uganda's leading online grocery platform, empowering communities with convenient access to fresh, affordable, and quality food while supporting local farmers and sustainable practices.
+                To become Uganda’s leading online fresh market, fostering a sustainable and thriving food supply chain that benefits both consumers and local producers.
               </p>
             </div>
           </div>
@@ -33,24 +33,24 @@ const AboutUs = () => {
             <h2 className="text-2xl font-semibold text-green-600 mb-6 text-center">Our Values</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="bg-green-50 p-4 rounded-lg text-center">
-                <h3 className="font-semibold text-green-700 mb-2">Quality</h3>
-                <p className="text-sm">We never compromise on the quality of products we deliver to our customers.</p>
+                <h3 className="font-semibold text-green-700 mb-2">Freshness</h3>
+                <p className="text-sm">We prioritize delivering farm-fresh and high-quality products.</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg text-center">
-                <h3 className="font-semibold text-green-700 mb-2">Integrity</h3>
-                <p className="text-sm">We conduct business with honesty, transparency, and ethical practices.</p>
+                <h3 className="font-semibold text-green-700 mb-2">Convenience</h3>
+                <p className="text-sm">Shop from anywhere, anytime, and get your orders delivered to your doorstep.</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg text-center">
-                <h3 className="font-semibold text-green-700 mb-2">Innovation</h3>
-                <p className="text-sm">We continuously improve our platform and services to better serve our customers.</p>
+                <h3 className="font-semibold text-green-700 mb-2">Affordability</h3>
+                <p className="text-sm">We ensure fair prices while supporting local farmers and suppliers.</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg text-center">
-                <h3 className="font-semibold text-green-700 mb-2">Community</h3>
-                <p className="text-sm">We support local farmers and businesses to strengthen our communities.</p>
+                <h3 className="font-semibold text-green-700 mb-2">Reliability</h3>
+                <p className="text-sm">We are committed to providing a trustworthy and seamless shopping experience.</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg text-center">
                 <h3 className="font-semibold text-green-700 mb-2">Sustainability</h3>
-                <p className="text-sm">We promote eco-friendly practices and responsible consumption.</p>
+                <p className="text-sm">We support eco-friendly and ethical sourcing practices to promote a healthier planet.</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg text-center">
                 <h3 className="font-semibold text-green-700 mb-2">Excellence</h3>
@@ -58,59 +58,25 @@ const AboutUs = () => {
               </div>
             </div>
           </div>
-
           <div>
-            <h2 className="text-2xl font-semibold text-green-600 mb-3">What We Offer</h2>
-            <ul className="list-disc list-inside space-y-2 ml-4">
-              <li><strong>Fresh Produce:</strong> Locally sourced fruits and vegetables, picked at peak ripeness</li>
-              <li><strong>Quality Groceries:</strong> Essential pantry items, dairy products, and household necessities</li>
-              <li><strong>Fast Delivery:</strong> Quick and reliable delivery service to your location</li>
-              <li><strong>Competitive Prices:</strong> Affordable pricing without compromising on quality</li>
-              <li><strong>Customer Support:</strong> Dedicated support team to assist with your needs</li>
-            </ul>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-semibold text-green-600 mb-3">Why Choose Fresh Katale?</h2>
+            <h2 className="text-2xl font-semibold text-green-600 mb-3 text-center">Why Choose Us?</h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-green-700 mb-2">Quality Assurance</h3>
-                <p className="text-sm">We carefully select and inspect all products to ensure you receive only the best quality items.</p>
+                <h3 className="font-semibold text-green-700 mb-2">Wide Variety of Fresh Produce</h3>
+                <p className="text-sm">From fruits and vegetables to meats and dairy, we’ve got you covered.</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-green-700 mb-2">Convenience</h3>
-                <p className="text-sm">Shop from the comfort of your home and have groceries delivered at your preferred time.</p>
+                <h3 className="font-semibold text-green-700 mb-2">Seamless Online Shopping</h3>
+                <p className="text-sm">Our easy-to-use platform ensures a hassle-free shopping experience.</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-green-700 mb-2">Local Support</h3>
-                <p className="text-sm">We work with local farmers and suppliers to support the community and ensure freshness.</p>
+                <h3 className="font-semibold text-green-700 mb-2">Fast & Reliable Delivery</h3>
+                <p className="text-sm">Get your groceries delivered quickly and conveniently.</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-green-700 mb-2">Sustainability</h3>
-                <p className="text-sm">Committed to eco-friendly practices and reducing food waste through efficient supply chains.</p>
+                <h3 className="font-semibold text-green-700 mb-2">Supporting Local Farmers</h3>
+                <p className="text-sm">Every purchase contributes to the growth of small-scale farmers and suppliers.</p>
               </div>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-semibold text-green-600 mb-6 text-center">Our Commitment</h2>
-            <p className="text-center">
-              Fresh Katale is committed to building lasting relationships with our customers by consistently 
-              delivering exceptional service and quality products. We continuously strive to improve our 
-              offerings and expand our reach to serve more communities.
-            </p>
-          </div>
-
-          <div className="bg-green-100 p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-green-700 mb-3">Get in Touch</h2>
-            <p className="mb-4">
-              Have questions or feedback? We'd love to hear from you! Our customer service team is here 
-              to help make your shopping experience as smooth as possible.
-            </p>
-            <div className="space-y-2">
-              <p><strong>Email:</strong> support@freshkatale.com</p>
-              <p><strong>Phone:</strong> +256 700 000 000</p>
-              <p><strong>Hours:</strong> Monday - Sunday, 8:00 AM - 8:00 PM</p>
             </div>
           </div>
         </div>
