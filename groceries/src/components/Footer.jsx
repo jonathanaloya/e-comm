@@ -11,6 +11,7 @@ function Footer() {
                 <div className='text-center lg:text-left'>
                     <p>&copy; All Rights Reserved 2025</p>
                     <div className='flex gap-4 justify-center lg:justify-start mt-2 text-sm'>
+                        <Link to='/about-us' className='hover:text-green-600'>About Us</Link>
                         <Link to='/privacy-policy' className='hover:text-green-600'>Privacy Policy</Link>
                         <Link to='/terms-of-service' className='hover:text-green-600'>Terms of Service</Link>
                         <Link to='/faq' className='hover:text-green-600'>FAQ</Link>
