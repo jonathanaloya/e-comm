@@ -4,7 +4,7 @@ const AboutUs = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="bg-white rounded-lg shadow-sm p-8">
-        <h1 className="text-3xl font-bold text-green-700 mb-6">About Fresh Katale</h1>
+        <h1 className="text-3xl font-bold text-green-700 mb-6 text-center">About Fresh Katale</h1>
         
         <div className="space-y-6 text-gray-700 leading-relaxed">
           <p className="text-lg">
@@ -16,13 +16,13 @@ const AboutUs = () => {
 
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h2 className="text-2xl font-semibold text-green-600 mb-3">Our Mission</h2>
+              <h2 className="text-2xl font-semibold text-green-600 mb-3 text-center">Our Mission</h2>
               <p>
                 To revolutionize grocery shopping in Uganda by providing an efficient and reliable online marketplace that guarantees fresh, high-quality products at competitive prices.
               </p>
             </div>
             <div>
-              <h2 className="text-2xl font-semibold text-green-600 mb-3">Our Vision</h2>
+              <h2 className="text-2xl font-semibold text-green-600 mb-3 text-center">Our Vision</h2>
               <p>
                 To become Uganda’s leading online fresh market, fostering a sustainable and thriving food supply chain that benefits both consumers and local producers.
               </p>
