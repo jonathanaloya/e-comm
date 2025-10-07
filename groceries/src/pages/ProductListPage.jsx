@@ -56,7 +56,7 @@ const ProductListPage = () => {
         if (responseData.page == 1) {
           setData(responseData.data);
         } else {
-          setData([...data, ...responseData.data]);
+          setData(prev => [...prev, ...responseData.data]);
         }
         setTotalPage(responseData.totalCount);
       }
@@ -78,6 +78,13 @@ const ProductListPage = () => {
 
   useEffect(() => {
     if (categoryId && subCategoryId) {
+      setPage(1);
+      setData([]);
+    }
+  }, [categoryId, subCategoryId]);
+  
+  useEffect(() => {
+    if (categoryId && subCategoryId && page) {
       fetchProductdata();
     }
   }, [categoryId, subCategoryId, page]);
