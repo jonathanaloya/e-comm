@@ -20,13 +20,18 @@ const ProductListPage = () => {
         const categoryParam = params.category;
         const subCategoryParam = params.subCategory;
         
+        console.log('URL Params:', { categoryParam, subCategoryParam });
+        
         if (!categoryParam || !subCategoryParam) {
+          console.log('Missing params');
           setData([]);
           return;
         }
         
         const categoryId = categoryParam.split('-').pop();
         const subCategoryId = subCategoryParam.split('-').pop();
+        
+        console.log('Extracted IDs:', { categoryId, subCategoryId });
         
         const response = await Axios({
           ...SummaryApi.getProductByCategoryAndSubCategory,
@@ -38,13 +43,18 @@ const ProductListPage = () => {
           },
         });
 
+        console.log('API Response:', response.data);
+        
         const { data: responseData } = response;
         if (responseData.success) {
+          console.log('Products found:', responseData.data?.length || 0);
           setData(responseData.data || []);
         } else {
+          console.log('API returned success: false');
           setData([]);
         }
       } catch (error) {
+        console.error('Fetch error:', error);
         AxiosToastError(error);
         setData([]);
       } finally {
