@@ -6,12 +6,18 @@ const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI, { 
             useNewUrlParser: true, 
-            useUnifiedTopology: true 
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 45000,
+            maxPoolSize: 10,
+            retryWrites: true,
+            w: 'majority'
         });
         console.log('MongoDB Connected');
     } catch (error) {
         console.error('Database connection failed:', error);
-        process.exit(1);
+        // Don't exit immediately, let the app start without DB
+        console.log('Starting server without database connection...');
     }
 };
 

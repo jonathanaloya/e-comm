@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import session from 'express-session'
 import morgan from 'morgan'
-import connectDB from './config/database.js'
+import connectDB from './src/config/database.js'
 import { generalLimiter, securityHeaders, sanitizeInput } from './middleware/security.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import userRouter from './routes/userRoutes.js'
@@ -78,14 +78,12 @@ app.use('/api/user/admin',adminRouter)
 app.use(notFoundHandler)
 app.use(errorHandler)
 
-// Connect to database and start server
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`)
-  })
-}).catch(err => {
-  console.error('Failed to connect to database:', err)
-  process.exit(1)
+// Start server and attempt database connection
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`)
 })
+
+// Connect to database (non-blocking)
+connectDB()
 
 export default app
