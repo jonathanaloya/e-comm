@@ -11,7 +11,7 @@ productRouter.post('/create', authMiddleware, admin, csrfProtection, createProdu
 productRouter.post('/get', getProduct)
 
 productRouter.post("/get-product-by-category",getProductByCategory)
-productRouter.post('/get-pruduct-by-category-and-subcategory',getProductByCategoryAndSubCategory)
+productRouter.post('/get-product-by-category-and-subcategory',getProductByCategoryAndSubCategory)
 productRouter.post('/get-product-details',getProductDetails)
 
 productRouter.delete('/delete', authMiddleware, admin, csrfProtection, deleteProductDetails)
