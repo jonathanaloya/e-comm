@@ -54,7 +54,7 @@ app.use(session({
 
 app.use(morgan('combined'))
 
-const PORT = 8080 || process.env.PORT
+const PORT = process.env.PORT || 8080
 
 app.get("/",(request,response)=>{
     response.json({
@@ -78,8 +78,12 @@ app.use('/api/user/admin',adminRouter)
 app.use(notFoundHandler)
 app.use(errorHandler)
 
-// Connect to database
-connectDB().catch(err => {
+// Connect to database and start server
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`)
+  })
+}).catch(err => {
   console.error('Failed to connect to database:', err)
   process.exit(1)
 })
