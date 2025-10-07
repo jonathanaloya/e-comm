@@ -67,9 +67,10 @@ export const getProduct = async(req,res)=>{
         }
 
         const query = search ? {
-            $text : {
-                $search : search
-            }
+            $or: [
+                { name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ]
         } : {}
 
         const skip = (page - 1) * limit
@@ -287,11 +288,12 @@ export const searchProduct = async(req,res)=>{
         // Build query object
         let query = {}
         
-        // Text search
+        // Text search using regex (no index required)
         if(search && search.trim()) {
-            query.$text = {
-                $search : search.trim()
-            }
+            query.$or = [
+                { name: { $regex: search.trim(), $options: 'i' } },
+                { description: { $regex: search.trim(), $options: 'i' } }
+            ]
         }
         
         // Price range filter
@@ -342,21 +344,12 @@ export const searchProduct = async(req,res)=>{
         const skip = ( page - 1) * limit
 
         // Build aggregation pipeline for better performance and flexibility
-        // Separate $text filter from other query filters
-        let textQuery = null;
-        let otherFilters = { ...query };
-
-        if(query.$text) {
-            textQuery = { $match: { $text: query.$text } };
-            delete otherFilters.$text;
-        }
-
-        const otherMatch = Object.keys(otherFilters).length ? { $match: otherFilters } : null;
+        // Build pipeline with single match stage
+        const matchStage = Object.keys(query).length ? { $match: query } : null;
 
         // Build pipeline
         const pipeline = [
-            ...(textQuery ? [textQuery] : []),   // $text match first
-            ...(otherMatch ? [otherMatch] : []), // other filters next
+            ...(matchStage ? [matchStage] : []), // single match stage
             {
                 $lookup: {
                     from: 'categories',
@@ -375,9 +368,9 @@ export const searchProduct = async(req,res)=>{
             }
         ];
 
-        // Add text score projection if relevance sorting
+        // For relevance sorting with regex, we'll use default sorting
         if(sortBy === 'relevance' && search && search.trim()) {
-            pipeline.push({ $addFields: { score: { $meta: 'textScore' } } });
+            sortQuery = { createdAt: -1 }; // fallback to newest
         }
 
         // Sorting, skipping, limiting

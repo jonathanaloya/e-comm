@@ -18,11 +18,15 @@ export const loginLimiter = rateLimit({
 
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  max: 500, // 500 requests per window (increased for search)
   message: {
     message: 'Too many requests, please try again later',
     error: true,
     success: false
+  },
+  skip: (req) => {
+    // Skip rate limiting for search requests
+    return req.path.includes('/search') || req.path.includes('/get-product')
   }
 })
 
