@@ -76,11 +76,16 @@ const ProductListPage = () => {
   return (
     <section className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-6">
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold">Products ({data.length})</h1>
+          {console.log('Rendering products:', data)}
+        </div>
         {data.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {data.map((product) => (
-              <CardProduct key={product._id} data={product} />
-            ))}
+            {data.map((product, index) => {
+              console.log(`Rendering product ${index}:`, product);
+              return <CardProduct key={product._id || index} data={product} />;
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
