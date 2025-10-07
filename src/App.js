@@ -28,7 +28,7 @@ app.use(cors({
     origin: ['https://e-comm-rho-five.vercel.app', 'http://localhost:3000', 'http://localhost:5173'],
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'x-requested-with']
 }))
 
 // Security middleware
