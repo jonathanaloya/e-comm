@@ -3,11 +3,15 @@ import {
     getAllOrdersController, 
     updateOrderStatusController, 
     getAllUsersController,
-    getOrderTrackingController
+    getOrderTrackingController,
+    adminLoginController
 } from '../controllers/adminController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
 const adminRouter = Router();
+
+// Admin authentication
+adminRouter.post('/login', adminLoginController);
 
 // Admin order management routes
 adminRouter.get('/all-orders', authMiddleware, getAllOrdersController);

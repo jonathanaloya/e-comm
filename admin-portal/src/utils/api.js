@@ -34,7 +34,7 @@ api.interceptors.response.use(
 
 export const adminAPI = {
   // Auth
-  login: (credentials) => api.post('/api/user/login', credentials),
+  login: (credentials) => api.post('/api/admin/login', credentials),
   
   // Orders
   getAllOrders: () => api.get('/api/admin/all-orders'),
