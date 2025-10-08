@@ -16,7 +16,7 @@ adminRouter.post('/login', adminLoginController);
 // Temporary endpoint to create test admin user
 adminRouter.post('/create-test-admin', async (req, res) => {
     try {
-        const bcrypt = await import('bcryptjs');
+        const bcrypt = (await import('bcryptjs')).default;
         const User = (await import('../models/userModel.js')).default;
         
         const email = 'jonathanaloya27@gmail.com';
