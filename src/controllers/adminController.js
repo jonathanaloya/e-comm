@@ -9,10 +9,8 @@ import generateRefreshToken from '../utilities/generateRefreshToken.js';
 export const adminLoginController = async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log('Admin login attempt:', { email, passwordLength: password?.length });
 
         if (!email || !password) {
-            console.log('Missing email or password');
             return res.status(400).json({
                 message: 'Email and password are required',
                 error: true,
@@ -21,10 +19,8 @@ export const adminLoginController = async (req, res) => {
         }
 
         const user = await User.findOne({ email });
-        console.log('User found:', user ? 'Yes' : 'No');
 
         if (!user) {
-            console.log('User not found for email:', email);
             return res.status(400).json({
                 message: 'Invalid credentials',
                 error: true,
@@ -32,9 +28,7 @@ export const adminLoginController = async (req, res) => {
             });
         }
 
-        console.log('User status:', user.status);
         if (user.status !== 'Active') {
-            console.log('User not active');
             return res.status(400).json({
                 message: 'Account is not active',
                 error: true,
@@ -43,10 +37,8 @@ export const adminLoginController = async (req, res) => {
         }
 
         const checkPassword = await bcrypt.compare(password, user.password);
-        console.log('Password check result:', checkPassword);
 
         if (!checkPassword) {
-            console.log('Password mismatch');
             return res.status(400).json({
                 message: 'Invalid credentials',
                 error: true,
