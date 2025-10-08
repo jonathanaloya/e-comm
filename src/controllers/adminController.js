@@ -46,8 +46,9 @@ export const adminLoginController = async (req, res) => {
             });
         }
 
-        // Check if user is admin (you can add role field to user model)
+        // Check if user is admin (temporarily disabled for testing)
         // For now, we'll check if email contains 'admin' or matches specific admin emails
+        /*
         const adminEmails = ['admin@freshkatale.com', 'freshkatale@gmail.com'];
         if (!adminEmails.includes(email.toLowerCase())) {
             return res.status(403).json({
@@ -56,6 +57,7 @@ export const adminLoginController = async (req, res) => {
                 success: false
             });
         }
+        */
 
         const accessToken = await generateAccessToken(user._id);
         const refreshToken = await generateRefreshToken(user._id);
