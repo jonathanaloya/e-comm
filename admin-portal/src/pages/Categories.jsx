@@ -10,6 +10,7 @@ const Categories = () => {
   const [showSubCategoryModal, setShowSubCategoryModal] = useState(false)
   const [categoryForm, setCategoryForm] = useState({ name: '', image: '' })
   const [subCategoryForm, setSubCategoryForm] = useState({ name: '', category: '' })
+  const [editingCategory, setEditingCategory] = useState(null)
 
   useEffect(() => {
     fetchCategories()
@@ -38,13 +39,18 @@ const Categories = () => {
     e.preventDefault()
     setLoading(true)
     try {
-      await adminAPI.createCategory(categoryForm)
-      toast.success('Category created successfully')
-      setShowCategoryModal(false)
-      setCategoryForm({ name: '', image: '' })
-      fetchCategories()
+      const response = await adminAPI.createCategory({
+        name: categoryForm.name,
+        Image: categoryForm.image
+      })
+      if (response.data.success) {
+        toast.success('Category created successfully')
+        setShowCategoryModal(false)
+        setCategoryForm({ name: '', image: '' })
+        fetchCategories()
+      }
     } catch (error) {
-      toast.error('Failed to create category')
+      toast.error(error.response?.data?.message || 'Failed to create category')
     } finally {
       setLoading(false)
     }
@@ -54,15 +60,78 @@ const Categories = () => {
     e.preventDefault()
     setLoading(true)
     try {
-      await adminAPI.createSubCategory(subCategoryForm)
-      toast.success('Subcategory created successfully')
-      setShowSubCategoryModal(false)
-      setSubCategoryForm({ name: '', category: '' })
-      fetchSubCategories()
+      const response = await adminAPI.createSubCategory({
+        name: subCategoryForm.name,
+        category: subCategoryForm.category
+      })
+      if (response.data.success) {
+        toast.success('Subcategory created successfully')
+        setShowSubCategoryModal(false)
+        setSubCategoryForm({ name: '', category: '' })
+        fetchSubCategories()
+      }
     } catch (error) {
-      toast.error('Failed to create subcategory')
+      toast.error(error.response?.data?.message || 'Failed to create subcategory')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleEditCategory = async (category) => {
+    setCategoryForm({ name: category.name, image: category.Image })
+    setEditingCategory(category._id)
+    setShowCategoryModal(true)
+  }
+
+  const handleUpdateCategory = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const response = await adminAPI.updateCategory({
+        _id: editingCategory,
+        name: categoryForm.name,
+        Image: categoryForm.image
+      })
+      if (response.data.success) {
+        toast.success('Category updated successfully')
+        setShowCategoryModal(false)
+        setCategoryForm({ name: '', image: '' })
+        setEditingCategory(null)
+        fetchCategories()
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update category')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (window.confirm('Are you sure you want to delete this category?')) {
+      try {
+        const response = await adminAPI.deleteCategory(categoryId)
+        if (response.data.success) {
+          toast.success('Category deleted successfully')
+          fetchCategories()
+          fetchSubCategories()
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to delete category')
+      }
+    }
+  }
+
+  const handleDeleteSubCategory = async (subCategoryId) => {
+    if (window.confirm('Are you sure you want to delete this subcategory?')) {
+      try {
+        const response = await adminAPI.deleteSubCategory(subCategoryId)
+        if (response.data.success) {
+          toast.success('Subcategory deleted successfully')
+          fetchSubCategories()
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to delete subcategory')
+      }
     }
   }
 
@@ -92,16 +161,30 @@ const Categories = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories.map((category) => (
             <div key={category._id} className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center space-x-4">
-                {category.image && (
-                  <img src={category.image} alt={category.name} className="w-12 h-12 object-cover rounded" />
+              <div className="flex items-center space-x-4 mb-3">
+                {category.Image && (
+                  <img src={category.Image} alt={category.name} className="w-12 h-12 object-cover rounded" />
                 )}
-                <div>
+                <div className="flex-1">
                   <h3 className="font-semibold">{category.name}</h3>
                   <p className="text-sm text-gray-500">
                     {subCategories.filter(sub => sub.category === category._id).length} subcategories
                   </p>
                 </div>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEditCategory(category)}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDeleteCategory(category._id)}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}
@@ -128,7 +211,12 @@ const Categories = () => {
                     {categories.find(cat => cat._id === subCategory.category)?.name || 'Unknown'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button className="text-red-600 hover:text-red-800">Delete</button>
+                    <button 
+                      onClick={() => handleDeleteSubCategory(subCategory._id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -141,8 +229,8 @@ const Categories = () => {
       {showCategoryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-96">
-            <h3 className="text-lg font-semibold mb-4">Add New Category</h3>
-            <form onSubmit={handleCreateCategory}>
+            <h3 className="text-lg font-semibold mb-4">{editingCategory ? 'Edit Category' : 'Add New Category'}</h3>
+            <form onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory}>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Category Name</label>
                 <input
@@ -165,7 +253,11 @@ const Categories = () => {
               <div className="flex justify-end space-x-4">
                 <button
                   type="button"
-                  onClick={() => setShowCategoryModal(false)}
+                  onClick={() => {
+                    setShowCategoryModal(false)
+                    setEditingCategory(null)
+                    setCategoryForm({ name: '', image: '' })
+                  }}
                   className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
                 >
                   Cancel
@@ -175,7 +267,7 @@ const Categories = () => {
                   disabled={loading}
                   className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
                 >
-                  {loading ? 'Creating...' : 'Create'}
+                  {loading ? (editingCategory ? 'Updating...' : 'Creating...') : (editingCategory ? 'Update' : 'Create')}
                 </button>
               </div>
             </form>
