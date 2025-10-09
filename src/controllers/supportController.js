@@ -1,4 +1,5 @@
 import SupportTicket from '../models/supportTicketModel.js'
+import Notification from '../models/notificationModel.js'
 import { sendSupportTicketEmail } from '../services/emailService.js'
 
 export const createSupportTicket = async (request, response) => {
@@ -28,7 +29,25 @@ export const createSupportTicket = async (request, response) => {
 
         const savedTicket = await ticket.save()
 
-        // Send email to admin
+        // Create notification for admin
+        try {
+            const notification = new Notification({
+                type: 'support',
+                title: `New Support Ticket: ${subject}`,
+                message: `${name} (${email}) submitted a ${priority} priority support ticket: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`,
+                priority: priority,
+                data: {
+                    ticketId: savedTicket.ticketId,
+                    userId: userId,
+                    email: email
+                }
+            })
+            await notification.save()
+        } catch (notificationError) {
+            console.error('Failed to create notification:', notificationError)
+        }
+
+        // Send email to admin (optional - since we have notifications now)
         try {
             await sendSupportTicketEmail(savedTicket)
         } catch (emailError) {

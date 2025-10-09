@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { NavLink } from 'react-router-dom'
-import { FaHome, FaShoppingCart, FaUsers, FaBox, FaSignOutAlt } from 'react-icons/fa'
+import { FaHome, FaShoppingCart, FaUsers, FaBox, FaSignOutAlt, FaTags, FaBell } from 'react-icons/fa'
 import { useDispatch } from 'react-redux'
 import { logout } from '../store/authSlice'
 
@@ -16,7 +16,9 @@ const Sidebar = () => {
     { path: '/', icon: FaHome, label: 'Dashboard' },
     { path: '/orders', icon: FaShoppingCart, label: 'Orders' },
     { path: '/users', icon: FaUsers, label: 'Users' },
-    { path: '/products', icon: FaBox, label: 'Products' }
+    { path: '/products', icon: FaBox, label: 'Products' },
+    { path: '/categories', icon: FaTags, label: 'Categories' },
+    { path: '/notifications', icon: FaBell, label: 'Notifications' }
   ]
 
   return (

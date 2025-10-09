@@ -45,10 +45,26 @@ export const adminAPI = {
   
   // Products
   getAllProducts: () => api.post('/api/product/get', {}),
+  createProduct: (data) => api.post('/api/product/upload-product', data),
+  updateProduct: (data) => api.put('/api/product/update-product', data),
+  deleteProduct: (id) => api.delete(`/api/product/delete-product/${id}`),
   
   // Categories
   getCategories: () => api.get('/api/category/get-category'),
-  getSubCategories: () => api.post('/api/subcategory/get', {})
+  createCategory: (data) => api.post('/api/category/add-category', data),
+  updateCategory: (data) => api.put('/api/category/update-category', data),
+  deleteCategory: (id) => api.delete(`/api/category/delete-category/${id}`),
+  
+  // Subcategories
+  getSubCategories: () => api.post('/api/subcategory/get', {}),
+  createSubCategory: (data) => api.post('/api/subcategory/add-sub-category', data),
+  updateSubCategory: (data) => api.put('/api/subcategory/update-sub-category', data),
+  deleteSubCategory: (id) => api.delete(`/api/subcategory/delete-sub-category/${id}`),
+  
+  // Notifications
+  getNotifications: () => api.get('/api/admin/notifications'),
+  markNotificationAsRead: (id) => api.put(`/api/admin/notifications/${id}/read`),
+  deleteNotification: (id) => api.delete(`/api/admin/notifications/${id}`)
 }
 
 export default api

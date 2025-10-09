@@ -4,7 +4,10 @@ import {
     updateOrderStatusController, 
     getAllUsersController,
     getOrderTrackingController,
-    adminLoginController
+    adminLoginController,
+    getNotificationsController,
+    markNotificationAsReadController,
+    deleteNotificationController
 } from '../controllers/adminController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
@@ -12,6 +15,11 @@ const adminRouter = Router();
 
 // Admin authentication
 adminRouter.post('/login', adminLoginController);
+
+// Admin notification routes
+adminRouter.get('/notifications', authMiddleware, getNotificationsController);
+adminRouter.put('/notifications/:id/read', authMiddleware, markNotificationAsReadController);
+adminRouter.delete('/notifications/:id', authMiddleware, deleteNotificationController);
 
 // Admin order management routes
 adminRouter.get('/all-orders', authMiddleware, getAllOrdersController);

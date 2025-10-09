@@ -1,6 +1,7 @@
 import Order from "../models/orderModel.js";
 import User from "../models/userModel.js";
 import Product from "../models/productModel.js";
+import Notification from "../models/notificationModel.js";
 import bcrypt from 'bcryptjs';
 import generateAccessToken from '../utilities/generateAccessToken.js';
 import generateRefreshToken from '../utilities/generateRefreshToken.js';
@@ -228,6 +229,91 @@ export const getOrderTrackingController = async (req, res) => {
         return res.json({
             message: "Order tracking info fetched successfully",
             data: order,
+            error: false,
+            success: true
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+};
+
+// Get all notifications for admin
+export const getNotificationsController = async (req, res) => {
+    try {
+        const notifications = await Notification.find({})
+            .sort({ createdAt: -1 })
+            .limit(100);
+
+        return res.json({
+            message: "Notifications fetched successfully",
+            data: notifications,
+            error: false,
+            success: true
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+};
+
+// Mark notification as read
+export const markNotificationAsReadController = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const notification = await Notification.findByIdAndUpdate(
+            id,
+            { read: true, readAt: new Date() },
+            { new: true }
+        );
+
+        if (!notification) {
+            return res.status(404).json({
+                message: "Notification not found",
+                error: true,
+                success: false
+            });
+        }
+
+        return res.json({
+            message: "Notification marked as read",
+            data: notification,
+            error: false,
+            success: true
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+};
+
+// Delete notification
+export const deleteNotificationController = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const notification = await Notification.findByIdAndDelete(id);
+
+        if (!notification) {
+            return res.status(404).json({
+                message: "Notification not found",
+                error: true,
+                success: false
+            });
+        }
+
+        return res.json({
+            message: "Notification deleted successfully",
             error: false,
             success: true
         });

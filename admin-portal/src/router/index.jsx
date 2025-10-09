@@ -5,6 +5,8 @@ import Dashboard from '../pages/Dashboard'
 import Orders from '../pages/Orders'
 import Users from '../pages/Users'
 import Products from '../pages/Products'
+import Categories from '../pages/Categories'
+import Notifications from '../pages/Notifications'
 import ProtectedRoute from '../components/ProtectedRoute'
 
 const router = createBrowserRouter([
@@ -31,6 +33,14 @@ const router = createBrowserRouter([
       {
         path: 'products',
         element: <Products />
+      },
+      {
+        path: 'categories',
+        element: <Categories />
+      },
+      {
+        path: 'notifications',
+        element: <Notifications />
       }
     ]
   }
