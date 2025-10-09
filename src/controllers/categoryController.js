@@ -6,9 +6,9 @@ export const AddCategory = async (req, res) => {
     try {
         const { name, Image } = req.body;
 
-        if (!name || !Image) {
+        if (!name) {
             return res.status(400).json({ 
-                message: "All fields are required", 
+                message: "Category name is required", 
                 error: true, 
                 success: false 
             });
@@ -16,7 +16,7 @@ export const AddCategory = async (req, res) => {
         
         const newCategory = new Category({ 
             name, 
-            Image 
+            Image: Image || '' 
         });
         const saveCategory = await newCategory.save()
 

@@ -73,7 +73,9 @@ const Categories = () => {
         fetchCategories()
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create category')
+      console.error('Category creation error:', error)
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create category'
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
       setUploading(false)
