@@ -64,7 +64,14 @@ export const adminAPI = {
   // Notifications
   getNotifications: () => api.get('/api/admin/notifications'),
   markNotificationAsRead: (id) => api.put(`/api/admin/notifications/${id}/read`),
-  deleteNotification: (id) => api.delete(`/api/admin/notifications/${id}`)
+  deleteNotification: (id) => api.delete(`/api/admin/notifications/${id}`),
+  
+  // File Upload
+  uploadImage: (formData) => api.post('/api/file/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
 }
 
 export default api

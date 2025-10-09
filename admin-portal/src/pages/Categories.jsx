@@ -9,8 +9,11 @@ const Categories = () => {
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [showSubCategoryModal, setShowSubCategoryModal] = useState(false)
   const [categoryForm, setCategoryForm] = useState({ name: '', image: '' })
-  const [subCategoryForm, setSubCategoryForm] = useState({ name: '', category: '' })
+  const [subCategoryForm, setSubCategoryForm] = useState({ name: '', category: '', image: '' })
   const [editingCategory, setEditingCategory] = useState(null)
+  const [categoryImageFile, setCategoryImageFile] = useState(null)
+  const [subCategoryImageFile, setSubCategoryImageFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     fetchCategories()
@@ -35,45 +38,76 @@ const Categories = () => {
     }
   }
 
+  const uploadImage = async (file) => {
+    const formData = new FormData()
+    formData.append('image', file)
+    
+    try {
+      const response = await adminAPI.uploadImage(formData)
+      return response.data.data.url
+    } catch (error) {
+      throw new Error('Failed to upload image')
+    }
+  }
+
   const handleCreateCategory = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setUploading(true)
     try {
+      let imageUrl = categoryForm.image
+      
+      if (categoryImageFile) {
+        imageUrl = await uploadImage(categoryImageFile)
+      }
+      
       const response = await adminAPI.createCategory({
         name: categoryForm.name,
-        Image: categoryForm.image
+        Image: imageUrl
       })
       if (response.data.success) {
         toast.success('Category created successfully')
         setShowCategoryModal(false)
         setCategoryForm({ name: '', image: '' })
+        setCategoryImageFile(null)
         fetchCategories()
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create category')
     } finally {
       setLoading(false)
+      setUploading(false)
     }
   }
 
   const handleCreateSubCategory = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setUploading(true)
     try {
+      let imageUrl = subCategoryForm.image
+      
+      if (subCategoryImageFile) {
+        imageUrl = await uploadImage(subCategoryImageFile)
+      }
+      
       const response = await adminAPI.createSubCategory({
         name: subCategoryForm.name,
-        category: subCategoryForm.category
+        category: subCategoryForm.category,
+        image: imageUrl
       })
       if (response.data.success) {
         toast.success('Subcategory created successfully')
         setShowSubCategoryModal(false)
-        setSubCategoryForm({ name: '', category: '' })
+        setSubCategoryForm({ name: '', category: '', image: '' })
+        setSubCategoryImageFile(null)
         fetchSubCategories()
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create subcategory')
     } finally {
       setLoading(false)
+      setUploading(false)
     }
   }
 
@@ -242,13 +276,28 @@ const Categories = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Image URL</label>
+                <label className="block text-sm font-medium mb-2">Category Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="w-full p-2 border rounded-lg"
+                  onChange={(e) => setCategoryImageFile(e.target.files[0])}
+                />
+                <p className="text-xs text-gray-500 mt-1">Upload an image file (JPG, PNG, etc.)</p>
+                {categoryImageFile && (
+                  <p className="text-sm text-green-600 mt-1">Selected: {categoryImageFile.name}</p>
+                )}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Or Image URL</label>
                 <input
                   type="url"
+                  placeholder="https://example.com/image.jpg"
                   className="w-full p-2 border rounded-lg"
                   value={categoryForm.image}
                   onChange={(e) => setCategoryForm({...categoryForm, image: e.target.value})}
                 />
+                <p className="text-xs text-gray-500 mt-1">Alternative: paste an image URL</p>
               </div>
               <div className="flex justify-end space-x-4">
                 <button
@@ -267,7 +316,7 @@ const Categories = () => {
                   disabled={loading}
                   className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
                 >
-                  {loading ? (editingCategory ? 'Updating...' : 'Creating...') : (editingCategory ? 'Update' : 'Create')}
+                  {uploading ? 'Uploading...' : loading ? (editingCategory ? 'Updating...' : 'Creating...') : (editingCategory ? 'Update' : 'Create')}
                 </button>
               </div>
             </form>
@@ -307,6 +356,30 @@ const Categories = () => {
                   ))}
                 </select>
               </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Subcategory Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="w-full p-2 border rounded-lg"
+                  onChange={(e) => setSubCategoryImageFile(e.target.files[0])}
+                />
+                <p className="text-xs text-gray-500 mt-1">Upload an image file (JPG, PNG, etc.)</p>
+                {subCategoryImageFile && (
+                  <p className="text-sm text-green-600 mt-1">Selected: {subCategoryImageFile.name}</p>
+                )}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Or Image URL</label>
+                <input
+                  type="url"
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full p-2 border rounded-lg"
+                  value={subCategoryForm.image}
+                  onChange={(e) => setSubCategoryForm({...subCategoryForm, image: e.target.value})}
+                />
+                <p className="text-xs text-gray-500 mt-1">Alternative: paste an image URL</p>
+              </div>
               <div className="flex justify-end space-x-4">
                 <button
                   type="button"
@@ -320,7 +393,7 @@ const Categories = () => {
                   disabled={loading}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
                 >
-                  {loading ? 'Creating...' : 'Create'}
+                  {uploading ? 'Uploading...' : loading ? 'Creating...' : 'Create'}
                 </button>
               </div>
             </form>

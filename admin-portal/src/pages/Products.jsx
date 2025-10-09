@@ -21,6 +21,8 @@ const Products = () => {
     discount: '',
     more_details: {}
   })
+  const [productImageFiles, setProductImageFiles] = useState([])
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     fetchProducts()
@@ -57,12 +59,35 @@ const Products = () => {
     }
   }
 
+  const uploadImage = async (file) => {
+    const formData = new FormData()
+    formData.append('image', file)
+    
+    try {
+      const response = await adminAPI.uploadImage(formData)
+      return response.data.data.url
+    } catch (error) {
+      throw new Error('Failed to upload image')
+    }
+  }
+
   const handleCreateProduct = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setUploading(true)
     try {
+      let imageUrls = [...productForm.image]
+      
+      // Upload files if any
+      if (productImageFiles.length > 0) {
+        const uploadPromises = productImageFiles.map(file => uploadImage(file))
+        const uploadedUrls = await Promise.all(uploadPromises)
+        imageUrls = [...uploadedUrls, ...imageUrls.filter(url => url)]
+      }
+      
       const response = await adminAPI.createProduct({
         ...productForm,
+        image: imageUrls.filter(url => url),
         stock: parseInt(productForm.stock),
         price: parseFloat(productForm.price),
         discount: parseFloat(productForm.discount) || 0
@@ -77,6 +102,7 @@ const Products = () => {
       toast.error(error.response?.data?.message || 'Failed to create product')
     } finally {
       setLoading(false)
+      setUploading(false)
     }
   }
 
@@ -148,6 +174,7 @@ const Products = () => {
       discount: '',
       more_details: {}
     })
+    setProductImageFiles([])
     setEditingProduct(null)
   }
 
@@ -343,33 +370,60 @@ const Products = () => {
                 </div>
                 <div className="mt-4">
                   <label className="block text-sm font-medium mb-2">Product Images</label>
-                  {productForm.image.map((img, index) => (
-                    <div key={index} className="flex items-center space-x-2 mb-2">
-                      <input
-                        type="url"
-                        placeholder="Image URL"
-                        className="flex-1 p-2 border rounded-lg"
-                        value={img}
-                        onChange={(e) => handleImageChange(index, e.target.value)}
-                      />
-                      {productForm.image.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeImageField(index)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={addImageField}
-                    className="text-blue-600 hover:text-blue-800 text-sm"
-                  >
-                    + Add another image
-                  </button>
+                  
+                  {/* File Upload */}
+                  <div className="mb-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="w-full p-2 border rounded-lg"
+                      onChange={(e) => setProductImageFiles(Array.from(e.target.files))}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Upload image files (JPG, PNG, etc.) - You can select multiple files</p>
+                    {productImageFiles.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-green-600">Selected files:</p>
+                        <ul className="text-xs text-gray-600">
+                          {productImageFiles.map((file, index) => (
+                            <li key={index}>• {file.name}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* URL Inputs */}
+                  <div className="border-t pt-4">
+                    <label className="block text-sm font-medium mb-2">Or Image URLs</label>
+                    {productForm.image.map((img, index) => (
+                      <div key={index} className="flex items-center space-x-2 mb-2">
+                        <input
+                          type="url"
+                          placeholder="https://example.com/image.jpg"
+                          className="flex-1 p-2 border rounded-lg"
+                          value={img}
+                          onChange={(e) => handleImageChange(index, e.target.value)}
+                        />
+                        {productForm.image.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeImageField(index)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addImageField}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      + Add another URL
+                    </button>
+                  </div>
                 </div>
                 <div className="flex justify-end space-x-4 mt-6">
                   <button
@@ -387,7 +441,7 @@ const Products = () => {
                     disabled={loading}
                     className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
                   >
-                    {loading ? (editingProduct ? 'Updating...' : 'Creating...') : (editingProduct ? 'Update' : 'Create')}
+                    {uploading ? 'Uploading Images...' : loading ? (editingProduct ? 'Updating...' : 'Creating...') : (editingProduct ? 'Update' : 'Create')}
                   </button>
                 </div>
               </form>
