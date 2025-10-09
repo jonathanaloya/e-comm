@@ -124,7 +124,7 @@ const Products = () => {
   const handleDeleteProduct = async (productId) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        const response = await adminAPI.deleteProduct(productId)
+        const response = await adminAPI.deleteProduct({ _id: productId })
         if (response.data.success) {
           toast.success('Product deleted successfully')
           fetchProducts()

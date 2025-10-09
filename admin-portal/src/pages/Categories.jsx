@@ -109,7 +109,7 @@ const Categories = () => {
   const handleDeleteCategory = async (categoryId) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
-        const response = await adminAPI.deleteCategory(categoryId)
+        const response = await adminAPI.deleteCategory({ _id: categoryId })
         if (response.data.success) {
           toast.success('Category deleted successfully')
           fetchCategories()
@@ -124,7 +124,7 @@ const Categories = () => {
   const handleDeleteSubCategory = async (subCategoryId) => {
     if (window.confirm('Are you sure you want to delete this subcategory?')) {
       try {
-        const response = await adminAPI.deleteSubCategory(subCategoryId)
+        const response = await adminAPI.deleteSubCategory({ _id: subCategoryId })
         if (response.data.success) {
           toast.success('Subcategory deleted successfully')
           fetchSubCategories()

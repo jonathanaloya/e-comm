@@ -45,21 +45,21 @@ export const adminAPI = {
   
   // Products
   getAllProducts: () => api.post('/api/product/get', {}),
-  createProduct: (data) => api.post('/api/product/upload-product', data),
-  updateProduct: (data) => api.put('/api/product/update-product', data),
-  deleteProduct: (id) => api.delete(`/api/product/delete-product/${id}`),
+  createProduct: (data) => api.post('/api/product/create', data),
+  updateProduct: (data) => api.put('/api/product/update', data),
+  deleteProduct: (data) => api.delete('/api/product/delete', { data }),
   
   // Categories
   getCategories: () => api.get('/api/category/get-category'),
   createCategory: (data) => api.post('/api/category/add-category', data),
   updateCategory: (data) => api.put('/api/category/update-category', data),
-  deleteCategory: (id) => api.delete(`/api/category/delete-category/${id}`),
+  deleteCategory: (data) => api.delete('/api/category/delete-category', { data }),
   
   // Subcategories
   getSubCategories: () => api.post('/api/subcategory/get', {}),
-  createSubCategory: (data) => api.post('/api/subcategory/add-sub-category', data),
-  updateSubCategory: (data) => api.put('/api/subcategory/update-sub-category', data),
-  deleteSubCategory: (id) => api.delete(`/api/subcategory/delete-sub-category/${id}`),
+  createSubCategory: (data) => api.post('/api/subcategory/create', data),
+  updateSubCategory: (data) => api.put('/api/subcategory/update', data),
+  deleteSubCategory: (data) => api.delete('/api/subcategory/delete', { data }),
   
   // Notifications
   getNotifications: () => api.get('/api/admin/notifications'),
