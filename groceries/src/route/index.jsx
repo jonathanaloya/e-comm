@@ -10,15 +10,9 @@ import EmailVerification from "../pages/EmailVerification";
 import LoginOtpVerification from "../pages/LoginOtpVerification";
 import ResetPassword from "../pages/ResetPassword";
 import MobileUserMenu from "../pages/MobileUserMenu";
-import Dashboard from "../layouts/Dashboard";
 import Profile from "../pages/Profile";
 import MyOrder from "../pages/MyOrder";
 import Address from "../pages/Address";
-import ProductAdmin from "../pages/ProductAdmin";
-import UploadProduct from "../pages/UploadProduct";
-import SubCategory from "../pages/SubCategory";
-import Category from "../pages/Category";
-import AdminPermission from "../layouts/AdminPermission";
 import ProductListPage from "../pages/ProductListPage";
 import ProductDisplayPage from "../pages/ProductDisplayPage";
 import Cart from "../pages/Cart";
@@ -80,39 +74,16 @@ const router = createBrowserRouter([
                 element: <MobileUserMenu />
             },
             {
-                path:"dashboard",
-                element: <Dashboard />,
-                children: [
-                    {
-                        path: "profile",
-                        element: <Profile />
-                    },
-                    {
-                        path: "myorders",
-                        element: <MyOrder />
-                    },
-                    {
-                        path: "address",
-                        element: <Address />
-                    },
-                    {
-                        path: "category",
-                        element: <AdminPermission ><Category /></AdminPermission>
-                    },
-                    {
-                        path: "subcategory",
-                        element: <AdminPermission ><SubCategory /></AdminPermission>
-                    },
-                    {
-                        path: "upload-product",
-                        element: <AdminPermission ><UploadProduct /></AdminPermission>
-                    },
-                    {
-                        path: "product",
-                        element: <AdminPermission ><ProductAdmin /></AdminPermission>
-                    },
-
-                ]
+                path: "profile",
+                element: <Profile />
+            },
+            {
+                path: "myorders",
+                element: <MyOrder />
+            },
+            {
+                path: "address",
+                element: <Address />
             },
             {
                 path : ":category",

@@ -8,7 +8,7 @@ import { logout } from "../store/userSlice";
 import toast from "react-hot-toast";
 import AxiosToastError from "../utils/AxiosToastError";
 import { HiOutlineExternalLink } from "react-icons/hi";
-import isAdmin from "../utils/isAdmin";
+
 
 const UserMenu = ({ close }) => {
   const user = useSelector((state) => state.user);
@@ -46,13 +46,11 @@ const UserMenu = ({ close }) => {
       <div className="text-sm flex items-center gap-1">
         <span className="max-w-52 text-ellipsis line-clamp-1">
           {user.name || user.mobile}{" "}
-          <span className="text-medium text-red-500">
-            {user.role === "ADMIN" ? "(Admin)" : ""}
-          </span>
+
         </span>
         <Link
           onClick={handleClose}
-          to={"/dashboard/profile"}
+          to={"/profile"}
           className=" hover:text-primary-200"
         >
           <HiOutlineExternalLink size={16} />
@@ -62,49 +60,9 @@ const UserMenu = ({ close }) => {
       <Divider />
 
       <div className="text-sm grid gap-1">
-        {isAdmin(user.role) && (
-          <Link
-            onClick={handleClose}
-            to={"/dashboard/category"}
-            className="px-2 hover:bg-orange-200 py-1"
-          >
-            Category
-          </Link>
-        )}
-
-        {isAdmin(user.role) && (
-          <Link
-            onClick={handleClose}
-            to={"/dashboard/subcategory"}
-            className="px-2 hover:bg-orange-200 py-1"
-          >
-            Sub Category
-          </Link>
-        )}
-
-        {isAdmin(user.role) && (
-          <Link
-            onClick={handleClose}
-            to={"/dashboard/upload-product"}
-            className="px-2 hover:bg-orange-200 py-1"
-          >
-            Upload Product
-          </Link>
-        )}
-
-        {isAdmin(user.role) && (
-          <Link
-            onClick={handleClose}
-            to={"/dashboard/product"}
-            className="px-2 hover:bg-orange-200 py-1"
-          >
-            Product
-          </Link>
-        )}
-
         <Link
           onClick={handleClose}
-          to={"/dashboard/myorders"}
+          to={"/myorders"}
           className="px-2 hover:bg-orange-200 py-1"
         >
           My Orders
@@ -112,7 +70,7 @@ const UserMenu = ({ close }) => {
 
         <Link
           onClick={handleClose}
-          to={"/dashboard/address"}
+          to={"/address"}
           className="px-2 hover:bg-orange-200 py-1"
         >
           Save Address
