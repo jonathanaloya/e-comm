@@ -241,7 +241,7 @@ const Products = () => {
                 <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
                 <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-lg font-bold text-green-600">${product.price}</span>
+                  <span className="text-lg font-bold text-green-600">UGX {product.price?.toLocaleString()}</span>
                   <span className="text-sm text-gray-500">Stock: {product.stock}</span>
                 </div>
                 <div className="flex space-x-2">

@@ -25,7 +25,7 @@ const app = express()
 // CORS configuration
 app.use(cors({
     credentials: true,
-    origin: ['https://freshkatale.com', 'https://admin.freshkatale.com', 'http://localhost:3000', 'http://localhost:5173'],
+    origin: ['https://freshkatale.com', 'https://admin.freshkatale.com', 'http://localhost:8080', 'http://localhost:5173'],
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'x-requested-with']
