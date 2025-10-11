@@ -4,7 +4,7 @@ import subCategory from "../models/subCategoryModel.js";
 
 export const AddCategory = async (req, res) => {
     try {
-        const { name, Image } = req.body;
+        const { name, image } = req.body;
 
         if (!name) {
             return res.status(400).json({ 
@@ -16,7 +16,7 @@ export const AddCategory = async (req, res) => {
         
         const newCategory = new Category({ 
             name, 
-            Image: Image || '' 
+            image: image || '' 
         });
         const saveCategory = await newCategory.save()
 
@@ -71,13 +71,13 @@ export const getCategory = async (req, res) => {
 
 export const updateCategory = async (req, res) => {
     try {
-        const { _id, name, Image } = req.body;
+        const { _id, name, image } = req.body;
 
         const update = await Category.updateOne({
             _id: _id
         }, {
             name,
-            Image
+            image
         })
 
         return res.status(200).json({ 

@@ -327,11 +327,12 @@ const Products = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Price</label>
+                    <label className="block text-sm font-medium mb-2">Price (UGX)</label>
                     <input
                       type="number"
-                      step="0.01"
+                      step="1"
                       required
+                      placeholder="Enter price in Ugandan Shillings"
                       className="w-full p-2 border rounded-lg"
                       value={productForm.price}
                       onChange={(e) => setProductForm({...productForm, price: e.target.value})}
