@@ -1,0 +1,28 @@
+MANUAL DEPLOYMENT PROCESS:
+
+1. Connect to your Hostinger server:
+   ssh root@srv1045306
+
+2. Backup current contaminated build:
+   cd /var/www/e-comm/groceries
+   cp -r dist dist_backup_contaminated
+
+3. Clear current build:
+   rm -rf dist/*
+
+4. From your local machine, upload clean build:
+   scp -r C:\Users\admin\Desktop\e-comm\e-comm\groceries\dist\* root@srv1045306:/var/www/e-comm/groceries/dist/
+
+5. Set proper permissions:
+   ssh root@srv1045306 "chown -R www-data:www-data /var/www/e-comm/groceries/dist && chmod -R 755 /var/www/e-comm/groceries/dist"
+
+6. Reload nginx:
+   ssh root@srv1045306 "systemctl reload nginx"
+
+7. Test the site:
+   curl -I http://freshkatale.com
+
+VERIFICATION:
+- Main site should show "Fresh Katale - Fresh Groceries Delivered" 
+- No admin portal interface
+- Clean e-commerce branding

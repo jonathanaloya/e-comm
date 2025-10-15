@@ -1,0 +1,23 @@
+NGINX CONFIG FIX:
+
+The error shows package-lock.json is in /etc/nginx/sites-enabled/ which is wrong.
+
+Run these commands:
+
+1. Remove the invalid file:
+   rm /etc/nginx/sites-enabled/package-lock.json
+
+2. Check what's in sites-enabled:
+   ls -la /etc/nginx/sites-enabled/
+
+3. Test nginx config:
+   nginx -t
+
+4. If still errors, check sites-available:
+   ls -la /etc/nginx/sites-available/
+
+5. Ensure only proper config files are symlinked:
+   ln -sf /etc/nginx/sites-available/freshkatale.com.conf /etc/nginx/sites-enabled/
+
+6. Test and reload:
+   nginx -t && systemctl reload nginx
