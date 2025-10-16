@@ -7,6 +7,7 @@ import { csrfProtection } from '../middleware/csrfProtection.js'
 const productRouter = Router()
 
 productRouter.post('/create', authMiddleware, admin, csrfProtection, createProduct)
+productRouter.get('/', getProduct)
 
 productRouter.post('/get', getProduct)
 
