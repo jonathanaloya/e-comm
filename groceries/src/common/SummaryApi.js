@@ -1,6 +1,7 @@
 
 
-export const baseURL = "https://cse-341-project1-h1kw.onrender.com"
+export const baseURL = "https://freshkatale.com";
+
 
 const SummaryApi = {
     csrfToken : {
