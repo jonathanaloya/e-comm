@@ -90,7 +90,9 @@ const Products = () => {
         image: imageUrls.filter(url => url),
         stock: parseInt(productForm.stock),
         price: parseFloat(productForm.price),
-        discount: parseFloat(productForm.discount) || 0
+        discount: parseFloat(productForm.discount) || 0,
+        category: [productForm.category],
+        subCategory: [productForm.subCategory]
       })
       if (response.data.success) {
         toast.success('Product created successfully')
@@ -115,7 +117,9 @@ const Products = () => {
         _id: editingProduct,
         stock: parseInt(productForm.stock),
         price: parseFloat(productForm.price),
-        discount: parseFloat(productForm.discount) || 0
+        discount: parseFloat(productForm.discount) || 0,
+        category: [productForm.category],
+        subCategory: [productForm.subCategory]
       })
       if (response.data.success) {
         toast.success('Product updated successfully')
