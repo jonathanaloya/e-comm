@@ -7,6 +7,8 @@ import Loading from "../components/Loading";
 import CardProduct from "../components/CardProduct";
 import { useSelector } from "react-redux";
 import { valideURLConvert } from "../utils/validURLConvert";
+import noDataImage from '../assets/nodata.png'
+import { baseURL } from '../common/SummaryApi'
 
 const ProductListPage = () => {
   const params = useParams();
@@ -151,11 +153,12 @@ const ProductListPage = () => {
                         className="flex items-center gap-3 p-3 hover:bg-gray-50 border-b last:border-b-0"
                         onClick={() => setShowCategoriesMenu(false)}
                       >
-                        <img 
-                          src={cat.Image} 
-                          alt={cat.name}
-                          className="w-8 h-8 object-cover rounded"
-                        />
+                                <img 
+                                  src={cat.Image && String(cat.Image).startsWith('http') ? cat.Image : (cat.Image ? `${baseURL}${cat.Image}` : noDataImage)}
+                                  alt={cat.name}
+                                  className="w-8 h-8 object-cover rounded"
+                                  onError={(e)=>{ e.currentTarget.onerror = null; e.currentTarget.src = noDataImage }}
+                                />
                         <span className="font-medium">{cat.name}</span>
                       </Link>
                     );
@@ -186,9 +189,10 @@ const ProductListPage = () => {
                       className="bg-white rounded-lg p-3 text-center hover:shadow-md transition-shadow"
                     >
                       <img 
-                        src={cat.Image} 
+                        src={cat.Image && String(cat.Image).startsWith('http') ? cat.Image : (cat.Image ? `${baseURL}${cat.Image}` : noDataImage)}
                         alt={cat.name}
                         className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 object-cover rounded"
+                        onError={(e)=>{ e.currentTarget.onerror = null; e.currentTarget.src = noDataImage }}
                       />
                       <p className="text-xs font-medium truncate">{cat.name}</p>
                     </Link>
@@ -204,9 +208,10 @@ const ProductListPage = () => {
           <div className="mb-6 sm:mb-8 bg-white rounded-lg p-4 sm:p-6 shadow-sm border-2 border-green-200">
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
               <img 
-                src={categoryInfo.Image} 
+                src={categoryInfo.Image && String(categoryInfo.Image).startsWith('http') ? categoryInfo.Image : (categoryInfo.Image ? `${baseURL}${categoryInfo.Image}` : noDataImage)}
                 alt={categoryInfo.name}
                 className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg"
+                onError={(e)=>{ e.currentTarget.onerror = null; e.currentTarget.src = noDataImage }}
               />
               <div className="text-center sm:text-left">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">{categoryInfo.name}</h1>

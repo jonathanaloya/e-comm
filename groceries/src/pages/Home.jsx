@@ -1,5 +1,7 @@
 import banner from '../assets/banner.jpg'
 import bannerMobile from '../assets/mob.jpg'
+import noDataImage from '../assets/nodata.png'
+import { baseURL } from '../common/SummaryApi'
 import { useSelector } from 'react-redux'
 import { valideURLConvert } from '../utils/validURLConvert'
 import {Link, useNavigate} from 'react-router-dom'
@@ -71,11 +73,12 @@ const Home = () => {
                   >
                     <div className='aspect-square mb-2 overflow-hidden rounded-lg bg-gray-50'>
                         <img 
-                          src={cat.Image}
+                          src={cat.Image && String(cat.Image).startsWith('http') ? cat.Image : (cat.Image ? `${baseURL}${cat.Image}` : noDataImage)}
                           alt={cat.name}
                           className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200'
                           loading='lazy'
                           decoding='async'
+                          onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = noDataImage }}
                         />
                     </div>
                     <p className='text-sm font-medium text-center text-gray-700 truncate'>{cat.name}</p>
