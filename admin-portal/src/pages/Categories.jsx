@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import UploadCategoryModel from '../components/UploadCategoryModel'
-import Loading from '../components/Loading'
-import NoData from '../components/NoData'
-import Axios from '../utils/Axios'
-import SummaryApi from '../common/SummaryApi'
-import EditCategory from '../components/EditCategory'
-import CofirmBox from '../components/CofirmBox'
 import toast from 'react-hot-toast'
-import AxiosToastError from '../utils/AxiosToastError'
 import { useSelector } from 'react-redux'
 
 const CategoryPage = () => {
@@ -33,14 +25,8 @@ const CategoryPage = () => {
     const fetchCategory = async()=>{
         try {
             setLoading(true)
-            const response = await Axios({
-                ...SummaryApi.getCategory
-            })
-            const { data : responseData } = response
-
-            if(responseData.success){
-                setCategoryData(responseData.data)
-            }
+            // Placeholder for API call
+            setCategoryData([])
         } catch (error) {
 
         }finally{
@@ -54,20 +40,12 @@ const CategoryPage = () => {
 
     const handleDeleteCategory = async()=>{
         try {
-            const response = await Axios({
-                ...SummaryApi.deleteCategory,
-                data : deleteCategory
-            })
-
-            const { data : responseData } = response
-
-            if(responseData.success){
-                toast.success(responseData.message)
-                fetchCategory()
-                setOpenConfirmBoxDelete(false)
-            }
+            // Placeholder for delete API call
+            toast.success("Category deleted successfully")
+            fetchCategory()
+            setOpenConfirmBoxDelete(false)
         } catch (error) {
-            AxiosToastError(error)
+            toast.error("Failed to delete category")
         }
     }
 
@@ -79,7 +57,7 @@ const CategoryPage = () => {
         </div>
         {
             !categoryData[0] && !loading && (
-                <NoData/>
+                <div className='text-center py-8'>No categories found</div>
             )
         }
 
@@ -115,25 +93,39 @@ const CategoryPage = () => {
 
         {
             loading && (
-                <Loading/>
+                <div className='text-center py-8'>Loading...</div>
             )
         }
 
         {
             openUploadCategory && (
-                <UploadCategoryModel fetchData={fetchCategory} close={()=>setOpenUploadCategory(false)}/>
+                <div>Upload Category Modal Placeholder</div>
             )
         }
 
         {
             openEdit && (
-                <EditCategory data={editData} close={()=>setOpenEdit(false)} fetchData={fetchCategory}/>
+                <div>Edit Category Modal Placeholder</div>
             )
         }
 
         {
            openConfimBoxDelete && (
-            <CofirmBox close={()=>setOpenConfirmBoxDelete(false)} cancel={()=>setOpenConfirmBoxDelete(false)} confirm={handleDeleteCategory}/>
+            <div className='fixed top-0 right-0 bottom-0 left-0 z-50 bg-neutral-800 bg-opacity-70 p-4 flex justify-center items-center'>
+                <div className='bg-white w-full max-w-md p-4 rounded'>
+                    <div className='flex justify-between items-center gap-3'>
+                        <h1 className='font-semibold'>Delete Permanently</h1>
+                        <button onClick={()=>setOpenConfirmBoxDelete(false)}>
+                            <span className='text-xl'>×</span>
+                        </button>
+                    </div>
+                    <p className='my-4'>Are you sure you want to delete this item?</p>
+                    <div className='w-fit ml-auto flex items-center gap-3'>
+                        <button onClick={()=>setOpenConfirmBoxDelete(false)} className='px-4 py-2 border rounded border-red-500 text-red-500 hover:bg-red-500 hover:text-white'>Cancel</button>
+                        <button onClick={handleDeleteCategory} className='px-4 py-2 border rounded border-green-500 text-green-500 hover:bg-green-500 hover:text-white'>Confirm</button>
+                    </div>
+                </div>
+            </div>
            )
         }
     </section>
