@@ -318,7 +318,7 @@ const Products = () => {
                       onChange={(e) => setProductForm({...productForm, subCategory: e.target.value})}
                     >
                       <option value="">Select SubCategory</option>
-                      {categories.map((subCategory) => (
+                      {subCategories.map((subCategory) => (
                         <option key={subCategory._id} value={subCategory._id}>
                           {subCategory.name}
                         </option>
