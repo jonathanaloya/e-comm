@@ -84,10 +84,10 @@ const Home = () => {
                     <div className="aspect-square mb-2 overflow-hidden rounded-lg bg-gray-50">
                       <img
                         src={
-                          cat.Image && String(cat.Image).startsWith("http")
-                            ? cat.Image
-                            : cat.Image
-                            ? `${baseURL}${cat.Image}`
+                          cat.image && String(cat.image).startsWith("http")
+                            ? cat.image
+                            : cat.image
+                            ? `${baseURL}${cat.image}`
                             : noDataImage
                         }
                         alt={cat.name}
