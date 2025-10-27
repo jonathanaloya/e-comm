@@ -7,6 +7,7 @@ const CategoryPage = () => {
     const [openUploadCategory,setOpenUploadCategory] = useState(false)
     const [loading,setLoading] = useState(false)
     const [categoryData,setCategoryData] = useState([])
+    const [subCategoryData,setSubCategoryData] = useState([])
     const [openEdit,setOpenEdit] = useState(false)
     const [editData,setEditData] = useState({
         name : "",
@@ -39,8 +40,18 @@ const CategoryPage = () => {
         }
     }
 
+    const fetchSubCategories = async()=>{
+        try {
+            const response = await adminAPI.getSubCategories()
+            setSubCategoryData(response.data.data || [])
+        } catch (error) {
+            console.error('Error fetching subcategories:', error)
+        }
+    }
+
     useEffect(()=>{
         fetchCategory()
+        fetchSubCategories()
     },[])
 
     const uploadImage = async (file) => {
@@ -133,8 +144,11 @@ const CategoryPage = () => {
   return (
     <section className=''>
         <div className='p-2   bg-white shadow-md flex items-center justify-between'>
-            <h2 className='font-semibold'>Category</h2>
-            <button onClick={()=>setOpenUploadCategory(true)} className='text-sm border border-primary-200 hover:bg-primary-200 px-3 py-1 rounded'>Add Category</button>
+            <h2 className='font-semibold'>Categories Management</h2>
+            <div className="space-x-4">
+                <button onClick={()=>setOpenUploadCategory(true)} className='text-sm border border-primary-200 hover:bg-primary-200 px-3 py-1 rounded'>Add Category</button>
+                <button className='text-sm border border-blue-200 hover:bg-blue-200 px-3 py-1 rounded'>Add Subcategory</button>
+            </div>
         </div>
         {
             !categoryData[0] && !loading && (
@@ -142,37 +156,76 @@ const CategoryPage = () => {
             )
         }
 
-        <div className='p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-            {
-                categoryData.map((category,index)=>{
-                    return(
-                        <div className='bg-white p-4 rounded-lg shadow-md border' key={category._id}>
-                            <div className='flex items-center space-x-4 mb-3'>
-                                {category.image && (
-                                    <img src={category.image} alt={category.name} className="w-16 h-16 object-cover rounded" />
-                                )}
-                                <div className="flex-1">
-                                    <h3 className="font-semibold text-lg">{category.name}</h3>
+        <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Categories</h2>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+                {
+                    categoryData.map((category,index)=>{
+                        return(
+                            <div className='bg-white p-4 rounded-lg shadow-md border' key={category._id}>
+                                <div className='flex items-center space-x-4 mb-3'>
+                                    {category.image && (
+                                        <img src={category.image} alt={category.name} className="w-16 h-16 object-cover rounded" />
+                                    )}
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold text-lg">{category.name}</h3>
+                                        <p className="text-sm text-gray-500">
+                                            {subCategoryData.filter(sub => sub.category.some(cat => cat._id === category._id)).length} subcategories
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className='flex space-x-2'>
+                                    <button onClick={()=>{
+                                        setOpenEdit(true)
+                                        setEditData(category)
+                                    }} className='flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm transition-colors'>
+                                        Edit
+                                    </button>
+                                    <button onClick={()=>{
+                                        setOpenConfirmBoxDelete(true)
+                                        setDeleteCategory(category)
+                                    }} className='flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors'>
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
-                            <div className='flex space-x-2'>
-                                <button onClick={()=>{
-                                    setOpenEdit(true)
-                                    setEditData(category)
-                                }} className='flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm transition-colors'>
-                                    Edit
-                                </button>
-                                <button onClick={()=>{
-                                    setOpenConfirmBoxDelete(true)
-                                    setDeleteCategory(category)
-                                }} className='flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors'>
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    )
-                })
-            }
+                        )
+                    })
+                }
+            </div>
+        </div>
+
+        {/* Subcategories Section */}
+        <div>
+            <h2 className="text-xl font-semibold mb-4">Subcategories</h2>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+                <table className="min-w-full">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                        {subCategoryData.map((subCategory) => (
+                            <tr key={subCategory._id}>
+                                <td className="px-6 py-4 whitespace-nowrap">{subCategory.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    {subCategory.category?.map(cat => cat.name).join(', ') || 'Unknown'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <button
+                                        className="text-red-600 hover:text-red-800"
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         {
