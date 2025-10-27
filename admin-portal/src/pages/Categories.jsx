@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useSelector } from 'react-redux'
+import { adminAPI } from '../utils/api'
 
 const CategoryPage = () => {
     const [openUploadCategory,setOpenUploadCategory] = useState(false)
@@ -15,6 +16,9 @@ const CategoryPage = () => {
     const [deleteCategory,setDeleteCategory] = useState({
         _id : ""
     })
+    const [categoryForm, setCategoryForm] = useState({ name: '', image: '' })
+    const [categoryImageFile, setCategoryImageFile] = useState(null)
+    const [uploading, setUploading] = useState(false)
     // const allCategory = useSelector(state => state.product.allCategory)
 
 
@@ -25,13 +29,11 @@ const CategoryPage = () => {
     const fetchCategory = async()=>{
         try {
             setLoading(true)
-            const response = await fetch('/api/category/get-category')
-            const data = await response.json()
-            if(data.success){
-                setCategoryData(data.data)
-            }
+            const response = await adminAPI.getCategories()
+            setCategoryData(response.data.data || [])
         } catch (error) {
             console.error('Error fetching categories:', error)
+            toast.error('Failed to fetch categories')
         }finally{
             setLoading(false)
         }
@@ -41,26 +43,90 @@ const CategoryPage = () => {
         fetchCategory()
     },[])
 
+    const uploadImage = async (file) => {
+        const formData = new FormData()
+        formData.append('image', file)
+
+        try {
+            const response = await adminAPI.uploadImage(formData)
+            return response.data.data.url
+        } catch (error) {
+            throw new Error('Failed to upload image')
+        }
+    }
+
+    const handleCreateCategory = async (e) => {
+        e.preventDefault()
+        setUploading(true)
+        try {
+            let imageUrl = categoryForm.image
+
+            if (categoryImageFile) {
+                imageUrl = await uploadImage(categoryImageFile)
+            }
+
+            const response = await adminAPI.createCategory({
+                name: categoryForm.name,
+                image: imageUrl
+            })
+            if (response.data.success) {
+                toast.success('Category created successfully')
+                setOpenUploadCategory(false)
+                setCategoryForm({ name: '', image: '' })
+                setCategoryImageFile(null)
+                fetchCategory()
+            }
+        } catch (error) {
+            console.error('Category creation error:', error)
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to create category'
+            toast.error(errorMessage)
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const handleUpdateCategory = async (e) => {
+        e.preventDefault()
+        setUploading(true)
+        try {
+            let imageUrl = editData.image
+
+            if (categoryImageFile) {
+                imageUrl = await uploadImage(categoryImageFile)
+            }
+
+            const response = await adminAPI.updateCategory({
+                _id: editData._id,
+                name: editData.name,
+                image: imageUrl
+            })
+            if (response.data.success) {
+                toast.success('Category updated successfully')
+                setOpenEdit(false)
+                setEditData({ name: '', image: '' })
+                setCategoryImageFile(null)
+                fetchCategory()
+            }
+        } catch (error) {
+            console.error('Category update error:', error)
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to update category'
+            toast.error(errorMessage)
+        } finally {
+            setUploading(false)
+        }
+    }
+
     const handleDeleteCategory = async()=>{
         try {
-            const response = await fetch('/api/category/delete-category', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(deleteCategory)
-            })
-            const data = await response.json()
-            if(data.success){
-                toast.success(data.message)
+            const response = await adminAPI.deleteCategory(deleteCategory)
+            if(response.data.success){
+                toast.success(response.data.message)
                 fetchCategory()
                 setOpenConfirmBoxDelete(false)
-            } else {
-                toast.error(data.message || "Failed to delete category")
             }
         } catch (error) {
             console.error('Error deleting category:', error)
-            toast.error("Failed to delete category")
+            toast.error(error.response?.data?.message || 'Failed to delete category')
         }
     }
 
@@ -120,12 +186,15 @@ const CategoryPage = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg w-96">
                         <h3 className="text-lg font-semibold mb-4">Add New Category</h3>
-                        <form>
+                        <form onSubmit={handleCreateCategory}>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Category Name</label>
                                 <input
                                     type="text"
+                                    required
                                     className="w-full p-2 border rounded-lg"
+                                    value={categoryForm.name}
+                                    onChange={(e) => setCategoryForm({...categoryForm, name: e.target.value})}
                                     placeholder="Enter category name"
                                 />
                             </div>
@@ -135,21 +204,42 @@ const CategoryPage = () => {
                                     type="file"
                                     accept="image/*"
                                     className="w-full p-2 border rounded-lg"
+                                    onChange={(e) => setCategoryImageFile(e.target.files[0])}
                                 />
+                                <p className="text-xs text-gray-500 mt-1">Upload an image file (JPG, PNG, etc.)</p>
+                                {categoryImageFile && (
+                                    <p className="text-sm text-green-600 mt-1">Selected: {categoryImageFile.name}</p>
+                                )}
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Or Image URL</label>
+                                <input
+                                    type="url"
+                                    placeholder="https://example.com/image.jpg"
+                                    className="w-full p-2 border rounded-lg"
+                                    value={categoryForm.image}
+                                    onChange={(e) => setCategoryForm({...categoryForm, image: e.target.value})}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Alternative: paste an image URL</p>
                             </div>
                             <div className="flex justify-end space-x-4">
                                 <button
                                     type="button"
-                                    onClick={() => setOpenUploadCategory(false)}
+                                    onClick={() => {
+                                        setOpenUploadCategory(false)
+                                        setCategoryForm({ name: '', image: '' })
+                                        setCategoryImageFile(null)
+                                    }}
                                     className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                                    disabled={uploading}
+                                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
                                 >
-                                    Create
+                                    {uploading ? 'Creating...' : 'Create'}
                                 </button>
                             </div>
                         </form>
@@ -163,13 +253,15 @@ const CategoryPage = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg w-96">
                         <h3 className="text-lg font-semibold mb-4">Edit Category</h3>
-                        <form>
+                        <form onSubmit={handleUpdateCategory}>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Category Name</label>
                                 <input
                                     type="text"
+                                    required
                                     className="w-full p-2 border rounded-lg"
-                                    defaultValue={editData.name}
+                                    value={editData.name}
+                                    onChange={(e) => setEditData({...editData, name: e.target.value})}
                                 />
                             </div>
                             <div className="mb-4">
@@ -178,21 +270,42 @@ const CategoryPage = () => {
                                     type="file"
                                     accept="image/*"
                                     className="w-full p-2 border rounded-lg"
+                                    onChange={(e) => setCategoryImageFile(e.target.files[0])}
                                 />
+                                <p className="text-xs text-gray-500 mt-1">Upload a new image file (JPG, PNG, etc.)</p>
+                                {categoryImageFile && (
+                                    <p className="text-sm text-green-600 mt-1">Selected: {categoryImageFile.name}</p>
+                                )}
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Or Image URL</label>
+                                <input
+                                    type="url"
+                                    placeholder="https://example.com/image.jpg"
+                                    className="w-full p-2 border rounded-lg"
+                                    value={editData.image}
+                                    onChange={(e) => setEditData({...editData, image: e.target.value})}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Alternative: paste an image URL</p>
                             </div>
                             <div className="flex justify-end space-x-4">
                                 <button
                                     type="button"
-                                    onClick={() => setOpenEdit(false)}
+                                    onClick={() => {
+                                        setOpenEdit(false)
+                                        setEditData({ name: '', image: '' })
+                                        setCategoryImageFile(null)
+                                    }}
                                     className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                                    disabled={uploading}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
                                 >
-                                    Update
+                                    {uploading ? 'Updating...' : 'Update'}
                                 </button>
                             </div>
                         </form>
