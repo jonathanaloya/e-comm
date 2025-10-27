@@ -312,14 +312,13 @@ const Products = () => {
                   <div>
                     <label className="block text-sm font-medium mb-2">Subcategory</label>
                     <select
+                      required
                       className="w-full p-2 border rounded-lg"
                       value={productForm.subCategory}
                       onChange={(e) => setProductForm({...productForm, subCategory: e.target.value})}
                     >
-                      <option value="">Select Subcategory</option>
-                      {subCategories
-                        .filter(sub => sub.category === productForm.category)
-                        .map((subCategory) => (
+                      <option value="">Select SubCategory</option>
+                      {categories.map((subCategory) => (
                         <option key={subCategory._id} value={subCategory._id}>
                           {subCategory.name}
                         </option>
