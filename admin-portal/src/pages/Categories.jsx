@@ -25,10 +25,13 @@ const CategoryPage = () => {
     const fetchCategory = async()=>{
         try {
             setLoading(true)
-            // Placeholder for API call
-            setCategoryData([])
+            const response = await fetch('/api/category/get-category')
+            const data = await response.json()
+            if(data.success){
+                setCategoryData(data.data)
+            }
         } catch (error) {
-
+            console.error('Error fetching categories:', error)
         }finally{
             setLoading(false)
         }
@@ -40,11 +43,23 @@ const CategoryPage = () => {
 
     const handleDeleteCategory = async()=>{
         try {
-            // Placeholder for delete API call
-            toast.success("Category deleted successfully")
-            fetchCategory()
-            setOpenConfirmBoxDelete(false)
+            const response = await fetch('/api/category/delete-category', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(deleteCategory)
+            })
+            const data = await response.json()
+            if(data.success){
+                toast.success(data.message)
+                fetchCategory()
+                setOpenConfirmBoxDelete(false)
+            } else {
+                toast.error(data.message || "Failed to delete category")
+            }
         } catch (error) {
+            console.error('Error deleting category:', error)
             toast.error("Failed to delete category")
         }
     }
@@ -61,27 +76,30 @@ const CategoryPage = () => {
             )
         }
 
-        <div className='p-4 grid  grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2'>
+        <div className='p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
             {
                 categoryData.map((category,index)=>{
                     return(
-                        <div className='w-32 h-56 rounded shadow-md' key={category._id}>
-                            <img
-                                alt={category.name}
-                                src={category.image}
-                                className='w-full object-scale-down'
-                            />
-                            <div className='items-center h-9 flex gap-2'>
+                        <div className='bg-white p-4 rounded-lg shadow-md border' key={category._id}>
+                            <div className='flex items-center space-x-4 mb-3'>
+                                {category.image && (
+                                    <img src={category.image} alt={category.name} className="w-16 h-16 object-cover rounded" />
+                                )}
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-lg">{category.name}</h3>
+                                </div>
+                            </div>
+                            <div className='flex space-x-2'>
                                 <button onClick={()=>{
                                     setOpenEdit(true)
                                     setEditData(category)
-                                }} className='flex-1 bg-green-100 hover:bg-green-200 text-green-600 font-medium py-1 rounded'>
+                                }} className='flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm transition-colors'>
                                     Edit
                                 </button>
                                 <button onClick={()=>{
                                     setOpenConfirmBoxDelete(true)
                                     setDeleteCategory(category)
-                                }} className='flex-1 bg-red-100 hover:bg-red-200 text-red-600 font-medium py-1 rounded'>
+                                }} className='flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors'>
                                     Delete
                                 </button>
                             </div>
@@ -99,13 +117,87 @@ const CategoryPage = () => {
 
         {
             openUploadCategory && (
-                <div>Upload Category Modal Placeholder</div>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-96">
+                        <h3 className="text-lg font-semibold mb-4">Add New Category</h3>
+                        <form>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Category Name</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-2 border rounded-lg"
+                                    placeholder="Enter category name"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Category Image</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="w-full p-2 border rounded-lg"
+                                />
+                            </div>
+                            <div className="flex justify-end space-x-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setOpenUploadCategory(false)}
+                                    className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                                >
+                                    Create
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )
         }
 
         {
             openEdit && (
-                <div>Edit Category Modal Placeholder</div>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-96">
+                        <h3 className="text-lg font-semibold mb-4">Edit Category</h3>
+                        <form>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Category Name</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-2 border rounded-lg"
+                                    defaultValue={editData.name}
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Category Image</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="w-full p-2 border rounded-lg"
+                                />
+                            </div>
+                            <div className="flex justify-end space-x-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setOpenEdit(false)}
+                                    className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                                >
+                                    Update
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )
         }
 
