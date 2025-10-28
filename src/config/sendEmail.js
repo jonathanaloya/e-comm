@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const sendEmail = async ({ sendTo, subject, html }) => {
     try {
         const { data, error } = await resend.emails.send({
-            from: `Fresh Katale <${process.env.FROM_EMAIL || 'onboarding@resend.dev'}>`,
+            from: `Fresh Katale <${process.env.FROM_EMAIL || 'info@freshkatale.com'}>`,
             to: [sendTo],
             subject: subject,
             html: html,
