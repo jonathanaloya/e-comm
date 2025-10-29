@@ -111,9 +111,52 @@ export const getAllOrdersController = async (req, res) => {
             .populate('delivery_address')
             .sort({ createdAt: -1 });
 
+        // Group orders by mainOrderId for better display
+        const groupedOrders = {};
+        const ungroupedOrders = [];
+
+        orders.forEach((order) => {
+            if (order.mainOrderId) {
+                if (!groupedOrders[order.mainOrderId]) {
+                    groupedOrders[order.mainOrderId] = {
+                        mainOrderId: order.mainOrderId,
+                        createdAt: order.createdAt,
+                        payment_status: order.payment_status,
+                        order_status: order.order_status,
+                        delivery_address: order.delivery_address,
+                        paymentId: order.paymentId,
+                        userId: order.userId,
+                        items: [],
+                        totalAmount: 0,
+                        deliveryFee: order.deliveryFee || 0,
+                    };
+                }
+                // Push each product in order.items to the grouped items array
+                if (Array.isArray(order.items)) {
+                    order.items.forEach((item) => {
+                        groupedOrders[order.mainOrderId].items.push({
+                            ...item._doc,
+                            price: item.price ?? item.itemTotal / (item.quantity || 1),
+                            itemTotal: item.itemTotal ?? item.price * item.quantity,
+                        });
+                        groupedOrders[order.mainOrderId].totalAmount +=
+                            item.itemTotal || item.price * item.quantity || 0;
+                    });
+                }
+            } else {
+                ungroupedOrders.push(order);
+            }
+        });
+
+        const formattedOrders = {
+            groupedOrders: Object.values(groupedOrders),
+            individualOrders: ungroupedOrders,
+            totalOrders: orders.length,
+        };
+
         return res.json({
             message: "Orders fetched successfully",
-            data: orders,
+            data: formattedOrders,
             error: false,
             success: true
         });
