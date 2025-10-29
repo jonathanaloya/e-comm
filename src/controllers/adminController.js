@@ -109,6 +109,7 @@ export const getAllOrdersController = async (req, res) => {
         const orders = await Order.find({})
             .populate('userId', 'name email mobile')
             .populate('delivery_address')
+            .populate('items.productId', 'name price image category')
             .sort({ createdAt: -1 });
 
         // Group orders by mainOrderId for better display
