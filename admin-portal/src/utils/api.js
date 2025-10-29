@@ -39,40 +39,40 @@ api.interceptors.response.use(
 
 export const adminAPI = {
   // Auth
-  login: (credentials) => api.post('/api/admin/login', credentials),
+  login: (credentials) => api.post('/admin/login', credentials),
   
   // Orders
-  getAllOrders: () => api.get('/api/admin/all-orders'),
-  updateOrderStatus: (data) => api.put('/api/admin/update-status', data),
+  getAllOrders: () => api.get('/admin/all-orders'),
+  updateOrderStatus: (data) => api.put('/admin/update-status', data),
   
   // Users
-  getAllUsers: () => api.get('/api/user/admin/all-users'),
+  getAllUsers: () => api.get('/user/admin/all-users'),
   
   // Products
-  getAllProducts: () => api.post('/api/product/get', {}),
-  createProduct: (data) => api.post('/api/product/create', data),
-  updateProduct: (data) => api.put('/api/product/update', data),
-  deleteProduct: (data) => api.delete('/api/product/delete', { data }),
-  
+  getAllProducts: () => api.post('/product/get', {}),
+  createProduct: (data) => api.post('/product/create', data),
+  updateProduct: (data) => api.put('/product/update', data),
+  deleteProduct: (data) => api.delete('/product/delete', { data }),
+
   // Categories
-  getCategories: () => api.get('/api/category/get-category'),
-  createCategory: (data) => api.post('/api/category/add-category', data),
-  updateCategory: (data) => api.put('/api/category/update-category', data),
-  deleteCategory: (data) => api.delete('/api/category/delete-category', { data }),
-  
+  getCategories: () => api.get('/category/get-category'),
+  createCategory: (data) => api.post('/category/add-category', data),
+  updateCategory: (data) => api.put('/category/update-category', data),
+  deleteCategory: (data) => api.delete('/category/delete-category', { data }),
+
   // Subcategories
-  getSubCategories: () => api.post('/api/subcategory/get', {}),
-  createSubCategory: (data) => api.post('/api/subcategory/create', data),
-  updateSubCategory: (data) => api.put('/api/subcategory/update', data),
-  deleteSubCategory: (data) => api.delete('/api/subcategory/delete', { data }),
+  getSubCategories: () => api.post('/subcategory/get', {}),
+  createSubCategory: (data) => api.post('/subcategory/create', data),
+  updateSubCategory: (data) => api.put('/subcategory/update', data),
+  deleteSubCategory: (data) => api.delete('/subcategory/delete', { data }),
   
   // Notifications
-  getNotifications: () => api.get('/api/admin/notifications'),
-  markNotificationAsRead: (id) => api.put(`/api/admin/notifications/${id}/read`),
-  deleteNotification: (id) => api.delete(`/api/admin/notifications/${id}`),
+  getNotifications: () => api.get('/admin/notifications'),
+  markNotificationAsRead: (id) => api.put(`/admin/notifications/${id}/read`),
+  deleteNotification: (id) => api.delete(`/admin/notifications/${id}`),
   
   // File Upload
-  uploadImage: (formData) => api.post('/api/file/upload', formData, {
+  uploadImage: (formData) => api.post('/file/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
