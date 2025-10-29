@@ -1,5 +1,3 @@
-// src/components/Flutterwave.jsx
-
 import React from "react";
 import toast from "react-hot-toast"; 
 import Axios from "axios";
@@ -35,7 +33,7 @@ const FlutterwavePaymentButton = ({
       // 1️⃣ Call backend /checkout API
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || process.env.REACT_APP_API_URL;
       const res = await Axios.post(
-        `${API_BASE_URL}/api/order/checkout`,
+        `${API_BASE_URL}/order/checkout`,
         {
           list_items: cartItemsList,
           addressId: addressList[selectAddress]?._id,

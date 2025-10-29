@@ -1,5 +1,3 @@
-// src/pages/CheckoutPage.jsx
-
 import React, { useState, useEffect } from "react";
 import { DisplayPriceInShillings } from "../utils/DisplayPriceInShillings";
 import AddAddress from "../components/AddAddress";
@@ -165,16 +163,16 @@ const CheckoutPage = () => {
         toast.error("Payment was cancelled.");
         setIsProcessing(false);
         setPaymentMethod("");
-        // Redirect to Vercel cancel page
-        window.location.href = "https://freshkatale.com/cancel";
+        // Redirect to main page with cancellation message
+        navigate("/", { state: { message: "Payment was cancelled." } });
       } else {
         // For any other status, treat as failed/cancelled
         toast.dismiss();
         toast.error("Payment was not completed. Please try again.");
         setIsProcessing(false);
         setPaymentMethod("");
-        // Redirect to Vercel cancel page for failed payments too
-        window.location.href = "https://freshkatale.com/cancel";
+        // Redirect to main page for failed payments
+        navigate("/", { state: { message: "Payment was not completed. Please try again." } });
       }
     }
   }, [location.search, navigate]); // Rerun when search params change
