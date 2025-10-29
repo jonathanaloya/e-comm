@@ -1,176 +1,176 @@
 
 
-export const baseURL = "https://freshkatale.com";
+export const baseURL = "https://freshkatale.com/api";
 
 
 const SummaryApi = {
     csrfToken : {
-        url : '/api/user/csrf-token',
+        url : '/user/csrf-token',
         method : 'get'
     },
     register : {
-        url : '/api/user/register',
+        url : '/user/register',
         method : 'post'
     },
     verifyRegistrationOtp : {
-        url : '/api/user/verify-registration-otp',
+        url : '/user/verify-registration-otp',
         method : 'post'
     },
     login : {
-        url : '/api/user/login',
+        url : '/user/login',
         method : 'post'
     },
     forgot_password : {
-        url : '/api/user/forgot-password',
+        url : '/user/forgot-password',
         method : 'put'
     },
     forgot_password_otp_vrification : {
-        url : '/api/user/verify-forgot-password-otp',
+        url : '/user/verify-forgot-password-otp',
         method : 'put'
     },
     resetPassword : {
-        url : '/api/user/reset-password',
+        url : '/user/reset-password',
         method : 'put'
     },
     refreshToken : {
-        url : '/api/user/refresh-token',
+        url : '/user/refresh-token',
         method : 'post'
     },
     getUserLoginDetails : {
-        url : '/api/user/user-details',
+        url : '/user/user-details',
         method : 'get'
     },
     logout : {
-        url : '/api/user/logout',
+        url : '/user/logout',
         method : 'get'
     },
     uploadAvatar : {
-        url : '/api/user/upload-avatar',
+        url : '/user/upload-avatar',
         method : 'put'
     },
     updateUserDetails : {
-        url : '/api/user/update-user',
+        url : '/user/update-user',
         method : 'put'
     },
     addCategory : {
-        url : '/api/category/add-category',
+        url : '/category/add-category',
         method : 'post'
     },
     uploadImage : {
-        url : '/api/file/upload-image',
+        url : '/file/upload-image',
         method : 'post'
     },
     getCategory : {
-        url : '/api/category/get-category',
+        url : '/category/get-category',
         method : 'get'
     },
     updateCategory : {
-        url : '/api/category/update-category',
+        url : '/category/update-category',
         method : 'put'
     },
     deleteCategory : {
-        url : '/api/category/delete-category',
+        url : '/category/delete-category',
         method : 'delete'
     },
     createSubCategory : {
-        url : '/api/subcategory/create',
+        url : '/subcategory/create',
         method : 'post'
     },
     getSubCategory : {
-        url : '/api/subcategory/get',
+        url : '/subcategory/get',
         method : 'post'
     },
     updateSubCategory : {
-        url : '/api/subcategory/update',
+        url : '/subcategory/update',
         method : 'put'
     },
     deleteSubCategory : {
-        url : '/api/subcategory/delete',
+        url : '/subcategory/delete',
         method : 'delete'
     },
     createProduct : {
-        url : '/api/product/create',
+        url : '/product/create',
         method : 'post'
     },
     getProduct : {
-        url : '/api/product/get',
+        url : '/product/get',
         method : 'post'
     },
     getProductByCategory : {
-        url : '/api/product/get-product-by-category',
+        url : '/product/get-product-by-category',
         method : 'post'
     },
     getProductByCategoryAndSubCategory : {
-        url : '/api/product/get-product-by-category-and-subcategory',
+        url : '/product/get-product-by-category-and-subcategory',
         method : 'post'
     },
     getProductDetails : {
-        url : '/api/product/get-product-details',
+        url : '/product/get-product-details',
         method : 'post'
     },
     updateProduct : {
-        url : '/api/product/update',
+        url : '/product/update',
         method : 'put'
     },
     deleteProduct : {
-        url : '/api/product/delete',
+        url : '/product/delete',
         method : 'delete'
     },
     searchProduct : {
-        url : '/api/product/search',
+        url : '/product/search',
         method : 'post'
     },
     addTocart : {
-        url : "/api/cart/create",
+        url : "/cart/create",
         method : 'post'
     },
     getCartItem : {
-        url : '/api/cart/get',
+        url : '/cart/get',
         method : 'get'
     },
     updateCartItemQty : {
-        url : '/api/cart/update-qty',
+        url : '/cart/update-qty',
         method : 'put'
     },
     deleteCartItem : {
-        url : '/api/cart/delete-cart-item',
+        url : '/cart/delete-cart-item',
         method : 'delete'
     },
     createAddress : {
-        url : '/api/address/create',
+        url : '/address/create',
         method : 'post'
     },
     getAddress : {
-        url : '/api/address/get',
+        url : '/address/get',
         method : 'get'
     },
     updateAddress : {
-        url : '/api/address/update',
+        url : '/address/update',
         method : 'put'
     },
     disableAddress : {
-        url : '/api/address/disable',
+        url : '/address/disable',
         method : 'delete'
     },
     CashOnDeliveryOrder : {
-        url : "/api/order/cash-on-delivery",
+        url : "/order/cash-on-delivery",
         method : 'post'
     },
     payment_url : {
-        url : "/api/order/checkout",
+        url : "/order/checkout",
         method : 'post'
     },
     getOrderItems : {
-        url : '/api/order/order-list',
+        url : '/order/order-list',
         method : 'get'
     },
     createSupportTicket : {
-        url : '/api/support/create-ticket',
+        url : '/support/create-ticket',
         method : 'post'
     },
 
     getOrderTracking : {
-        url : '/api/order/tracking',
+        url : '/order/tracking',
         method : 'get'
     }
 }
