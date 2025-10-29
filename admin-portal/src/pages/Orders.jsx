@@ -17,12 +17,22 @@ const Orders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      
+
       const response = await adminAPI.getAllOrders()
-      
+
       if (response.data.success) {
-        setOrders(response.data.data)
-        setFilteredOrders(response.data.data)
+        // Handle both grouped and individual orders
+        const data = response.data.data
+        let allOrders = []
+
+        if (data.groupedOrders) {
+          allOrders = [...data.groupedOrders, ...data.individualOrders]
+        } else {
+          allOrders = data
+        }
+
+        setOrders(allOrders)
+        setFilteredOrders(allOrders)
       }
     } catch (error) {
       toast.error('Failed to fetch orders')
@@ -69,7 +79,7 @@ const Orders = () => {
 
   const OrderModal = ({ order, onClose, onUpdate }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Order Details</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
@@ -79,7 +89,7 @@ const Orders = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Order ID</label>
-              <p className="text-sm text-gray-900">{order.orderId}</p>
+              <p className="text-sm text-gray-900">{order.mainOrderId || order.orderId}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Customer</label>
@@ -95,23 +105,68 @@ const Orders = () => {
             </div>
           </div>
 
+          {/* Order Items */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Product</label>
-            <p className="text-sm text-gray-900">{order.product_details?.name}</p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Ordered Items</label>
+            <div className="space-y-2">
+              {order.items && order.items.length > 0 ? (
+                order.items.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      {item.product_details?.image && item.product_details.image[0] && (
+                        <img
+                          src={`https://freshkatale.com${item.product_details.image[0]}`}
+                          alt={item.product_details.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      )}
+                      <div>
+                        <p className="font-medium text-gray-900">{item.product_details?.name}</p>
+                        <p className="text-sm text-gray-600">UGX {item.price?.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">Qty: {item.quantity}</p>
+                      <p className="text-sm text-gray-600">UGX {(item.itemTotal || item.price * item.quantity)?.toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    {order.product_details?.image && order.product_details.image[0] && (
+                      <img
+                        src={`https://freshkatale.com${order.product_details.image[0]}`}
+                        alt={order.product_details.name}
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                    )}
+                    <div>
+                      <p className="font-medium text-gray-900">{order.product_details?.name}</p>
+                      <p className="text-sm text-gray-600">UGX {order.price?.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">Qty: {order.quantity}</p>
+                    <p className="text-sm text-gray-600">UGX {order.totalAmt?.toLocaleString()}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Quantity</label>
-              <p className="text-sm text-gray-900">{order.quantity}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Amount</label>
-              <p className="text-sm text-gray-900">UGX {order.totalAmt?.toLocaleString()}</p>
+              <label className="block text-sm font-medium text-gray-700">Total Amount</label>
+              <p className="text-sm text-gray-900">UGX {order.totalAmount?.toLocaleString() || order.totalAmt?.toLocaleString()}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Payment Status</label>
               <p className="text-sm text-gray-900">{order.payment_status}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Order Status</label>
+              <p className="text-sm text-gray-900">{order.order_status}</p>
             </div>
           </div>
 
@@ -128,8 +183,8 @@ const Orders = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Update Status</label>
-            <select 
-              value={order.order_status} 
+            <select
+              value={order.order_status}
               onChange={(e) => onUpdate(order._id, e.target.value)}
               className="w-full p-2 border rounded-lg"
             >
@@ -213,9 +268,9 @@ const Orders = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredOrders.map((order) => (
-                <tr key={order._id} className="hover:bg-gray-50">
+                <tr key={order._id || order.mainOrderId} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {order.orderId}
+                    {order.mainOrderId || order.orderId}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div>
@@ -223,11 +278,20 @@ const Orders = () => {
                       <div className="text-gray-500">{order.userId?.email}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {order.product_details?.name}
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {order.items && order.items.length > 0 ? (
+                      <div>
+                        <div className="font-medium">{order.items[0].product_details?.name}</div>
+                        {order.items.length > 1 && (
+                          <div className="text-gray-500">+{order.items.length - 1} more items</div>
+                        )}
+                      </div>
+                    ) : (
+                      order.product_details?.name
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    UGX {order.totalAmt?.toLocaleString()}
+                    UGX {order.totalAmount?.toLocaleString() || order.totalAmt?.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
