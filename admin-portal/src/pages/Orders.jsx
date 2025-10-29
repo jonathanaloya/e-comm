@@ -72,7 +72,8 @@ const Orders = () => {
         order.items?.some(item => 
           item.product_details?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.product_details?.sku?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        ) ||
+        order.userId.mobile?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
