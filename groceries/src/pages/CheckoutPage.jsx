@@ -82,7 +82,7 @@ const CheckoutPage = () => {
       const API_BASE_URL =
         import.meta.env.VITE_API_BASE_URL || process.env.REACT_APP_API_URL;
       const response = await Axios.post(
-        `${API_BASE_URL}/api/order/calculate-delivery-fee`,
+        `${API_BASE_URL}/order/calculate-delivery-fee`,
         {
           addressId: addressList[addressIndex]._id,
           cartTotal: totalPrice,
@@ -166,7 +166,7 @@ const CheckoutPage = () => {
         setIsProcessing(false);
         setPaymentMethod("");
         // Redirect to Vercel cancel page
-        window.location.href = "https://e-comm-rho-five.vercel.app/cancel";
+        window.location.href = "https://freshkatale.com/cancel";
       } else {
         // For any other status, treat as failed/cancelled
         toast.dismiss();
@@ -174,7 +174,7 @@ const CheckoutPage = () => {
         setIsProcessing(false);
         setPaymentMethod("");
         // Redirect to Vercel cancel page for failed payments too
-        window.location.href = "https://e-comm-rho-five.vercel.app/cancel";
+        window.location.href = "https://freshkatale.com/cancel";
       }
     }
   }, [location.search, navigate]); // Rerun when search params change
@@ -185,7 +185,7 @@ const CheckoutPage = () => {
       const API_BASE_URL =
         import.meta.env.VITE_API_BASE_URL || process.env.REACT_APP_API_URL;
       const response = await Axios.get(
-        `${API_BASE_URL}/api/order/verify-payment?transaction_id=${transaction_id}&tx_ref=${tx_ref}`,
+        `${API_BASE_URL}/order/verify-payment?transaction_id=${transaction_id}&tx_ref=${tx_ref}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -355,7 +355,7 @@ const CheckoutPage = () => {
       });
 
       const backendResponse = await Axios.post(
-        `${API_BASE_URL}/api/order/checkout`,
+        `${API_BASE_URL}/order/checkout`,
         {
           userId: user?._id,
           list_items: listItems,
