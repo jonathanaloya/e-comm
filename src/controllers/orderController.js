@@ -509,8 +509,8 @@ export async function paymentController(request, response) {
 
     const createdOrderDocs = await Promise.all(orderPromises);
 
-    // Always redirect to Vercel site for consistency
-    const baseUrl = "https://e-comm-rho-five.vercel.app";
+    // Always redirect to production site for consistency
+    const baseUrl = "https://freshkatale.com";
 
     console.log("Payment redirect URL: Always using Vercel site", {
       baseUrl,
@@ -533,7 +533,7 @@ export async function paymentController(request, response) {
       customizations: {
         title: "Fresh Katale",
         description: `Payment for Order ${mainOrderId}`,
-        logo: "https://e-comm-rho-five.vercel.app/logo.jpg",
+        logo: "https://freshkatale.com/logo.jpg",
       },
       meta: {
         mainOrderId: mainOrderId,
