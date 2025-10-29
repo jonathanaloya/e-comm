@@ -128,6 +128,14 @@ const getOrderStatusUpdateTemplate = (order, user, newStatus) => {
     'cancelled': '#F44336'
   };
 
+  const itemsHtml = order.items?.map(item => `
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">${item.product_details.name}</td>
+      <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.quantity}</td>
+      <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">UGX ${item.totalAmt.toLocaleString()}</td>
+    </tr>
+  `).join('') || '';
+
   return `
     <html>
       <head>
@@ -137,6 +145,7 @@ const getOrderStatusUpdateTemplate = (order, user, newStatus) => {
           .header { background: ${statusColors[newStatus] || '#4CAF50'}; color: white; padding: 20px; text-align: center; }
           .content { padding: 20px; }
           .order-details { background: #f9f9f9; padding: 15px; margin: 20px 0; }
+          .table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px; }
           .footer { background: #f1f1f1; padding: 20px; text-align: center; font-size: 12px; }
         </style>
       </head>
@@ -145,28 +154,44 @@ const getOrderStatusUpdateTemplate = (order, user, newStatus) => {
           <div class="header">
             <h1>Order Status Update</h1>
           </div>
-          
+
           <div class="content">
             <p>Dear ${user.name},</p>
-            
+
             <p>We have an update on your order:</p>
-            
+
             <div class="order-details">
               <h3>Order Information:</h3>
               <p><strong>Order ID:</strong> ${order.mainOrderId || order.orderId}</p>
               <p><strong>New Status:</strong> <span style="color: ${statusColors[newStatus]}; font-weight: bold;">${newStatus.toUpperCase()}</span></p>
               <p><strong>Update Time:</strong> ${new Date().toLocaleString()}</p>
             </div>
-            
+
+            ${itemsHtml ? `
+              <h3>Order Items:</h3>
+              <table class="table">
+                <thead>
+                  <tr style="background: #f5f5f5;">
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Product</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Quantity</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsHtml}
+                </tbody>
+              </table>
+            ` : ''}
+
             <p>${statusMessages[newStatus] || 'Your order status has been updated.'}</p>
-            
+
             <p>You can track your order status by logging into your account on our website.</p>
-            
+
             <p>Thank you for choosing Fresh Katale!</p>
-            
+
             <p>Best regards,<br>Fresh Katale Team</p>
           </div>
-          
+
           <div class="footer">
             <p>&copy; 2024 Fresh Katale. All rights reserved.</p>
             <p>This is an automated message, please do not reply to this email.</p>
@@ -520,7 +545,7 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
     const totalAmount = order.totalAmount || order.items?.reduce((sum, item) => sum + item.totalAmt, 0) || 0;
     const deliveryFee = order.deliveryFee || 0;
     const distance = deliveryAddress?.distance ? `${Math.ceil(deliveryAddress.distance)}km` : 'N/A';
-    const coordinates = deliveryAddress?.coordinates ? 
+    const coordinates = deliveryAddress?.coordinates ?
       `https://maps.google.com/maps?q=${deliveryAddress.coordinates.lat},${deliveryAddress.coordinates.lng}` : null;
 
     const adminTemplate = `
@@ -544,7 +569,7 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
               <h1>🚨 NEW ORDER RECEIVED</h1>
               <p>Immediate Action Required</p>
             </div>
-            
+
             <div class="content">
               <div class="urgent">
                 <h3>⚡ URGENT: New Order for Delivery</h3>
@@ -552,14 +577,14 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
                 <p><strong>Payment Method:</strong> ${order.payment_status}</p>
                 <p><strong>Order Time:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
               </div>
-              
+
               <div class="order-details">
                 <h3>Customer Information:</h3>
                 <p><strong>Name:</strong> ${user.name}</p>
                 <p><strong>Email:</strong> ${user.email}</p>
                 <p><strong>Phone:</strong> ${deliveryAddress?.mobile || 'Not provided'}</p>
               </div>
-              
+
               <div class="location-box">
                 <h3>📍 Delivery Location & Distance:</h3>
                 <p><strong>Address:</strong> ${deliveryAddress?.address_line || 'Not provided'}</p>
@@ -568,7 +593,7 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
                 <p><strong>Delivery Fee:</strong> UGX ${deliveryFee.toLocaleString()}</p>
                 ${coordinates ? `<p><strong>📍 View on Map:</strong> <a href="${coordinates}" target="_blank">Open in Google Maps</a></p>` : ''}
               </div>
-              
+
               ${itemsHtml ? `
                 <h3>Items to Prepare:</h3>
                 <table class="table">
@@ -584,14 +609,14 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
                   </tbody>
                 </table>
               ` : ''}
-              
+
               <div class="order-details">
                 <h3>💰 Order Summary:</h3>
                 <p><strong>Subtotal:</strong> UGX ${(totalAmount - deliveryFee).toLocaleString()}</p>
                 <p><strong>Delivery Fee:</strong> UGX ${deliveryFee.toLocaleString()}</p>
                 <p><strong>Total Amount:</strong> UGX ${totalAmount.toLocaleString()}</p>
               </div>
-              
+
               <div class="urgent">
                 <h3>⏰ Next Steps:</h3>
                 <ol>
@@ -602,7 +627,7 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
                 </ol>
               </div>
             </div>
-            
+
             <div class="footer">
               <p>Fresh Katale Admin System - Order Management</p>
               <p>This is an automated notification for new orders</p>
@@ -611,9 +636,9 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
         </body>
       </html>
     `;
-    
+
     const transporter = createTransporter();
-    
+
     const mailOptions = {
       from: `"Fresh Katale System" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
@@ -623,7 +648,7 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
 
     const result = await transporter.sendMail(mailOptions);
     console.log('Admin order notification sent:', result.messageId);
-    
+
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error('Error sending admin order notification:', error);
