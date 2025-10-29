@@ -192,21 +192,32 @@ export const updateOrderStatusController = async (req, res) => {
             });
         }
 
+        // Find the order first to get user and address info for email
+        const order = await Order.findById(orderId).populate('userId', 'name email mobile').populate('delivery_address');
+        if (!order) {
+            return res.status(404).json({
+                message: "Order not found",
+                error: true,
+                success: false
+            });
+        }
+
         const updatedOrder = await Order.findByIdAndUpdate(
             orderId,
-            { 
+            {
                 order_status: status,
                 updatedAt: new Date()
             },
             { new: true }
         ).populate('userId', 'name email mobile');
 
-        if (!updatedOrder) {
-            return res.status(404).json({
-                message: "Order not found",
-                error: true,
-                success: false
-            });
+        // Send status update email to customer
+        try {
+            const { sendOrderStatusUpdateEmail } = await import("../services/emailService.js");
+            await sendOrderStatusUpdateEmail(order, order.userId, status);
+        } catch (emailError) {
+            console.error("Failed to send status update email:", emailError);
+            // Don't fail the status update if email fails
         }
 
         return res.json({
