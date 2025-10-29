@@ -189,6 +189,26 @@ export async function CashOnDeliveryOrderController(request, response) {
           "../services/emailService.js"
         );
         await sendAdminOrderNotification(orderForEmail, user, address);
+
+        // Create in-app notification for admin
+        try {
+          const Notification = (await import("../models/notificationModel.js")).default;
+          const notification = new Notification({
+            type: 'order',
+            title: `New Order Received: ${generatedOrder.orderId}`,
+            message: `${user.name} placed a new order for UGX ${generatedOrder.totalAmt.toLocaleString()}. Payment method: ${generatedOrder.payment_status}`,
+            priority: 'high',
+            data: {
+              orderId: generatedOrder.orderId,
+              userId: userId,
+              totalAmount: generatedOrder.totalAmt,
+              paymentMethod: generatedOrder.payment_status
+            }
+          });
+          await notification.save();
+        } catch (notificationError) {
+          console.error('Failed to create order notification:', notificationError);
+        }
       }
     } catch (emailError) {
       // Don't fail the order if email fails
@@ -761,6 +781,26 @@ export async function verifyPaymentController(request, response) {
                 "../services/emailService.js"
               );
               await sendAdminOrderNotification(mainOrder, user, address);
+
+              // Create in-app notification for admin (only for successful payments)
+              try {
+                const Notification = (await import("../models/notificationModel.js")).default;
+                const notification = new Notification({
+                  type: 'order',
+                  title: `Payment Confirmed: ${mainOrder.mainOrderId}`,
+                  message: `${user.name}'s payment of UGX ${mainOrder.totalAmount.toLocaleString()} has been successfully processed.`,
+                  priority: 'high',
+                  data: {
+                    orderId: mainOrder.mainOrderId,
+                    userId: userId,
+                    totalAmount: mainOrder.totalAmount,
+                    paymentMethod: 'Online Payment'
+                  }
+                });
+                await notification.save();
+              } catch (notificationError) {
+                console.error('Failed to create payment notification:', notificationError);
+              }
             }
           }
         } catch (emailError) {

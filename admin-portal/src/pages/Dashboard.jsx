@@ -17,7 +17,7 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      
+
       const [ordersRes, usersRes, productsRes] = await Promise.all([
         adminAPI.getAllOrders(),
         adminAPI.getAllUsers(),
@@ -25,13 +25,22 @@ const Dashboard = () => {
       ])
 
       if (ordersRes.data.success) {
-        const orders = ordersRes.data.data
-        setRecentOrders(orders.slice(0, 5))
+        // Handle both grouped and individual orders
+        const data = ordersRes.data.data
+        let allOrders = []
+
+        if (data.groupedOrders) {
+          allOrders = [...data.groupedOrders, ...data.individualOrders]
+        } else {
+          allOrders = data
+        }
+
+        setRecentOrders(allOrders.slice(0, 5))
         setStats(prev => ({
           ...prev,
-          totalOrders: orders.length,
-          pendingOrders: orders.filter(o => o.order_status === 'pending').length,
-          totalRevenue: orders.reduce((sum, o) => sum + (o.totalAmt || 0), 0)
+          totalOrders: allOrders.length,
+          pendingOrders: allOrders.filter(o => o.order_status === 'pending').length,
+          totalRevenue: allOrders.reduce((sum, o) => sum + (o.totalAmount || o.totalAmt || 0), 0)
         }))
       }
 
@@ -137,10 +146,10 @@ const Dashboard = () => {
             </thead>
             <tbody>
               {recentOrders.map((order) => (
-                <tr key={order._id} className="border-b hover:bg-gray-50">
-                  <td className="p-2">{order.orderId}</td>
+                <tr key={order._id || order.mainOrderId} className="border-b hover:bg-gray-50">
+                  <td className="p-2">{order.mainOrderId || order.orderId}</td>
                   <td className="p-2">{order.userId?.name || 'N/A'}</td>
-                  <td className="p-2">UGX {order.totalAmt?.toLocaleString()}</td>
+                  <td className="p-2">UGX {order.totalAmount?.toLocaleString() || order.totalAmt?.toLocaleString()}</td>
                   <td className="p-2">
                     <span className={`px-2 py-1 rounded text-xs ${
                       order.order_status === 'delivered' ? 'bg-green-100 text-green-800' :
