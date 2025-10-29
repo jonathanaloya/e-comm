@@ -66,7 +66,13 @@ const Orders = () => {
       filtered = filtered.filter(order => 
         order.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.userId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        order.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.mainOrderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.paymentId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.items?.some(item => 
+          item.product_details?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.product_details?.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
       )
     }
 
