@@ -10,16 +10,29 @@ const api = axios.create({
 
 // Request interceptor
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const token = localStorage.getItem('adminToken')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    // Add CSRF token if available
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-    if (csrfToken) {
-      config.headers['X-CSRF-Token'] = csrfToken
+
+    // Add CSRF token for non-GET requests
+    if (config.method !== 'get') {
+      try {
+        // Fetch CSRF token from server
+        const csrfResponse = await fetch('/api/user/csrf-token', {
+          method: 'GET',
+          credentials: 'include'
+        })
+        const csrfData = await csrfResponse.json()
+        if (csrfData.success && csrfData.csrfToken) {
+          config.headers['x-csrf-token'] = csrfData.csrfToken
+        }
+      } catch (error) {
+        console.warn('Failed to fetch CSRF token:', error)
+      }
     }
+
     return config
   },
   (error) => Promise.reject(error)
