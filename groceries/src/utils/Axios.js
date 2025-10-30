@@ -80,6 +80,7 @@ Axios.interceptors.response.use(
       // Clear cart state after successful order placement
       store.dispatch(handleAddItemCart([]));
       console.log('Cart cleared after successful order placement');
+      toast.success('Order placed successfully! Cart has been cleared.');
     }
     return response;
   },
