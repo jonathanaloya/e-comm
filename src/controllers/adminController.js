@@ -47,18 +47,14 @@ export const adminLoginController = async (req, res) => {
             });
         }
 
-        // Check if user is admin (temporarily disabled for testing)
-        // For now, we'll check if email contains 'admin' or matches specific admin emails
-        /*
-        const adminEmails = ['admin@freshkatale.com', 'freshkatale@gmail.com'];
-        if (!adminEmails.includes(email.toLowerCase())) {
+        // Check if user is admin
+        if (user.role !== 'ADMIN') {
             return res.status(403).json({
                 message: 'Access denied. Admin privileges required.',
                 error: true,
                 success: false
             });
         }
-        */
 
         const accessToken = await generateAccessToken(user._id);
         const refreshToken = await generateRefreshToken(user._id);
