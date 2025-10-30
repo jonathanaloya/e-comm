@@ -75,6 +75,12 @@ Axios.interceptors.request.use(
 
 Axios.interceptors.response.use(
   (response) => {
+    // Check if this is a successful order response and clear cart
+    if (response.config.url?.includes('/cash-on-delivery') && response.data?.success) {
+      // Clear cart state after successful order placement
+      store.dispatch(handleAddItemCart([]));
+      console.log('Cart cleared after successful order placement');
+    }
     return response;
   },
   async (error) => {
