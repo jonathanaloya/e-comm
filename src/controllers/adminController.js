@@ -50,9 +50,10 @@ export const adminLoginController = async (req, res) => {
         // Check if user is admin
         if (user.role !== 'ADMIN') {
             return res.status(403).json({
-                message: 'Access denied. Admin privileges required.',
+                message: 'Access denied. This portal is for administrators only. Please use the main website for customer access.',
                 error: true,
-                success: false
+                success: false,
+                adminOnly: true
             });
         }
 
