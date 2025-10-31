@@ -24,8 +24,24 @@ const UserMenu = ({ close }) => {
         if (close) {
           close();
         }
+
+        // Perform complete logout
+        console.log('Manual logout - performing complete logout');
+
+        // Clear Redux state
         dispatch(logout());
+
+        // Clear all localStorage
         localStorage.clear();
+
+        // Clear all sessionStorage
+        sessionStorage.clear();
+
+        // Clear all cookies
+        document.cookie.split(";").forEach(function(c) {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+
         toast.success(response.data.message);
         // Force reload to guarantee UI resets
         window.location.href = "/login";

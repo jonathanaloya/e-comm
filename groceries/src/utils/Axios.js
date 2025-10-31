@@ -108,19 +108,34 @@ Axios.interceptors.response.use(
 
     if (error.response?.status === 401) {
       if (error.response?.data?.sessionExpired) {
+        console.log('Session expired - performing complete logout');
+
         // Call backend logout to clear cookies/session
         try {
           await Axios.get("/api/user/logout");
-        } catch (e) {}
-        // Clear Redux state
+        } catch (e) {
+          console.log('Backend logout failed, but continuing with frontend cleanup');
+        }
+
+        // Clear Redux state completely
         store.dispatch(logout());
         store.dispatch(handleAddItemCart([]));
         store.dispatch(setOrder([]));
+
         // Clear all auth data securely
         localStorage.clear();
         sessionStorage.clear();
+
+        // Clear all cookies
+        document.cookie.split(";").forEach(function(c) {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+
+        // Clear any remaining tokens
         document.cookie = "accessToken=; Max-Age=0; path=/;";
         document.cookie = "refreshToken=; Max-Age=0; path=/;";
+        document.cookie = "token=; Max-Age=0; path=/;";
+
         toast.error("Session expired. Please login again.");
         window.location.href = "/login";
         return Promise.reject(error);
