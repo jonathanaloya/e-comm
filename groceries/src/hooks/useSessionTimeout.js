@@ -29,12 +29,26 @@ export const useSessionTimeout = () => {
       await Axios.get(SummaryApi.getUserDetails.url);
     } catch (error) {
       if (error.response?.status === 401 && error.response?.data?.sessionExpired) {
-        // Clear localStorage
+        console.log('Session expired during validation - performing complete logout');
+
+        // Clear all localStorage
         localStorage.clear();
+
+        // Clear all sessionStorage
+        sessionStorage.clear();
+
+        // Clear all cookies
+        document.cookie.split(";").forEach(function(c) {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+
         // Clear Redux state
         dispatch(logout());
         dispatch(handleAddItemCart([]));
+
         // Show logout message
+        toast.error('Session expired. Please login again.');
+
         // Redirect to login
         window.location.href = '/login';
       }
@@ -67,13 +81,26 @@ export const useSessionTimeout = () => {
 
       // Set logout timer
       timeoutRef.current = setTimeout(() => {
-        // Clear localStorage
+        console.log('Session expired due to inactivity - performing complete logout');
+
+        // Clear all localStorage
         localStorage.clear();
+
+        // Clear all sessionStorage
+        sessionStorage.clear();
+
+        // Clear all cookies
+        document.cookie.split(";").forEach(function(c) {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+
         // Clear Redux state
         dispatch(logout());
         dispatch(handleAddItemCart([]));
+
         // Show logout message
         toast.error('Session expired due to inactivity. Please login again.');
+
         // Redirect to login
         window.location.href = '/login';
       }, INACTIVITY_TIMEOUT);
