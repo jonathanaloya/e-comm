@@ -49,13 +49,15 @@ const Notifications = () => {
 
   const handleSupportTicketClick = async (notification) => {
     if (notification.type === 'support' && notification.data?.ticketId) {
-      try {
-        const response = await adminAPI.getSupportTicketDetails(notification.data.ticketId)
-        setSelectedTicket(response.data.data)
-        setShowTicketModal(true)
-      } catch (error) {
-        toast.error('Failed to load support ticket details')
-      }
+      // Navigate to support tickets page with the specific ticket highlighted
+      window.location.href = `/support-tickets?ticket=${notification.data.ticketId}`
+    }
+  }
+
+  const handleOrderClick = (notification) => {
+    if (notification.type === 'order' && notification.data?.orderId) {
+      // Navigate to orders page with the specific order highlighted
+      window.location.href = `/orders?highlight=${notification.data.orderId}`
     }
   }
 
@@ -122,6 +124,16 @@ const Notifications = () => {
           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
         >
           View & Reply
+        </button>
+      )
+    }
+    if (notification.type === 'order' && notification.data?.orderId) {
+      return (
+        <button
+          onClick={() => handleOrderClick(notification)}
+          className="text-green-600 hover:text-green-800 text-sm font-medium"
+        >
+          View Order Details
         </button>
       )
     }

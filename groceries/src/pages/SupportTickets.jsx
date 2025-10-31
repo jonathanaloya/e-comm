@@ -14,6 +14,23 @@ const SupportTickets = () => {
 
   useEffect(() => {
     fetchSupportTickets()
+
+    // Check for highlighted ticket from URL params
+    const urlParams = new URLSearchParams(window.location.search)
+    const highlightTicketId = urlParams.get('ticket')
+    if (highlightTicketId) {
+      // Find and highlight the ticket after data loads
+      setTimeout(() => {
+        const ticketElement = document.querySelector(`[data-ticket-id="${highlightTicketId}"]`)
+        if (ticketElement) {
+          ticketElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          ticketElement.classList.add('bg-yellow-100', 'ring-2', 'ring-yellow-400')
+          setTimeout(() => {
+            ticketElement.classList.remove('bg-yellow-100', 'ring-2', 'ring-yellow-400')
+          }, 3000)
+        }
+      }, 1000)
+    }
   }, [])
 
   const fetchSupportTickets = async () => {
@@ -146,6 +163,7 @@ const SupportTickets = () => {
               {tickets.map((ticket) => (
                 <div
                   key={ticket.ticketId}
+                  data-ticket-id={ticket.ticketId}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => fetchTicketDetails(ticket.ticketId)}
                 >

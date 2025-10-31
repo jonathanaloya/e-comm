@@ -57,6 +57,23 @@ const Orders = () => {
 
   useEffect(() => {
     fetchOrders()
+
+    // Check for highlighted order from URL params
+    const urlParams = new URLSearchParams(window.location.search)
+    const highlightOrderId = urlParams.get('highlight')
+    if (highlightOrderId) {
+      // Find and highlight the order after data loads
+      setTimeout(() => {
+        const orderElement = document.querySelector(`[data-order-id="${highlightOrderId}"]`)
+        if (orderElement) {
+          orderElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          orderElement.classList.add('bg-yellow-100', 'ring-2', 'ring-yellow-400')
+          setTimeout(() => {
+            orderElement.classList.remove('bg-yellow-100', 'ring-2', 'ring-yellow-400')
+          }, 3000)
+        }
+      }, 1000)
+    }
   }, [])
 
   useEffect(() => {
@@ -275,7 +292,11 @@ const Orders = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredOrders.map((order) => (
-                <tr key={order._id || order.mainOrderId} className="hover:bg-gray-50">
+                <tr
+                  key={order._id || order.mainOrderId}
+                  data-order-id={order.mainOrderId || order.orderId}
+                  className="hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {order.mainOrderId || order.orderId}
                   </td>
