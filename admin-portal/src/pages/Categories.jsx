@@ -20,6 +20,20 @@ const CategoryPage = () => {
     const [categoryForm, setCategoryForm] = useState({ name: '', image: '' })
     const [categoryImageFile, setCategoryImageFile] = useState(null)
     const [uploading, setUploading] = useState(false)
+
+    // Subcategory states
+    const [openUploadSubCategory, setOpenUploadSubCategory] = useState(false)
+    const [subCategoryForm, setSubCategoryForm] = useState({ name: '', image: '', category: [] })
+    const [subCategoryImageFile, setSubCategoryImageFile] = useState(null)
+    const [openEditSubCategory, setOpenEditSubCategory] = useState(false)
+    const [editSubCategoryData, setEditSubCategoryData] = useState({
+        _id: '',
+        name: '',
+        image: '',
+        category: []
+    })
+    const [openConfirmBoxDeleteSubCategory, setOpenConfirmBoxDeleteSubCategory] = useState(false)
+    const [deleteSubCategory, setDeleteSubCategory] = useState({ _id: '' })
     // const allCategory = useSelector(state => state.product.allCategory)
 
 
@@ -141,13 +155,90 @@ const CategoryPage = () => {
         }
     }
 
+    const handleCreateSubCategory = async (e) => {
+        e.preventDefault()
+        setUploading(true)
+        try {
+            let imageUrl = subCategoryForm.image
+
+            if (subCategoryImageFile) {
+                imageUrl = await uploadImage(subCategoryImageFile)
+            }
+
+            const response = await adminAPI.createSubCategory({
+                name: subCategoryForm.name,
+                image: imageUrl,
+                category: subCategoryForm.category
+            })
+            if (response.data.success) {
+                toast.success('Subcategory created successfully')
+                setOpenUploadSubCategory(false)
+                setSubCategoryForm({ name: '', image: '', category: [] })
+                setSubCategoryImageFile(null)
+                fetchSubCategories()
+            }
+        } catch (error) {
+            console.error('Subcategory creation error:', error)
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to create subcategory'
+            toast.error(errorMessage)
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const handleUpdateSubCategory = async (e) => {
+        e.preventDefault()
+        setUploading(true)
+        try {
+            let imageUrl = editSubCategoryData.image
+
+            if (subCategoryImageFile) {
+                imageUrl = await uploadImage(subCategoryImageFile)
+            }
+
+            const response = await adminAPI.updateSubCategory({
+                _id: editSubCategoryData._id,
+                name: editSubCategoryData.name,
+                image: imageUrl,
+                category: editSubCategoryData.category
+            })
+            if (response.data.success) {
+                toast.success('Subcategory updated successfully')
+                setOpenEditSubCategory(false)
+                setEditSubCategoryData({ _id: '', name: '', image: '', category: [] })
+                setSubCategoryImageFile(null)
+                fetchSubCategories()
+            }
+        } catch (error) {
+            console.error('Subcategory update error:', error)
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to update subcategory'
+            toast.error(errorMessage)
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const handleDeleteSubCategory = async()=>{
+        try {
+            const response = await adminAPI.deleteSubCategory(deleteSubCategory)
+            if(response.data.success){
+                toast.success(response.data.message)
+                fetchSubCategories()
+                setOpenConfirmBoxDeleteSubCategory(false)
+            }
+        } catch (error) {
+            console.error('Error deleting subcategory:', error)
+            toast.error(error.response?.data?.message || 'Failed to delete subcategory')
+        }
+    }
+
   return (
     <section className=''>
         <div className='p-2   bg-white shadow-md flex items-center justify-between'>
             <h2 className='font-semibold'>Categories Management</h2>
             <div className="space-x-4">
                 <button onClick={()=>setOpenUploadCategory(true)} className='text-sm border border-primary-200 hover:bg-primary-200 px-3 py-1 rounded'>Add Category</button>
-                <button className='text-sm border border-blue-200 hover:bg-blue-200 px-3 py-1 rounded'>Add Subcategory</button>
+                <button onClick={()=>setOpenUploadSubCategory(true)} className='text-sm border border-blue-200 hover:bg-blue-200 px-3 py-1 rounded'>Add Subcategory</button>
             </div>
         </div>
         {
@@ -215,11 +306,26 @@ const CategoryPage = () => {
                                     {subCategory.category?.map(cat => cat.name).join(', ') || 'Unknown'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <button
-                                        className="text-red-600 hover:text-red-800"
-                                    >
-                                        Delete
-                                    </button>
+                                    <div className="flex space-x-2">
+                                        <button
+                                            onClick={() => {
+                                                setOpenEditSubCategory(true)
+                                                setEditSubCategoryData(subCategory)
+                                            }}
+                                            className="text-blue-600 hover:text-blue-800"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setOpenConfirmBoxDeleteSubCategory(true)
+                                                setDeleteSubCategory(subCategory)
+                                            }}
+                                            className="text-red-600 hover:text-red-800"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -385,6 +491,202 @@ const CategoryPage = () => {
                 </div>
             </div>
            )
+        }
+
+        {/* Add Subcategory Modal */}
+        {
+            openUploadSubCategory && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-96">
+                        <h3 className="text-lg font-semibold mb-4">Add New Subcategory</h3>
+                        <form onSubmit={handleCreateSubCategory}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Subcategory Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full p-2 border rounded-lg"
+                                    value={subCategoryForm.name}
+                                    onChange={(e) => setSubCategoryForm({...subCategoryForm, name: e.target.value})}
+                                    placeholder="Enter subcategory name"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Category</label>
+                                <select
+                                    multiple
+                                    required
+                                    className="w-full p-2 border rounded-lg"
+                                    value={subCategoryForm.category}
+                                    onChange={(e) => {
+                                        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                                        setSubCategoryForm({...subCategoryForm, category: selectedOptions});
+                                    }}
+                                >
+                                    {categoryData.map(category => (
+                                        <option key={category._id} value={category._id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple categories</p>
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Subcategory Image</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="w-full p-2 border rounded-lg"
+                                    onChange={(e) => setSubCategoryImageFile(e.target.files[0])}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Upload an image file (JPG, PNG, etc.)</p>
+                                {subCategoryImageFile && (
+                                    <p className="text-sm text-green-600 mt-1">Selected: {subCategoryImageFile.name}</p>
+                                )}
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Or Image URL</label>
+                                <input
+                                    type="url"
+                                    placeholder="https://example.com/image.jpg"
+                                    className="w-full p-2 border rounded-lg"
+                                    value={subCategoryForm.image}
+                                    onChange={(e) => setSubCategoryForm({...subCategoryForm, image: e.target.value})}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Alternative: paste an image URL</p>
+                            </div>
+                            <div className="flex justify-end space-x-4">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setOpenUploadSubCategory(false)
+                                        setSubCategoryForm({ name: '', image: '', category: [] })
+                                        setSubCategoryImageFile(null)
+                                    }}
+                                    className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={uploading}
+                                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+                                >
+                                    {uploading ? 'Creating...' : 'Create'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )
+        }
+
+        {/* Edit Subcategory Modal */}
+        {
+            openEditSubCategory && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-96">
+                        <h3 className="text-lg font-semibold mb-4">Edit Subcategory</h3>
+                        <form onSubmit={handleUpdateSubCategory}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Subcategory Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full p-2 border rounded-lg"
+                                    value={editSubCategoryData.name}
+                                    onChange={(e) => setEditSubCategoryData({...editSubCategoryData, name: e.target.value})}
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Category</label>
+                                <select
+                                    multiple
+                                    required
+                                    className="w-full p-2 border rounded-lg"
+                                    value={editSubCategoryData.category.map(cat => cat._id || cat)}
+                                    onChange={(e) => {
+                                        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                                        setEditSubCategoryData({...editSubCategoryData, category: selectedOptions});
+                                    }}
+                                >
+                                    {categoryData.map(category => (
+                                        <option key={category._id} value={category._id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple categories</p>
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Subcategory Image</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="w-full p-2 border rounded-lg"
+                                    onChange={(e) => setSubCategoryImageFile(e.target.files[0])}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Upload a new image file (JPG, PNG, etc.)</p>
+                                {subCategoryImageFile && (
+                                    <p className="text-sm text-green-600 mt-1">Selected: {subCategoryImageFile.name}</p>
+                                )}
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Or Image URL</label>
+                                <input
+                                    type="url"
+                                    placeholder="https://example.com/image.jpg"
+                                    className="w-full p-2 border rounded-lg"
+                                    value={editSubCategoryData.image}
+                                    onChange={(e) => setEditSubCategoryData({...editSubCategoryData, image: e.target.value})}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Alternative: paste an image URL</p>
+                            </div>
+                            <div className="flex justify-end space-x-4">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setOpenEditSubCategory(false)
+                                        setEditSubCategoryData({ _id: '', name: '', image: '', category: [] })
+                                        setSubCategoryImageFile(null)
+                                    }}
+                                    className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={uploading}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                                >
+                                    {uploading ? 'Updating...' : 'Update'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )
+        }
+
+        {/* Delete Subcategory Confirmation */}
+        {
+            openConfirmBoxDeleteSubCategory && (
+                <div className='fixed top-0 right-0 bottom-0 left-0 z-50 bg-neutral-800 bg-opacity-70 p-4 flex justify-center items-center'>
+                    <div className='bg-white w-full max-w-md p-4 rounded'>
+                        <div className='flex justify-between items-center gap-3'>
+                            <h1 className='font-semibold'>Delete Subcategory Permanently</h1>
+                            <button onClick={()=>setOpenConfirmBoxDeleteSubCategory(false)}>
+                                <span className='text-xl'>×</span>
+                            </button>
+                        </div>
+                        <p className='my-4'>Are you sure you want to delete this subcategory?</p>
+                        <div className='w-fit ml-auto flex items-center gap-3'>
+                            <button onClick={()=>setOpenConfirmBoxDeleteSubCategory(false)} className='px-4 py-2 border rounded border-red-500 text-red-500 hover:bg-red-500 hover:text-white'>Cancel</button>
+                            <button onClick={handleDeleteSubCategory} className='px-4 py-2 border rounded border-green-500 text-green-500 hover:bg-green-500 hover:text-white'>Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            )
         }
     </section>
   )
