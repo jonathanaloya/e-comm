@@ -293,7 +293,7 @@ const CategoryPage = () => {
                 <table className="min-w-full">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name & Image</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
@@ -301,14 +301,7 @@ const CategoryPage = () => {
                     <tbody className="divide-y divide-gray-200">
                         {subCategoryData.map((subCategory) => (
                             <tr key={subCategory._id}>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center space-x-3">
-                                        {subCategory.Image && (
-                                            <img src={subCategory.Image} alt={subCategory.name} className="w-8 h-8 object-cover rounded" />
-                                        )}
-                                        <span>{subCategory.name}</span>
-                                    </div>
-                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">{subCategory.name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     {subCategory.category?.map(cat => cat.name).join(', ') || 'Unknown'}
                                 </td>
