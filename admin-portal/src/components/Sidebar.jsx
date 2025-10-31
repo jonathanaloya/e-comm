@@ -65,7 +65,7 @@ const Sidebar = () => {
           className="flex items-center space-x-3 p-3 w-full text-left hover:bg-red-600 rounded-xl transition-all duration-200 group border border-green-700 hover:border-red-500"
         >
           <FaSignOutAlt className="group-hover:text-red-200" />
-          <span className="font-medium group-hover:text-red-200">Logout</span>
+          <span className="font-medium group-hover:text-red-200 w-full">Logout</span>
         </button>
       </div>
     </div>
