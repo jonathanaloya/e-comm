@@ -40,7 +40,9 @@ const Dashboard = () => {
           ...prev,
           totalOrders: allOrders.length,
           pendingOrders: allOrders.filter(o => o.order_status === 'pending').length,
-          totalRevenue: allOrders.reduce((sum, o) => sum + (o.totalAmount || o.totalAmt || 0), 0)
+          totalRevenue: allOrders
+            .filter(o => o.order_status === 'delivered')
+            .reduce((sum, o) => sum + (o.totalAmount || o.totalAmt || 0), 0)
         }))
       }
 
