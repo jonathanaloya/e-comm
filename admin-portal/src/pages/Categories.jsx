@@ -293,7 +293,7 @@ const CategoryPage = () => {
                 <table className="min-w-full">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name & Image</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
@@ -301,7 +301,14 @@ const CategoryPage = () => {
                     <tbody className="divide-y divide-gray-200">
                         {subCategoryData.map((subCategory) => (
                             <tr key={subCategory._id}>
-                                <td className="px-6 py-4 whitespace-nowrap">{subCategory.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="flex items-center space-x-3">
+                                        {subCategory.Image && (
+                                            <img src={subCategory.Image} alt={subCategory.name} className="w-8 h-8 object-cover rounded" />
+                                        )}
+                                        <span>{subCategory.name}</span>
+                                    </div>
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     {subCategory.category?.map(cat => cat.name).join(', ') || 'Unknown'}
                                 </td>
@@ -514,22 +521,21 @@ const CategoryPage = () => {
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Category</label>
                                 <select
-                                    multiple
                                     required
                                     className="w-full p-2 border rounded-lg"
-                                    value={subCategoryForm.category}
+                                    value={subCategoryForm.category[0] || ''}
                                     onChange={(e) => {
-                                        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                                        setSubCategoryForm({...subCategoryForm, category: selectedOptions});
+                                        setSubCategoryForm({...subCategoryForm, category: [e.target.value]});
                                     }}
                                 >
+                                    <option value="">Select a category</option>
                                     {categoryData.map(category => (
                                         <option key={category._id} value={category._id}>
                                             {category.name}
                                         </option>
                                     ))}
                                 </select>
-                                <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple categories</p>
+                                <p className="text-xs text-gray-500 mt-1">Select one category for this subcategory</p>
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Subcategory Image</label>
@@ -601,22 +607,21 @@ const CategoryPage = () => {
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Category</label>
                                 <select
-                                    multiple
                                     required
                                     className="w-full p-2 border rounded-lg"
-                                    value={editSubCategoryData.category.map(cat => cat._id || cat)}
+                                    value={editSubCategoryData.category[0]?._id || editSubCategoryData.category[0] || ''}
                                     onChange={(e) => {
-                                        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                                        setEditSubCategoryData({...editSubCategoryData, category: selectedOptions});
+                                        setEditSubCategoryData({...editSubCategoryData, category: [e.target.value]});
                                     }}
                                 >
+                                    <option value="">Select a category</option>
                                     {categoryData.map(category => (
                                         <option key={category._id} value={category._id}>
                                             {category.name}
                                         </option>
                                     ))}
                                 </select>
-                                <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple categories</p>
+                                <p className="text-xs text-gray-500 mt-1">Select one category for this subcategory</p>
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Subcategory Image</label>
