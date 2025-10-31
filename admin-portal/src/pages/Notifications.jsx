@@ -47,7 +47,7 @@ const Notifications = () => {
     }
   }
 
-  const handleSupportTicketClick = async (notification) => {
+  const handleSupportTicketClick = (notification) => {
     if (notification.type === 'support' && notification.data?.ticketId) {
       // Navigate to support tickets page with the specific ticket highlighted
       window.location.href = `/support-tickets?ticket=${notification.data.ticketId}`
