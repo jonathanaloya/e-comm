@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { adminAPI } from '../utils/api'
 import toast from 'react-hot-toast'
+import SupportTicketModal from '../components/SupportTicketModal'
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all') // all, unread, read
+  const [selectedTicket, setSelectedTicket] = useState(null)
+  const [showTicketModal, setShowTicketModal] = useState(false)
 
   useEffect(() => {
     fetchNotifications()
@@ -44,6 +47,44 @@ const Notifications = () => {
     }
   }
 
+  const handleSupportTicketClick = async (notification) => {
+    if (notification.type === 'support' && notification.data?.ticketId) {
+      try {
+        const response = await adminAPI.getSupportTicketDetails(notification.data.ticketId)
+        setSelectedTicket(response.data.data)
+        setShowTicketModal(true)
+      } catch (error) {
+        toast.error('Failed to load support ticket details')
+      }
+    }
+  }
+
+  const handleReplyToTicket = async (ticketId, message) => {
+    try {
+      await adminAPI.replyToSupportTicket({ ticketId, message })
+      toast.success('Reply sent successfully')
+
+      // Refresh ticket details
+      const response = await adminAPI.getSupportTicketDetails(ticketId)
+      setSelectedTicket(response.data.data)
+    } catch (error) {
+      toast.error('Failed to send reply')
+    }
+  }
+
+  const handleUpdateTicketStatus = async (ticketId, status) => {
+    try {
+      await adminAPI.updateSupportTicketStatus({ ticketId, status })
+      toast.success(`Ticket status updated to ${status}`)
+
+      // Refresh ticket details
+      const response = await adminAPI.getSupportTicketDetails(ticketId)
+      setSelectedTicket(response.data.data)
+    } catch (error) {
+      toast.error('Failed to update ticket status')
+    }
+  }
+
   const filteredNotifications = notifications.filter(notif => {
     if (filter === 'unread') return !notif.read
     if (filter === 'read') return notif.read
@@ -71,6 +112,20 @@ const Notifications = () => {
       default:
         return '📢'
     }
+  }
+
+  const getNotificationAction = (notification) => {
+    if (notification.type === 'support' && notification.data?.ticketId) {
+      return (
+        <button
+          onClick={() => handleSupportTicketClick(notification)}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+        >
+          View & Reply
+        </button>
+      )
+    }
+    return null
   }
 
   if (loading) {
@@ -170,6 +225,7 @@ const Notifications = () => {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 ml-4">
+                  {getNotificationAction(notification)}
                   {!notification.read && (
                     <button
                       onClick={() => markAsRead(notification._id)}
@@ -189,6 +245,19 @@ const Notifications = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Support Ticket Modal */}
+      {showTicketModal && selectedTicket && (
+        <SupportTicketModal
+          ticket={selectedTicket}
+          onClose={() => {
+            setShowTicketModal(false)
+            setSelectedTicket(null)
+          }}
+          onReply={handleReplyToTicket}
+          onUpdateStatus={handleUpdateTicketStatus}
+        />
       )}
     </div>
   )
