@@ -202,6 +202,7 @@ const CheckoutPage = () => {
         // Immediately clear cart in Redux state and localStorage
         dispatch(handleAddItemCart([]));
         localStorage.removeItem("cart");
+        console.log('Cart cleared after successful online payment verification');
 
         if (fetchCartItem) {
           fetchCartItem().then(() =>
@@ -272,8 +273,10 @@ const CheckoutPage = () => {
       if (responseData.success) {
         toast.success(responseData.message);
 
+        // Clear cart state after successful order placement
         dispatch(handleAddItemCart([]));
         localStorage.removeItem("cart");
+        console.log('Cart cleared after successful COD order placement');
 
         // Refresh data from backend (cart should already be empty)
         if (fetchCartItem) {
