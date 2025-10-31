@@ -656,8 +656,185 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
   }
 };
 
+// Send support ticket confirmation to user
+export const sendSupportTicketConfirmationEmail = async (ticket) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email service not configured. Skipping support ticket confirmation.');
+      return { success: false, message: 'Email service not configured' };
+    }
+
+    const confirmationTemplate = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; }
+            .ticket-details { background: #f9f9f9; padding: 15px; margin: 20px 0; }
+            .message-box { background: #fff; border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 8px; }
+            .footer { background: #f1f1f1; padding: 20px; text-align: center; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎫 Support Ticket Submitted</h1>
+              <p>Ticket ID: ${ticket.ticketId}</p>
+            </div>
+
+            <div class="content">
+              <p>Dear ${ticket.name},</p>
+
+              <p>Thank you for contacting Fresh Katale support. We have received your support ticket and our team will respond to you as soon as possible.</p>
+
+              <div class="ticket-details">
+                <h3>Ticket Information:</h3>
+                <p><strong>Ticket ID:</strong> ${ticket.ticketId}</p>
+                <p><strong>Subject:</strong> ${ticket.subject}</p>
+                <p><strong>Priority:</strong> ${ticket.priority.toUpperCase()}</p>
+                <p><strong>Status:</strong> ${ticket.status}</p>
+                <p><strong>Submitted:</strong> ${new Date(ticket.createdAt).toLocaleString()}</p>
+              </div>
+
+              <div class="message-box">
+                <h3>Your Message:</h3>
+                <p>${ticket.message.replace(/\n/g, '<br>')}</p>
+              </div>
+
+              <p><strong>What happens next?</strong></p>
+              <ul>
+                <li>Our support team will review your ticket within 24 hours</li>
+                <li>You will receive an email notification when we respond</li>
+                <li>You can reply to our responses to continue the conversation</li>
+                <li>You can track your ticket status using the Ticket ID above</li>
+              </ul>
+
+              <p>If you have any additional information or urgent concerns, please don't hesitate to reply to this email.</p>
+
+              <p>Best regards,<br>Fresh Katale Support Team</p>
+            </div>
+
+            <div class="footer">
+              <p>&copy; 2024 Fresh Katale. All rights reserved.</p>
+              <p>This is an automated confirmation for your support ticket</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: `"Fresh Katale Support" <${process.env.EMAIL_USER}>`,
+      to: ticket.email,
+      subject: `🎫 Support Ticket Submitted - ${ticket.ticketId}`,
+      html: confirmationTemplate
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Support ticket confirmation email sent to user:', result.messageId);
+
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending support ticket confirmation email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Send support ticket reply to user
+export const sendSupportTicketReplyEmail = async (ticket, response) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email service not configured. Skipping support ticket reply email.');
+      return { success: false, message: 'Email service not configured' };
+    }
+
+    const replyTemplate = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; }
+            .ticket-details { background: #f9f9f9; padding: 15px; margin: 20px 0; }
+            .reply-box { background: #e3f2fd; border-left: 4px solid #2196F3; padding: 20px; margin: 20px 0; border-radius: 8px; }
+            .footer { background: #f1f1f1; padding: 20px; text-align: center; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>💬 Support Response</h1>
+              <p>Ticket ID: ${ticket.ticketId}</p>
+            </div>
+
+            <div class="content">
+              <p>Dear ${ticket.name},</p>
+
+              <p>You have received a response to your support ticket from our team.</p>
+
+              <div class="ticket-details">
+                <h3>Ticket Information:</h3>
+                <p><strong>Ticket ID:</strong> ${ticket.ticketId}</p>
+                <p><strong>Subject:</strong> ${ticket.subject}</p>
+                <p><strong>Status:</strong> ${ticket.status}</p>
+              </div>
+
+              <div class="reply-box">
+                <h3>Response from ${response.adminName}:</h3>
+                <p><strong>Sent:</strong> ${new Date(response.createdAt).toLocaleString()}</p>
+                <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 5px;">
+                  ${response.message.replace(/\n/g, '<br>')}
+                </div>
+              </div>
+
+              <p><strong>How to reply:</strong></p>
+              <ul>
+                <li>Reply directly to this email</li>
+                <li>Include your Ticket ID (${ticket.ticketId}) in the subject line</li>
+                <li>Our team will respond within 24 hours</li>
+              </ul>
+
+              <p>If this resolves your issue, please let us know so we can mark the ticket as resolved.</p>
+
+              <p>Best regards,<br>Fresh Katale Support Team</p>
+            </div>
+
+            <div class="footer">
+              <p>&copy; 2024 Fresh Katale. All rights reserved.</p>
+              <p>This is an automated response for your support ticket</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: `"Fresh Katale Support" <${process.env.EMAIL_USER}>`,
+      to: ticket.email,
+      subject: `💬 Support Response - ${ticket.ticketId}`,
+      html: replyTemplate,
+      replyTo: process.env.EMAIL_USER
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Support ticket reply email sent to user:', result.messageId);
+
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending support ticket reply email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Send support ticket email to admin
-export const sendSupportTicketEmail = async (ticket) => {
+export const sendSupportTicketEmail = async (ticket, recipient = 'admin') => {
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.log('Email service not configured. Skipping support ticket notification.');
