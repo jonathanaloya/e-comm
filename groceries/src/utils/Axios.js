@@ -80,7 +80,7 @@ Axios.interceptors.response.use(
         response.config.url?.includes('/order/checkout')) && response.data?.success) {
      // Clear cart state after successful order placement
      store.dispatch(handleAddItemCart([]));
-     console.log('Cart cleared after successful order placement');
+     console.log('Cart cleared after successful order placement via Axios interceptor');
      toast.success('Order placed successfully! Cart has been cleared.');
    }
    return response;
