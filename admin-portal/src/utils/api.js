@@ -83,6 +83,12 @@ export const adminAPI = {
   getNotifications: () => api.get('/api/admin/notifications'),
   markNotificationAsRead: (id) => api.put(`/api/admin/notifications/${id}/read`),
   deleteNotification: (id) => api.delete(`/api/admin/notifications/${id}`),
+
+  // Support Tickets
+  getSupportTickets: (params = {}) => api.get('/api/support/tickets', { params }),
+  getSupportTicketDetails: (ticketId) => api.get(`/api/support/tickets/${ticketId}`),
+  replyToSupportTicket: (data) => api.post('/api/support/reply', data),
+  updateSupportTicketStatus: (data) => api.put('/api/support/status', data),
   
   // File Upload
   uploadImage: (formData) => api.post('/api/file/upload', formData, {
