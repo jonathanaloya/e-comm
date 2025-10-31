@@ -25,6 +25,7 @@ import PrivacyPolicy from "../pages/PrivacyPolicy";
 import TermsOfService from "../pages/TermsOfService";
 import OrderTracking from "../pages/OrderTracking";
 import AboutUs from "../pages/AboutUs";
+import SupportTickets from "../pages/SupportTickets";
 
 
 
@@ -137,6 +138,10 @@ const router = createBrowserRouter([
             {
                 path: "about-us",
                 element: <AboutUs/>
+            },
+            {
+                path: "support-tickets",
+                element: <SupportTickets/>
             }
         ],
     },

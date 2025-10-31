@@ -76,6 +76,14 @@ const UserMenu = ({ close }) => {
           Save Address
         </Link>
 
+        <Link
+          onClick={handleClose}
+          to={"/support-tickets"}
+          className="px-2 hover:bg-orange-200 py-1"
+        >
+          Support Tickets
+        </Link>
+
         <button
           onClick={handleLogout}
           className="text-left px-2 hover:bg-red-200 py-1"

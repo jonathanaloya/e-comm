@@ -307,3 +307,82 @@ export const updateSupportTicketStatus = async (request, response) => {
         })
     }
 }
+
+// Get user support tickets (for logged-in users)
+export const getUserSupportTickets = async (request, response) => {
+    try {
+        const userId = request.userId
+        const { page = 1, limit = 10, status } = request.query
+
+        const query = { userId }
+        if (status) {
+            query.status = status
+        }
+
+        const skip = (page - 1) * limit
+
+        const tickets = await SupportTicket.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .select('ticketId subject status priority createdAt updatedAt responses')
+
+        const total = await SupportTicket.countDocuments(query)
+
+        return response.json({
+            message: "User support tickets retrieved successfully",
+            error: false,
+            success: true,
+            data: {
+                tickets,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(total / limit),
+                    totalTickets: total,
+                    hasNext: page * limit < total,
+                    hasPrev: page > 1
+                }
+            }
+        })
+
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
+}
+
+// Get user support ticket details (for logged-in users)
+export const getUserSupportTicketDetails = async (request, response) => {
+    try {
+        const userId = request.userId
+        const { ticketId } = request.params
+
+        const ticket = await SupportTicket.findOne({ ticketId, userId })
+            .populate('userId', 'name email')
+
+        if (!ticket) {
+            return response.status(404).json({
+                message: "Support ticket not found",
+                error: true,
+                success: false
+            })
+        }
+
+        return response.json({
+            message: "Ticket details retrieved successfully",
+            error: false,
+            success: true,
+            data: ticket
+        })
+
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
+}
