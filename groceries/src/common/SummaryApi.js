@@ -168,6 +168,14 @@ const SummaryApi = {
         url : '/support/create-ticket',
         method : 'post'
     },
+    getUserSupportTickets : {
+        url : '/user/support-tickets',
+        method : 'get'
+    },
+    getUserSupportTicketDetails : {
+        url : '/user/support-tickets',
+        method : 'get'
+    },
 
     getOrderTracking : {
         url : '/order/tracking',

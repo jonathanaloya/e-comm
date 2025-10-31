@@ -1,6 +1,7 @@
 import express from 'express'
 import { Router } from 'express'
 import { uploadAvatar, loginUser, logoutUser, registerUser, verifyEmail, verifyRegistrationOtp, updateUserDetails, forgotPassword, verifyForgotPasswordOtp, resetPassword, refreshToken, getUserLoginDetails } from '../controllers/userController.js'
+import { getUserSupportTickets, getUserSupportTicketDetails } from '../controllers/supportController.js'
 import authMiddleware from '../middleware/authMiddleware.js'
 import upload from '../middleware/multer.js'
 import { loginLimiter } from '../middleware/security.js'
@@ -35,5 +36,9 @@ userRouter.put('/reset-password', loginLimiter, validatePasswordReset, resetPass
 userRouter.post('/refresh-token', refreshToken);
 
 userRouter.get('/user-details', authMiddleware, getUserLoginDetails);
+
+// Support ticket routes for users
+userRouter.get('/support-tickets', authMiddleware, getUserSupportTickets);
+userRouter.get('/support-tickets/:ticketId', authMiddleware, getUserSupportTicketDetails);
 
 export default userRouter

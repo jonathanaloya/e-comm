@@ -841,10 +841,18 @@ export const sendSupportTicketEmail = async (ticket, recipient = 'admin') => {
       return { success: false, message: 'Email service not configured' };
     }
 
+    if (recipient === 'user') {
+      return await sendSupportTicketConfirmationEmail(ticket);
+    }
+
+    if (recipient === 'reply') {
+      return await sendSupportTicketReplyEmail(ticket, ticket.responses[ticket.responses.length - 1]);
+    }
+
     const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
     const priorityColors = {
       low: '#4CAF50',
-      medium: '#FF9800', 
+      medium: '#FF9800',
       high: '#F44336'
     };
 
@@ -868,7 +876,7 @@ export const sendSupportTicketEmail = async (ticket, recipient = 'admin') => {
               <h1>🎫 New Support Ticket</h1>
               <p>Ticket ID: ${ticket.ticketId}</p>
             </div>
-            
+
             <div class="content">
               <div class="ticket-details">
                 <h3>Ticket Information:</h3>
@@ -877,31 +885,31 @@ export const sendSupportTicketEmail = async (ticket, recipient = 'admin') => {
                 <p><strong>Status:</strong> ${ticket.status}</p>
                 <p><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleString()}</p>
               </div>
-              
+
               <div class="ticket-details">
                 <h3>Customer Information:</h3>
                 <p><strong>Name:</strong> ${ticket.name}</p>
                 <p><strong>Email:</strong> ${ticket.email}</p>
                 ${ticket.userId ? `<p><strong>User ID:</strong> ${ticket.userId}</p>` : '<p><em>Guest user</em></p>'}
               </div>
-              
+
               <div class="ticket-details">
                 <h3>Subject:</h3>
                 <p><strong>${ticket.subject}</strong></p>
               </div>
-              
+
               <div class="message-box">
                 <h3>Message:</h3>
                 <p>${ticket.message.replace(/\n/g, '<br>')}</p>
               </div>
-              
+
               <div class="ticket-details">
                 <h3>⚡ Action Required:</h3>
                 <p>Please respond to this support ticket promptly.</p>
                 <p>Reply directly to <strong>${ticket.email}</strong> or use your admin panel.</p>
               </div>
             </div>
-            
+
             <div class="footer">
               <p>Fresh Katale Support System</p>
               <p>This is an automated notification for new support tickets</p>
@@ -910,9 +918,9 @@ export const sendSupportTicketEmail = async (ticket, recipient = 'admin') => {
         </body>
       </html>
     `;
-    
+
     const transporter = createTransporter();
-    
+
     const mailOptions = {
       from: `"Fresh Katale Support" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
@@ -923,7 +931,7 @@ export const sendSupportTicketEmail = async (ticket, recipient = 'admin') => {
 
     const result = await transporter.sendMail(mailOptions);
     console.log('Support ticket email sent to admin:', result.messageId);
-    
+
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error('Error sending support ticket email:', error);
