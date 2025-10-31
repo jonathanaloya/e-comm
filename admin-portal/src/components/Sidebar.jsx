@@ -22,13 +22,13 @@ const Sidebar = () => {
   ]
 
   return (
-    <div className="bg-gradient-to-b from-green-800 to-green-900 text-white w-64 min-h-screen shadow-2xl">
+    <div className="bg-gradient-to-b from-green-800 to-green-900 text-white w-64 lg:w-64 md:w-20 min-h-screen shadow-2xl transition-all duration-300">
       <div className="p-6 border-b border-green-700">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-lg overflow-hidden">
             <img src="/logo.jpg" alt="Fresh Katale" className="w-full h-full object-cover" />
           </div>
-          <div>
+          <div className="hidden md:block lg:block">
             <h1 className="text-lg font-bold">Fresh Katale</h1>
             <p className="text-green-200 text-xs">Admin Portal</p>
           </div>
@@ -43,9 +43,9 @@ const Sidebar = () => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 group ${
-                  isActive 
-                    ? 'bg-white text-green-800 shadow-lg transform scale-105' 
+                `flex items-center p-3 rounded-xl transition-all duration-200 group ${
+                  isActive
+                    ? 'bg-white text-green-800 shadow-lg transform scale-105'
                     : 'hover:bg-green-700 hover:transform hover:translate-x-2'
                 }`
               }
@@ -53,7 +53,7 @@ const Sidebar = () => {
               <Icon className={`text-lg transition-colors ${
                 window.location.pathname === item.path ? 'text-green-600' : 'group-hover:text-green-200'
               }`} />
-              <span className="font-medium">{item.label}</span>
+              <span className="font-medium hidden md:inline lg:inline ml-3">{item.label}</span>
             </NavLink>
           )
         })}
@@ -62,10 +62,10 @@ const Sidebar = () => {
       <div className="absolute bottom-6 left-4 right-4">
         <button
           onClick={handleLogout}
-          className="flex items-center space-x-3 p-3 w-full text-left hover:bg-red-600 rounded-xl transition-all duration-200 group border border-green-700 hover:border-red-500"
+          className="flex items-center p-2 w-full text-left hover:bg-red-600 rounded-xl transition-all duration-200 group border border-green-700 hover:border-red-500"
         >
-          <FaSignOutAlt className="group-hover:text-red-200" />
-          <span className="font-medium group-hover:text-red-200 w-full">Logout</span>
+          <FaSignOutAlt className="group-hover:text-red-200 text-lg" />
+          <span className="font-medium group-hover:text-red-200 hidden md:inline lg:inline ml-3">Logout</span>
         </button>
       </div>
     </div>
