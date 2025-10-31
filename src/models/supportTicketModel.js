@@ -35,7 +35,26 @@ const supportTicketSchema = new mongoose.Schema({
         type: String,
         enum: ['open', 'in-progress', 'resolved', 'closed'],
         default: 'open'
-    }
+    },
+    responses: [{
+        adminId: {
+            type: mongoose.Schema.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        adminName: {
+            type: String,
+            required: true
+        },
+        message: {
+            type: String,
+            required: true
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 }, {
     timestamps: true
 })
