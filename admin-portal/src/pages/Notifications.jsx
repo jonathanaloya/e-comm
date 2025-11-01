@@ -47,10 +47,15 @@ const Notifications = () => {
     }
   }
 
-  const handleSupportTicketClick = (notification) => {
+  const handleSupportTicketClick = async (notification) => {
     if (notification.type === 'support' && notification.data?.ticketId) {
-      // Navigate to support tickets page with the specific ticket highlighted
-      window.location.href = `/support-tickets?ticket=${notification.data.ticketId}`
+      try {
+        const response = await adminAPI.getSupportTicketDetails(notification.data.ticketId)
+        setSelectedTicket(response.data.data)
+        setShowTicketModal(true)
+      } catch (error) {
+        toast.error('Failed to load support ticket details')
+      }
     }
   }
 

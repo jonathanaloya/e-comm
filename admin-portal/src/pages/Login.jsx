@@ -4,12 +4,17 @@ import { useDispatch } from 'react-redux'
 import toast from 'react-hot-toast'
 import { adminAPI } from '../utils/api'
 import { setUser } from '../store/authSlice'
+import ReCAPTCHA from 'react-google-recaptcha'
 
 const Login = () => {
-  const [credentials, setCredentials] = useState({ email: '', password: '' })
+  const [credentials, setCredentials] = useState({ email: '', password: '', recaptchaToken: '' })
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const dispatch = useDispatch()
+
+  const handleRecaptchaChange = (value) => {
+    setCredentials({ ...credentials, recaptchaToken: value })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -72,6 +77,16 @@ const Login = () => {
                   value={credentials.password}
                   onChange={(e) => setCredentials({...credentials, password: e.target.value})}
                 />
+              </div>
+
+              <div>
+                <div className="flex justify-center">
+                  <ReCAPTCHA
+                    sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
+                    onChange={handleRecaptchaChange}
+                    theme="light"
+                  />
+                </div>
               </div>
 
             </div>
