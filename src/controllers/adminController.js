@@ -5,17 +5,37 @@ import Notification from "../models/notificationModel.js";
 import bcrypt from 'bcryptjs';
 import generateAccessToken from '../utilities/generateAccessToken.js';
 import generateRefreshToken from '../utilities/generateRefreshToken.js';
+import verifyRecaptcha from '../utilities/verifyRecaptcha.js';
 
-// Admin login without reCAPTCHA
+// Admin login with reCAPTCHA
 export const adminLoginController = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, recaptchaToken } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({
                 message: 'Email and password are required',
                 error: true,
                 success: false
+            });
+        }
+
+        if (!recaptchaToken) {
+            return res.status(400).json({
+                message: "reCAPTCHA verification is required",
+                error: true,
+                success: false
+            });
+        }
+
+        // Verify reCAPTCHA
+        const recaptchaResult = await verifyRecaptcha(recaptchaToken);
+        if (!recaptchaResult.success) {
+            return res.status(400).json({
+                message: 'reCAPTCHA verification failed. Please try again.',
+                error: true,
+                success: false,
+                recaptchaErrors: recaptchaResult['error-codes']
             });
         }
 
