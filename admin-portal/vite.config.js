@@ -14,7 +14,8 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           redux: ['@reduxjs/toolkit', 'react-redux']
         }
-      }
+      },
+      external: []
     }
   }
 })
