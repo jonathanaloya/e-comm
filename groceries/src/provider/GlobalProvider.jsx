@@ -42,6 +42,12 @@ const GlobalProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('GlobalProvider: Cart fetch error:', error);
+      // If session expired during cart fetch, clear user state too
+      if (error.response?.status === 401 && error.response?.data?.sessionExpired) {
+        console.log('GlobalProvider: Session expired during cart fetch - clearing user state');
+        dispatch(logout());
+        dispatch(setOrder([]));
+      }
       // Ensure empty cart on error
       dispatch(handleAddItemCart([]));
     }
@@ -126,7 +132,13 @@ const GlobalProvider = ({ children }) => {
         dispatch(handleAddAddress(responseData.data));
       }
     } catch (error) {
-      // AxiosToastError(error)
+      // If session expired during address fetch, clear user state
+      if (error.response?.status === 401 && error.response?.data?.sessionExpired) {
+        console.log('GlobalProvider: Session expired during address fetch - clearing user state');
+        dispatch(logout());
+        dispatch(handleAddItemCart([]));
+        dispatch(setOrder([]));
+      }
     }
   };
   const fetchOrder = async () => {
@@ -140,6 +152,13 @@ const GlobalProvider = ({ children }) => {
         dispatch(setOrder(responseData.data));
       }
     } catch (error) {
+      // If session expired during order fetch, clear user state
+      if (error.response?.status === 401 && error.response?.data?.sessionExpired) {
+        console.log('GlobalProvider: Session expired during order fetch - clearing user state');
+        dispatch(logout());
+        dispatch(handleAddItemCart([]));
+        dispatch(setOrder([]));
+      }
     }
   };
 

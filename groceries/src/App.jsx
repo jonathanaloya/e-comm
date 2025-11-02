@@ -29,6 +29,10 @@ function App() {
     const userData = await fetchUserDetails();
     if (userData && userData.data) {
       dispatch(setUserDetails(userData.data));
+    } else if (userData.error) {
+      // If user details fetch failed (session expired), ensure UI reflects logged out state
+      console.log('User details fetch failed - ensuring UI shows logged out state');
+      dispatch(setUserDetails(null));
     }
   };
 
