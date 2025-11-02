@@ -15,8 +15,8 @@ import loginOtpTemplate from '../utilities/loginOtpTemplate.js'
 // Register user
 export async function registerUser(req, res) {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
+    const { name, email, mobile, password } = req.body;
+    if (!name || !email || !mobile || !password) {
       return res.status(400).json({
         message: 'All fields are required',
         error: true,
@@ -40,6 +40,7 @@ export async function registerUser(req, res) {
     const payload = {
       name,
       email,
+      mobile,
       password: hashedPassword,
       verify_email: true // Auto-verify email on registration
     }
