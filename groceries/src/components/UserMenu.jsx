@@ -31,7 +31,7 @@ const UserMenu = ({ close }) => {
         // Clear Redux state
         dispatch(logout());
 
-        // Clear all localStorage
+        // Clear all localStorage including cart data
         localStorage.clear();
 
         // Clear all sessionStorage
