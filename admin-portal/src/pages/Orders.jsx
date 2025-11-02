@@ -253,7 +253,7 @@ const Orders = () => {
               <FaSearch className="absolute left-3 top-3 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by Order ID, Customer Name, or Email"
+                placeholder="Search by Order ID, Customer Name, Email, or Phone"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -304,6 +304,7 @@ const Orders = () => {
                     <div>
                       <div className="font-medium">{order.userId?.name}</div>
                       <div className="text-gray-500">{order.userId?.email}</div>
+                      <div className="text-gray-400 text-xs">{order.userId?.mobile}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
