@@ -10,6 +10,7 @@ function Register() {
   const [data, setData] = useState({
     name: "",
     email: "",
+    mobile: "",
     password: "",
     confirmPassword: "",
   });
@@ -46,6 +47,7 @@ function Register() {
     const newErrors = {};
     if (!data.name) newErrors.name = "Name is required.";
     if (!data.email) newErrors.email = "Email is required.";
+    if (!data.mobile) newErrors.mobile = "Mobile number is required.";
     if (!data.password) {
       newErrors.password = "Password is required.";
     } else {
@@ -103,6 +105,7 @@ function Register() {
         setData({
           name: "",
           email: "",
+          mobile: "",
           password: "",
           confirmPassword: "",
         });
@@ -151,6 +154,23 @@ function Register() {
             />
             {errors.email && (
               <span className="text-red-500 text-xs">{errors.email}</span>
+            )}
+          </div>
+          <div className="grid gap-1">
+            <label htmlFor="mobile">Mobile Number :</label>
+            <input
+              type="tel"
+              id="mobile"
+              name="mobile"
+              placeholder="Enter your mobile number"
+              className={`bg-green-50 p-3 border rounded-lg outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 w-full text-base ${
+                errors.mobile ? "border-red-500" : ""
+              }`}
+              value={data.mobile}
+              onChange={handleChange}
+            />
+            {errors.mobile && (
+              <span className="text-red-500 text-xs">{errors.mobile}</span>
             )}
           </div>
           <div className="grid gap-1">
