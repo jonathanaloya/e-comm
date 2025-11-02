@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { adminAPI } from '../utils/api'
 import toast from 'react-hot-toast'
 import SupportTicketModal from '../components/SupportTicketModal'
@@ -9,6 +10,7 @@ const Notifications = () => {
   const [filter, setFilter] = useState('all') // all, unread, read
   const [selectedTicket, setSelectedTicket] = useState(null)
   const [showTicketModal, setShowTicketModal] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchNotifications()
@@ -61,8 +63,8 @@ const Notifications = () => {
 
   const handleOrderClick = (notification) => {
     if (notification.type === 'order' && notification.data?.orderId) {
-      // Navigate to orders page with the specific order highlighted
-      window.location.href = `/orders?highlight=${notification.data.orderId}`
+      // Use React Router navigation instead of window.location.href
+      navigate(`/orders?highlight=${notification.data.orderId}`)
     }
   }
 
