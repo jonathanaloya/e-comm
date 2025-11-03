@@ -48,4 +48,4 @@ Thumbs.db
 
 # Temporary folders
 tmp/
-temp/
+temp/admin-portal/.env
