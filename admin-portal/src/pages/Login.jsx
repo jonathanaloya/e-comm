@@ -82,7 +82,7 @@ const Login = () => {
               <div>
                 <div className="flex justify-center">
                   <ReCAPTCHA
-                    sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                     onChange={handleRecaptchaChange}
                     theme="light"
                   />
