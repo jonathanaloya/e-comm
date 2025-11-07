@@ -163,61 +163,13 @@ export async function CashOnDeliveryOrderController(request, response) {
     );
     console.log("Cash on Delivery: User shopping_cart cleared");
 
-    // Send order confirmation email and admin notification
-    try {
-      const user = await User.findById(userId);
-      const address = await (
-        await import("../models/addressModel.js")
-      ).default.findById(addressId);
-
-      if (user && user.email) {
-        const orderForEmail = {
-          mainOrderId: generatedOrder.orderId,
-          orderId: generatedOrder.orderId,
-          createdAt: generatedOrder.createdAt,
-          payment_status: generatedOrder.payment_status,
-          order_status: "confirmed",
-          totalAmount: generatedOrder.totalAmt,
-          deliveryFee: generatedOrder.deliveryFee,
-          items: generatedOrder.items.map((item) => ({
-            product_details: item.product_details,
-            quantity: item.quantity,
-            totalAmt: item.itemTotal,
-            name: item.product_details.name,
-            price: item.price,
-          })),
-        };
-
-        // Send customer confirmation
-        await sendOrderConfirmationEmail(orderForEmail, user, address);
-        // Send admin notification
-        const { sendAdminOrderNotification } = await import(
-          "../services/emailService.js"
-        );
-        await sendAdminOrderNotification(orderForEmail, user, address);
-
-        // Create in-app notification for admin
-        try {
-          const Notification = (await import("../models/notificationModel.js")).default;
-          const notification = new Notification({
-            type: 'order',
-            title: `New Order Received: ${generatedOrder.orderId}`,
-            message: `${user.name} placed a new order for UGX ${generatedOrder.totalAmt.toLocaleString()}. Payment method: ${generatedOrder.payment_status}`,
-            priority: 'high',
-            data: {
-              orderId: generatedOrder.orderId,
-              userId: userId,
-              totalAmount: generatedOrder.totalAmt,
-              paymentMethod: generatedOrder.payment_status
-            }
-          });
-          await notification.save();
-        } catch (notificationError) {
-          console.error('Failed to create order notification:', notificationError);
-        }
-      }
-    } catch (emailError) {
-      // Don't fail the order if email fails
+    if (removeCartItems.deletedCount === 0 && updateInUser.modifiedCount === 0) {
+        return response.json({
+            message: "Order successfully, but cart was not cleared.",
+            error: false,
+            success: true,
+            data: generatedOrder,
+        });
     }
 
     return response.json({
@@ -535,21 +487,6 @@ export async function paymentController(request, response) {
 
     const createdOrderDocs = await Promise.all(orderPromises);
 
-    // Clear user's cart after successful payment
-    console.log("Online Payment: Clearing cart for userId:", userId);
-
-    const cartDeleteResult = await Cart.deleteMany({ userId: userId });
-    console.log(
-      "Online Payment: Cart items deleted:",
-      cartDeleteResult.deletedCount
-    );
-
-    const userUpdateResult = await User.updateOne(
-      { _id: userId },
-      { shopping_cart: [] }
-    );
-    console.log("Online Payment: User shopping_cart cleared");
-
     // Always redirect to production site for consistency
     const baseUrl = "https://freshkatale.com";
 
@@ -757,6 +694,10 @@ export async function verifyPaymentController(request, response) {
           { shopping_cart: [] }
         );
         console.log("Online Payment: User shopping_cart cleared");
+
+        if (cartDeleteResult.deletedCount === 0 && userUpdateResult.modifiedCount === 0) {
+            console.warn("Online Payment: Cart was not cleared for userId:", userId);
+        }
 
         // Send order confirmation email for successful payment
         try {
@@ -979,8 +920,12 @@ export async function webhookFlutterwaveController(request, response) {
             "Webhook: Cart items deleted:",
             webhookCartDelete.deletedCount
           );
-          await User.updateOne({ _id: meta.userId }, { shopping_cart: [] });
+          const userUpdateResult = await User.updateOne({ _id: meta.userId }, { shopping_cart: [] });
           console.log("Webhook: User shopping_cart cleared");
+
+          if (webhookCartDelete.deletedCount === 0 && userUpdateResult.modifiedCount === 0) {
+              console.warn("Webhook: Cart was not cleared for userId:", meta.userId);
+          }
         }
       } else {
         const updateResult = await Order.updateMany(
