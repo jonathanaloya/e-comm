@@ -282,10 +282,7 @@ const CheckoutPage = () => {
         localStorage.removeItem("cartData");
         console.log('Cart completely cleared after successful COD order placement');
 
-        // Refresh data from backend (cart should already be empty)
-        if (fetchCartItem) {
-          await fetchCartItem();
-        }
+
         if (fetchOrder) {
           await fetchOrder();
         }
