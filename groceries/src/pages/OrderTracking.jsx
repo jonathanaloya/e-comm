@@ -22,8 +22,8 @@ const OrderTracking = () => {
     try {
       setLoading(true)
       const response = await Axios({
-        ...SummaryApi.getOrderTracking,
-        params: { orderId }
+        url: `/order/tracking/${orderId}`,
+        method: 'get'
       })
 
       if (response.data.success) {

@@ -37,5 +37,35 @@ orderRouter.post('/webhook', bodyParser.json({
 
 orderRouter.get("/order-list", authMiddleware, getOrderDetailsController)
 orderRouter.post("/calculate-delivery-fee", calculateDeliveryFeeController)
+orderRouter.get("/tracking/:orderId", authMiddleware, async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const orderModel = (await import('../models/orderModel.js')).default;
+        
+        const order = await orderModel.findById(orderId)
+            .populate('userId', 'name email mobile')
+            .populate('addressDetails');
+            
+        if (!order) {
+            return res.status(404).json({
+                message: "Order not found",
+                error: true,
+                success: false
+            });
+        }
+        
+        res.json({
+            message: "Order found",
+            success: true,
+            data: order
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message || "Server error",
+            error: true,
+            success: false
+        });
+    }
+})
 
 export default orderRouter
