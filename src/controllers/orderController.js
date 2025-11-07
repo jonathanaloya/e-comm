@@ -151,11 +151,17 @@ export async function CashOnDeliveryOrderController(request, response) {
     const generatedOrder = await Order.create(orderDoc);
 
     ///remove from the cart
+    console.log("Cash on Delivery: Clearing cart for userId:", userId);
     const removeCartItems = await Cart.deleteMany({ userId: userId });
+    console.log(
+      "Cash on Delivery: Cart items deleted:",
+      removeCartItems.deletedCount
+    );
     const updateInUser = await User.updateOne(
       { _id: userId },
       { shopping_cart: [] }
     );
+    console.log("Cash on Delivery: User shopping_cart cleared");
 
     // Send order confirmation email and admin notification
     try {
@@ -528,6 +534,21 @@ export async function paymentController(request, response) {
     });
 
     const createdOrderDocs = await Promise.all(orderPromises);
+
+    // Clear user's cart after successful payment
+    console.log("Online Payment: Clearing cart for userId:", userId);
+
+    const cartDeleteResult = await Cart.deleteMany({ userId: userId });
+    console.log(
+      "Online Payment: Cart items deleted:",
+      cartDeleteResult.deletedCount
+    );
+
+    const userUpdateResult = await User.updateOne(
+      { _id: userId },
+      { shopping_cart: [] }
+    );
+    console.log("Online Payment: User shopping_cart cleared");
 
     // Always redirect to production site for consistency
     const baseUrl = "https://freshkatale.com";
