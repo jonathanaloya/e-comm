@@ -42,7 +42,8 @@ orderRouter.get("/tracking/:orderId", authMiddleware, async (req, res) => {
         const { orderId } = req.params;
         const orderModel = (await import('../models/orderModel.js')).default;
         
-        const order = await orderModel.findById(orderId)
+        // Search by orderId field, not _id
+        const order = await orderModel.findOne({ orderId: orderId })
             .populate('userId', 'name email mobile')
             .populate('addressDetails');
             
