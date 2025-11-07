@@ -203,14 +203,6 @@ const ProductDisplayPage = () => {
 
             {/****only mobile */}
             <div className='my-4 grid gap-3 '>
-                <div>
-                    <p className='font-semibold'>Description</p>
-                    <p className='text-base'>{data.description}</p>
-                </div>
-                <div>
-                    <p className='font-semibold'>Unit</p>
-                    <p className='text-base'>{data.unit}</p>
-                </div>
                 {
                   data?.more_details && Object.keys(data?.more_details).map((element,index)=>{
                     return(
