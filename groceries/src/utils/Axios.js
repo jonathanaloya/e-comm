@@ -79,12 +79,14 @@ Axios.interceptors.response.use(
    if ((response.config.url?.includes('/order/cash-on-delivery') ||
         response.config.url?.includes('/order/checkout')) && response.data?.success) {
      // Clear cart state completely after successful order placement
-     store.dispatch(handleAddItemCart([]));
+     store.dispatch(handleClearCart());
      // Clear all possible cart-related localStorage keys
      localStorage.removeItem("cart");
      localStorage.removeItem("cartItems");
      localStorage.removeItem("cartData");
      localStorage.removeItem("shoppingCart");
+     localStorage.clear();
+     sessionStorage.clear();
      console.log('Cart completely cleared after successful order placement via Axios interceptor');
      toast.success('Order placed successfully! Cart has been cleared.');
    }
