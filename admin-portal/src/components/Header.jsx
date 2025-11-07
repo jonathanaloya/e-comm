@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { FaBell, FaUser, FaSearch } from 'react-icons/fa'
 import { adminAPI } from '../utils/api'
 import { useNavigate } from 'react-router-dom'
+import { setSearchTerm } from '../store/productsSlice'
 
 const Header = () => {
   const { user } = useSelector(state => state.auth)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [localSearchTerm, setLocalSearchTerm] = useState('')
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const fetchUnreadNotifications = async () => {
     try {
@@ -34,6 +37,12 @@ const Header = () => {
     navigate('/notifications')
   }
 
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      dispatch(setSearchTerm(localSearchTerm))
+    }
+  }
+
   return (
     <header className="bg-white shadow-lg border-b border-gray-100 px-4 md:px-6 py-4">
       <div className="flex items-center justify-between">
@@ -51,6 +60,9 @@ const Header = () => {
               type="text"
               placeholder="Quick search..."
               className="pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50"
+              value={localSearchTerm}
+              onChange={(e) => setLocalSearchTerm(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
             />
           </div>
 

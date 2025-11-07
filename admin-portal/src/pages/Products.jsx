@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { adminAPI } from '../utils/api'
 import toast from 'react-hot-toast'
+import { useSelector } from 'react-redux'
 
 const Products = () => {
   const [products, setProducts] = useState([])
@@ -24,15 +25,17 @@ const Products = () => {
   const [productImageFiles, setProductImageFiles] = useState([])
   const [uploading, setUploading] = useState(false)
 
+  const searchTerm = useSelector(state => state.products.searchTerm)
+
   useEffect(() => {
-    fetchProducts()
+    fetchProducts(searchTerm)
     fetchCategories()
     fetchSubCategories()
-  }, [])
+  }, [searchTerm])
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (search = '') => {
     try {
-      const response = await adminAPI.getAllProducts()
+      const response = await adminAPI.getAllProducts({ search })
       setProducts(response.data.data || [])
     } catch (error) {
       toast.error('Failed to fetch products')
@@ -98,7 +101,7 @@ const Products = () => {
         toast.success('Product created successfully')
         setShowProductModal(false)
         resetForm()
-        fetchProducts()
+        fetchProducts(searchTerm)
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create product')
@@ -125,7 +128,7 @@ const Products = () => {
         toast.success('Product updated successfully')
         setShowProductModal(false)
         resetForm()
-        fetchProducts()
+        fetchProducts(searchTerm)
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update product')
@@ -157,7 +160,7 @@ const Products = () => {
         const response = await adminAPI.deleteProduct({ _id: productId })
         if (response.data.success) {
           toast.success('Product deleted successfully')
-          fetchProducts()
+          fetchProducts(searchTerm)
         }
       } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to delete product')
