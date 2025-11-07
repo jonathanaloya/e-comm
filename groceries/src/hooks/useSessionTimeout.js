@@ -28,32 +28,9 @@ export const useSessionTimeout = () => {
       // Make a request to a protected endpoint to check if session is valid
       await Axios.get(SummaryApi.getUserDetails.url);
     } catch (error) {
-      if (error.response?.status === 401 && error.response?.data?.sessionExpired) {
-        console.log('Session expired during validation - performing complete logout');
-
-        // Clear all localStorage
-        localStorage.clear();
-
-        // Clear all sessionStorage
-        sessionStorage.clear();
-
-        // Clear all cookies
-        document.cookie.split(";").forEach(function(c) {
-          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
-
-        // Clear Redux state
-        dispatch(logout());
-        dispatch(handleAddItemCart([]));
-
-        // Show logout message
-        toast.error('Session expired. Please login again.');
-
-        // Redirect to login
-        window.location.href = '/login';
-      }
+      // The Axios interceptor will handle the 401 error, so we don't need to do anything here.
     }
-  }, [dispatch, isLoggedIn]);
+  }, [isLoggedIn]);
 
   const resetTimer = useCallback(() => {
 
