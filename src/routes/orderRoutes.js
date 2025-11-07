@@ -45,7 +45,7 @@ orderRouter.get("/tracking/:orderId", authMiddleware, async (req, res) => {
         // Search by orderId field, not _id
         const order = await orderModel.findOne({ orderId: orderId })
             .populate('userId', 'name email mobile')
-            .populate('addressDetails');
+            .populate('delivery_address');
             
         if (!order) {
             return res.status(404).json({
