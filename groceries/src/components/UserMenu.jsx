@@ -1,54 +1,19 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import Divider from "./Divider";
-import SummaryApi from "../common/SummaryApi";
-import Axios from "../utils/Axios";
-import { logout } from "../store/userSlice";
-import toast from "react-hot-toast";
-import AxiosToastError from "../utils/AxiosToastError";
 import { HiOutlineExternalLink } from "react-icons/hi";
 
 
+import { useGlobalContext } from "../provider/GlobalProvider";
+
 const UserMenu = ({ close }) => {
   const user = useSelector((state) => state.user);
-  const dispatch = useDispatch();
+  const { handleLogoutOut } = useGlobalContext();
   const navigate = useNavigate();
   const handleLogout = async () => {
-    try {
-      const response = await Axios({
-        ...SummaryApi.logout,
-      });
-
-      if (response.data.success) {
-        if (close) {
-          close();
-        }
-
-        // Perform complete logout
-        console.log('Manual logout - performing complete logout');
-
-        // Clear Redux state
-        dispatch(logout());
-
-        // Clear all localStorage including cart data
-        localStorage.clear();
-
-        // Clear all sessionStorage
-        sessionStorage.clear();
-
-        // Clear all cookies
-        document.cookie.split(";").forEach(function(c) {
-          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
-
-        toast.success(response.data.message);
-        // Force reload to guarantee UI resets
-        window.location.href = "/login";
-      }
-    } catch (error) {
-      AxiosToastError(error);
-    }
+    handleLogoutOut();
+    navigate("/login");
   };
 
   const handleClose = () => {
