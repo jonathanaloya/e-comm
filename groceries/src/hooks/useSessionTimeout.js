@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../store/userSlice';
+import { logout, setUserDetails } from '../store/userSlice';
 import { handleAddItemCart } from '../store/cartProduct';
 import toast from 'react-hot-toast';
 import Axios from '../utils/Axios';
@@ -26,11 +26,41 @@ export const useSessionTimeout = () => {
 
     try {
       // Make a request to a protected endpoint to check if session is valid
-      await Axios.get(SummaryApi.getUserDetails.url);
+      const response = await Axios({
+        ...SummaryApi.getUserLoginDetails
+      });
+      
+      // If successful, update user details in Redux
+      if (response.data.success && response.data.data) {
+        dispatch(setUserDetails(response.data.data));
+      }
     } catch (error) {
-      // The Axios interceptor will handle the 401 error, so we don't need to do anything here.
+      // Session is invalid - force logout
+      console.log('Session validation failed - forcing logout');
+      forceLogout('Session expired');
     }
   }, [isLoggedIn]);
+
+  const forceLogout = (reason = 'Session expired') => {
+    console.log('Forcing logout:', reason);
+    
+    // Clear all storage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Clear cookies
+    document.cookie.split(";").forEach(function(c) {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    
+    // Clear Redux state
+    dispatch(logout());
+    dispatch(handleAddItemCart([]));
+    
+    // Show message and redirect
+    toast.error(reason + '. Please login again.');
+    window.location.href = '/login';
+  };
 
   const resetTimer = useCallback(() => {
 
@@ -58,28 +88,7 @@ export const useSessionTimeout = () => {
 
       // Set logout timer
       timeoutRef.current = setTimeout(() => {
-        console.log('Session expired due to inactivity - performing complete logout');
-
-        // Clear all localStorage
-        localStorage.clear();
-
-        // Clear all sessionStorage
-        sessionStorage.clear();
-
-        // Clear all cookies
-        document.cookie.split(";").forEach(function(c) {
-          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
-
-        // Clear Redux state
-        dispatch(logout());
-        dispatch(handleAddItemCart([]));
-
-        // Show logout message
-        toast.error('Session expired due to inactivity. Please login again.');
-
-        // Redirect to login
-        window.location.href = '/login';
+        forceLogout('Session expired due to inactivity');
       }, INACTIVITY_TIMEOUT);
 
       // Set periodic session validation
