@@ -62,7 +62,7 @@ export const adminAPI = {
   getAllUsers: () => api.get('/api/user/admin/all-users'),
   
   // Products
-  getAllProducts: () => api.post('/api/product/get', {}),
+  getAllProducts: () => api.post('/api/product/get', { limit: 1000 }),
   createProduct: (data) => api.post('/api/product/create', data),
   updateProduct: (data) => api.put('/api/product/update', data),
   deleteProduct: (data) => api.delete('/api/product/delete', { data }),
