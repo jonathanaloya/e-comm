@@ -10,11 +10,11 @@ const ContactSupport = () => {
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent("Hi! I need help with Fresh Katale grocery store.")
-    window.open(`https://wa.me/256785733366?text=${message}`, '_blank')
+    window.open(`https://wa.me/256778149796?text=${message}`, '_blank')
   }
 
   const handleCall = () => {
-    window.open('tel:+256785733366', '_self')
+    window.open('tel:+256778149796', '_self')
   }
 
   const handleEmail = () => {
@@ -64,7 +64,7 @@ const ContactSupport = () => {
               <h3 className="font-semibold text-gray-800 mb-2">Call Us</h3>
               <p className="text-gray-600 text-sm mb-4">Speak directly with our team</p>
               <span className="text-primary-600 font-medium text-sm group-hover:text-primary-700">
-                +256 700 000 000
+                +256 778 149 796
               </span>
             </button>
           </div>
@@ -160,7 +160,7 @@ const ContactSupport = () => {
                         <div className="flex-1 text-left">
                           <h4 className="font-medium text-gray-800">WhatsApp Support</h4>
                           <p className="text-sm text-gray-600">Chat with us instantly on WhatsApp</p>
-                          <p className="text-sm text-green-600">+256 700 000 000</p>
+                          <p className="text-sm text-green-600">+256 778 149 796</p>
                         </div>
                         <span className="text-primary-600 group-hover:text-primary-700">→</span>
                       </button>
@@ -175,7 +175,7 @@ const ContactSupport = () => {
                         <div className="flex-1 text-left">
                           <h4 className="font-medium text-gray-800">Phone Support</h4>
                           <p className="text-sm text-gray-600">Call us directly for immediate assistance</p>
-                          <p className="text-sm text-blue-600">+256 700 000 000</p>
+                          <p className="text-sm text-blue-600">+256 778 149 796</p>
                         </div>
                         <span className="text-primary-600 group-hover:text-primary-700">→</span>
                       </button>
@@ -208,7 +208,7 @@ const ContactSupport = () => {
                   <FaPhone className="text-primary-600 mt-1" />
                   <div>
                     <p className="font-medium text-gray-800">Phone</p>
-                    <p className="text-gray-600">+256 700 000 000</p>
+                    <p className="text-gray-600">+256 778 149 796</p>
                   </div>
                 </div>
                 
@@ -224,7 +224,7 @@ const ContactSupport = () => {
                   <FaWhatsapp className="text-primary-600 mt-1" />
                   <div>
                     <p className="font-medium text-gray-800">WhatsApp</p>
-                    <p className="text-gray-600">+256 700 000 000</p>
+                    <p className="text-gray-600">+256 778 149 796</p>
                   </div>
                 </div>
                 

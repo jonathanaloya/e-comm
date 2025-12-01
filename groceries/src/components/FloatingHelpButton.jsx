@@ -21,12 +21,12 @@ const FloatingHelpButton = () => {
   }
 
   const handleCallUs = () => {
-    window.open('tel:+256700000000', '_self')
+    window.open('tel:+256778149796', '_self')
   }
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent("Hi! I need help with Fresh Katale grocery store.")
-    window.open(`https://wa.me/256700000000?text=${message}`, '_blank')
+    window.open(`https://wa.me/256778149796?text=${message}`, '_blank')
   }
 
   const handleEmailUs = () => {
@@ -102,7 +102,7 @@ const FloatingHelpButton = () => {
                 </div>
                 <div>
                   <p className="font-medium text-sm text-gray-800">Call Us</p>
-                  <p className="text-xs text-gray-500">+256 700 000 000</p>
+                  <p className="text-xs text-gray-500">+256 778 149 796</p>
                 </div>
               </button>
 
