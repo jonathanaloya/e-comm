@@ -67,19 +67,19 @@ const Dashboard = () => {
   }, [])
 
   const StatCard = ({ icon, title, value, color, trend }) => (
-    <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-green-200 group">
+    <div className="bg-white p-3 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-green-200 group">
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
-          <p className="text-3xl font-bold text-gray-800 mb-2">{value}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-gray-500 text-xs md:text-sm font-medium mb-1 truncate">{title}</p>
+          <p className="text-lg md:text-3xl font-bold text-gray-800 mb-1 md:mb-2 truncate">{value}</p>
           {trend && (
-            <div className="flex items-center text-xs">
+            <div className="flex items-center text-xs hidden md:flex">
               <span className="text-green-500 font-semibold">↗ {trend}%</span>
               <span className="text-gray-400 ml-1">vs last month</span>
             </div>
           )}
         </div>
-        <div className={`p-4 rounded-2xl ${color} group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+        <div className={`p-2 md:p-4 rounded-2xl ${color} group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
           {icon}
         </div>
       </div>
@@ -98,30 +98,30 @@ const Dashboard = () => {
       </div>
       
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
         <StatCard
-          icon={<FaShoppingCart className="text-white text-2xl" />}
+          icon={<FaShoppingCart className="text-white text-lg md:text-2xl" />}
           title="Total Orders"
           value={stats.totalOrders}
           color="bg-gradient-to-r from-blue-500 to-blue-600"
           trend="12.5"
         />
         <StatCard
-          icon={<FaUsers className="text-white text-2xl" />}
+          icon={<FaUsers className="text-white text-lg md:text-2xl" />}
           title="Total Users"
           value={stats.totalUsers}
           color="bg-gradient-to-r from-green-500 to-green-600"
           trend="8.2"
         />
         <StatCard
-          icon={<FaBox className="text-white text-2xl" />}
+          icon={<FaBox className="text-white text-lg md:text-2xl" />}
           title="Total Products"
           value={stats.totalProducts}
           color="bg-gradient-to-r from-purple-500 to-purple-600"
           trend="5.7"
         />
         <StatCard
-          icon={<FaDollarSign className="text-white text-2xl" />}
+          icon={<FaDollarSign className="text-white text-lg md:text-2xl" />}
           title="Total Revenue"
           value={`UGX ${stats.totalRevenue.toLocaleString()}`}
           color="bg-gradient-to-r from-yellow-500 to-orange-500"

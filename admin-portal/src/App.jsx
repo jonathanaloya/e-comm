@@ -3,15 +3,17 @@ import { Toaster } from 'react-hot-toast'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import { useAutoLogout } from './hooks/useAutoLogout'
+import { useState } from 'react'
 
 function App() {
   useAutoLogout();
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden ml-0 md:ml-0 lg:ml-0">
-        <Header />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-2 md:p-4 lg:p-6">
           <Outlet />
         </main>

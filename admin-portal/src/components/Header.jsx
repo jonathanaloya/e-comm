@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { FaBell, FaUser, FaSearch } from 'react-icons/fa'
+import { FaBell, FaUser, FaSearch, FaBars } from 'react-icons/fa'
 import { adminAPI } from '../utils/api'
 import { useNavigate } from 'react-router-dom'
 import { setSearchTerm } from '../store/productsSlice'
 
-const Header = () => {
+const Header = ({ onMenuClick }) => {
   const { user } = useSelector(state => state.auth)
   const [unreadCount, setUnreadCount] = useState(0)
   const [localSearchTerm, setLocalSearchTerm] = useState('')
@@ -47,19 +47,25 @@ const Header = () => {
     <header className="bg-white shadow-lg border-b border-gray-100 px-4 md:px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <FaBars className="text-gray-600 text-lg" />
+          </button>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800">Welcome back!</h2>
+            <h2 className="text-lg md:text-2xl font-bold text-gray-800">Welcome back!</h2>
             <p className="text-sm text-gray-500 hidden md:block">Manage your Fresh Katale store</p>
           </div>
         </div>
 
         <div className="flex items-center space-x-2 md:space-x-6">
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Quick search..."
-              className="pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50"
+              className="pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 w-32 md:w-auto"
               value={localSearchTerm}
               onChange={(e) => setLocalSearchTerm(e.target.value)}
               onKeyDown={handleSearchKeyDown}
