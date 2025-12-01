@@ -114,9 +114,19 @@ const GlobalProvider = ({ children }) => {
     } catch (error) {
       // Ignore logout API errors
     } finally {
-      // Clear all local storage and Redux states regardless of API response
+      // Preserve device ID to keep device trusted
+      const deviceId = localStorage.getItem('deviceId');
+      
+      // Clear all storage
       localStorage.clear();
       sessionStorage.clear();
+      
+      // Restore device ID
+      if (deviceId) {
+        localStorage.setItem('deviceId', deviceId);
+      }
+      
+      // Clear Redux states
       dispatch(logout());
       dispatch(handleAddItemCart([]));
       dispatch(handleAddAddress([]));
