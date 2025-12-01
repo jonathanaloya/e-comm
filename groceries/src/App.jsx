@@ -15,23 +15,20 @@ import CartMobileLink from "./components/CartMobile";
 import FloatingHelpButton from "./components/FloatingHelpButton";
 import InstallPrompt from "./components/InstallPrompt";
 import LoadingSpinner from "./components/LoadingSpinner";
-import { useSessionTimeout } from "./hooks/useSessionTimeout";
+
 
 function App() {
   const dispatch = useDispatch();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Session timeout hook - automatically logs out inactive users
-  useSessionTimeout();
+
 
   const fetchUser = async () => {
     const userData = await fetchUserDetails();
     if (userData && userData.data) {
       dispatch(setUserDetails(userData.data));
     } else if (userData.error) {
-      // If user details fetch failed (session expired), ensure UI reflects logged out state
-      console.log('User details fetch failed - ensuring UI shows logged out state');
       dispatch(setUserDetails(null));
     }
   };

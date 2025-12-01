@@ -64,7 +64,7 @@ const refreshAccessToken = async(refreshToken)=>{
         localStorage.setItem('accesstoken',accessToken)
         return accessToken
     } catch (error) {
-        console.log(error)
+        // Token refresh failed
     }
 }
 

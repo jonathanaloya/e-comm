@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { pricewithDiscount } from "../utils/PriceWithDiscount";
 import { handleAddAddress } from "../store/addressSlice";
 import { setOrder } from "../store/orderSlice";
+import { logout } from "../store/userSlice";
 
 const GlobalContext = createContext(null);
 
@@ -23,32 +24,21 @@ const GlobalProvider = ({ children }) => {
 
   const fetchCartItem = async () => {
     try {
-      console.log('GlobalProvider: Fetching cart items...');
       const response = await Axios({
         ...SummaryApi.getCartItem,
       });
       const { data: responseData } = response;
-      console.log('GlobalProvider: Cart fetch response:', responseData);
-      console.log('GlobalProvider: Cart data received:', responseData.data);
 
       if (responseData.success) {
-        console.log('GlobalProvider: Setting cart items in Redux:', responseData.data?.length || 0, 'items');
         dispatch(handleAddItemCart(responseData.data || []));
-        console.log('GlobalProvider: Cart items set in Redux successfully');
       } else {
-        console.log('GlobalProvider: Cart fetch failed:', responseData.message);
-        // Ensure empty cart on failure
         dispatch(handleAddItemCart([]));
       }
     } catch (error) {
-      console.error('GlobalProvider: Cart fetch error:', error);
-      // If session expired during cart fetch, clear user state too
       if (error.response?.status === 401 && error.response?.data?.sessionExpired) {
-        console.log('GlobalProvider: Session expired during cart fetch - clearing user state');
         dispatch(logout());
         dispatch(setOrder([]));
       }
-      // Ensure empty cart on error
       dispatch(handleAddItemCart([]));
     }
   };
@@ -115,9 +105,23 @@ const GlobalProvider = ({ children }) => {
     setNotDiscountTotalPrice(notDiscountPrice);
   }, [cartItem]);
 
-  const handleLogoutOut = () => {
-    localStorage.clear();
-    dispatch(handleAddItemCart([]));
+  const handleLogoutOut = async () => {
+    try {
+      // Call backend logout API
+      await Axios({
+        ...SummaryApi.logout
+      });
+    } catch (error) {
+      // Ignore logout API errors
+    } finally {
+      // Clear all local storage and Redux states regardless of API response
+      localStorage.clear();
+      sessionStorage.clear();
+      dispatch(logout());
+      dispatch(handleAddItemCart([]));
+      dispatch(handleAddAddress([]));
+      dispatch(setOrder([]));
+    }
   };
 
   const fetchAddress = async () => {
@@ -132,9 +136,7 @@ const GlobalProvider = ({ children }) => {
         dispatch(handleAddAddress(responseData.data));
       }
     } catch (error) {
-      // If session expired during address fetch, clear user state
       if (error.response?.status === 401 && error.response?.data?.sessionExpired) {
-        console.log('GlobalProvider: Session expired during address fetch - clearing user state');
         dispatch(logout());
         dispatch(handleAddItemCart([]));
         dispatch(setOrder([]));
@@ -152,9 +154,7 @@ const GlobalProvider = ({ children }) => {
         dispatch(setOrder(responseData.data));
       }
     } catch (error) {
-      // If session expired during order fetch, clear user state
       if (error.response?.status === 401 && error.response?.data?.sessionExpired) {
-        console.log('GlobalProvider: Session expired during order fetch - clearing user state');
         dispatch(logout());
         dispatch(handleAddItemCart([]));
         dispatch(setOrder([]));
@@ -164,10 +164,8 @@ const GlobalProvider = ({ children }) => {
 
   useEffect(() => {
     if (user?._id) {
-      // Check if we just completed an order (success page visited)
       const orderCompleted = sessionStorage.getItem('orderCompleted');
       if (orderCompleted) {
-        console.log('Order completed detected - ensuring cart is empty');
         dispatch(handleAddItemCart([]));
         sessionStorage.removeItem('orderCompleted');
       } else {
@@ -188,6 +186,7 @@ const GlobalProvider = ({ children }) => {
         totalQty,
         notDiscountTotalPrice,
         fetchOrder,
+        handleLogoutOut,
       }}
     >
       {children}
