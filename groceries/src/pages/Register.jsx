@@ -5,6 +5,7 @@ import Axios from "../utils/Axios";
 import AxiosToastError from "../utils/AxiosToastError";
 import { Link, useNavigate } from "react-router-dom";
 import SummaryApi from "../common/SummaryApi";
+import ReCaptcha from "../components/ReCaptcha";
 
 function Register() {
   const [data, setData] = useState({
@@ -17,6 +18,7 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [recaptchaToken, setRecaptchaToken] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -69,7 +71,7 @@ function Register() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const validateValue = Object.values(data).every((el) => el);
+  const validateValue = Object.values(data).every((el) => el) && recaptchaToken;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,12 +80,15 @@ function Register() {
       toast.error("Please fix the errors in the form.");
       return;
     }
+    if (!recaptchaToken) {
+      toast.error('Please complete the reCAPTCHA verification');
+      return;
+    }
     try {
       const response = await Axios({
         ...SummaryApi.register,
-        data: data,
+        data: { ...data, recaptchaToken },
       });
-      // Only show backend error if frontend validation passed and backend error is not generic
       if (response.data.error) {
         if (
           response.data.errors &&
@@ -97,11 +102,12 @@ function Register() {
         ) {
           toast.error(response.data.message);
         }
-        // If backend returns generic 'validation failed', ignore it (frontend already showed errors)
       }
       if (response.data.success) {
         toast.success(response.data.message);
-        navigate("/login");
+        navigate("/email-verification", {
+          state: { email: data.email }
+        });
         setData({
           name: "",
           email: "",
@@ -109,6 +115,7 @@ function Register() {
           password: "",
           confirmPassword: "",
         });
+        setRecaptchaToken('');
       }
     } catch (error) {
       AxiosToastError(error);
@@ -236,6 +243,14 @@ function Register() {
                 {errors.confirmPassword}
               </span>
             )}
+          </div>
+
+          <div className="grid gap-1">
+            <ReCaptcha 
+              onVerify={setRecaptchaToken}
+              onExpired={() => setRecaptchaToken('')}
+              onError={() => setRecaptchaToken('')}
+            />
           </div>
 
           <button

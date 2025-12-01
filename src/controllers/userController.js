@@ -15,12 +15,31 @@ import loginOtpTemplate from '../utilities/loginOtpTemplate.js'
 // Register user
 export async function registerUser(req, res) {
   try {
-    const { name, email, mobile, password } = req.body;
+    const { name, email, mobile, password, recaptchaToken } = req.body;
     if (!name || !email || !mobile || !password) {
       return res.status(400).json({
         message: 'All fields are required',
         error: true,
         success: false
+      });
+    }
+
+    if (!recaptchaToken) {
+      return res.status(400).json({
+        message: "reCAPTCHA verification is required",
+        error: true,
+        success: false
+      });
+    }
+
+    // Verify reCAPTCHA
+    const recaptchaResult = await verifyRecaptcha(recaptchaToken);
+    if (!recaptchaResult.success) {
+      return res.status(400).json({
+        message: 'reCAPTCHA verification failed. Please try again.',
+        error: true,
+        success: false,
+        recaptchaErrors: recaptchaResult['error-codes']
       });
     }
 
@@ -37,18 +56,44 @@ export async function registerUser(req, res) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Generate OTP for email verification
+    const loginOtp = generateOtp();
+    const loginOtpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
     const payload = {
       name,
       email,
       mobile,
       password: hashedPassword,
-      verify_email: true // Auto-verify email on registration
+      verify_email: false, // Will be verified after OTP
+      login_otp: loginOtp,
+      login_otp_expiry: loginOtpExpiry
     }
     const newUser = new User(payload);
-    const save =await newUser.save();
+    const save = await newUser.save();
+
+    // Send verification email
+    try {
+      await sendEmail({
+        sendTo: email,
+        subject: 'Verify Your Email - Fresh Katale',
+        html: loginOtpTemplate({
+          name: name,
+          otp: loginOtp
+        })
+      });
+    } catch (emailError) {
+      // If email fails, delete the user and return error
+      await User.findByIdAndDelete(save._id);
+      return res.status(500).json({
+        message: 'Failed to send verification email. Please try again.',
+        error: true,
+        success: false
+      });
+    }
 
     return res.json({
-      message: 'User registered successfully. You can now login with your credentials.',
+      message: 'Registration successful! Please check your email for verification code.',
       error: false,
       success: true,
       data: { userId: save?._id, email: save?.email }
