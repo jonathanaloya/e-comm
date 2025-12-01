@@ -31,18 +31,13 @@ const ProductListPage = () => {
         const categoryParam = params.category;
         const subCategoryParam = params.subCategory;
 
-        console.log("URL Params:", { categoryParam, subCategoryParam });
-
         if (!categoryParam || !subCategoryParam) {
-          console.log("Missing params");
           setData([]);
           return;
         }
 
         const categoryId = categoryParam.split("-").pop();
         const subCategoryId = subCategoryParam.split("-").pop();
-
-        console.log("Extracted IDs:", { categoryId, subCategoryId });
 
         // Find category and subcategory info
         const category = allCategory.find((cat) => cat._id === categoryId);
@@ -63,27 +58,14 @@ const ProductListPage = () => {
           },
         });
 
-        console.log("Full API Response:", response);
-        console.log("Response.data:", response.data);
-
         const { data: responseData } = response;
-        console.log("ResponseData:", responseData);
-        console.log("ResponseData.success:", responseData.success);
-        console.log("ResponseData.data:", responseData.data);
 
         if (responseData.success) {
-          console.log("Products found:", responseData.data?.length || 0);
-          console.log("Setting data to:", responseData.data);
           setData(responseData.data || []);
         } else {
-          console.log(
-            "API returned success: false, message:",
-            responseData.message
-          );
           setData([]);
         }
       } catch (error) {
-        console.error("Fetch error:", error);
         AxiosToastError(error);
         setData([]);
       } finally {
@@ -381,8 +363,8 @@ const ProductListPage = () => {
                             <img
                               src={
                                 Array.isArray(sub.image)
-                                  ? sub.image[0]
-                                  : sub.image
+                                  ? (String(sub.image[0]).startsWith("http") ? sub.image[0] : `${baseURL}${sub.image[0]}`)
+                                  : (String(sub.image).startsWith("http") ? sub.image : `${baseURL}${sub.image}`)
                               }
                               alt={sub.name}
                               className="w-full h-full object-cover"
