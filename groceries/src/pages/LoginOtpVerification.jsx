@@ -10,6 +10,7 @@ import { setUserDetails } from '../store/userSlice'
 
 function LoginOtpVerification() {
     const [ data, setData ] = useState(["","","","","",""])
+    const [ trustDevice, setTrustDevice ] = useState(false)
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const inputRef = useRef([])
@@ -33,7 +34,9 @@ function LoginOtpVerification() {
                 ...SummaryApi.login,
                 data : {
                     email: location?.state?.email,
-                    otp : data.join("")
+                    otp : data.join(""),
+                    deviceId: location?.state?.deviceId,
+                    trustDevice
                 }
             })
             if(response.data.error){
@@ -102,6 +105,19 @@ function LoginOtpVerification() {
                             })
                         }
                     </div>
+                </div>
+
+                <div className='flex items-center gap-2 my-3'>
+                    <input 
+                        type="checkbox" 
+                        id="trustDevice" 
+                        checked={trustDevice}
+                        onChange={(e) => setTrustDevice(e.target.checked)}
+                        className='w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500'
+                    />
+                    <label htmlFor="trustDevice" className='text-sm text-gray-600'>
+                        Trust this device (skip verification code next time)
+                    </label>
                 </div>
 
                 <button disabled={!validateValue} className={` ${validateValue ? 'bg-green-800 hover:bg-green-600' : 'bg-gray-500'} text-white p-2 rounded font-semibold my-3 tracking-wider`}>Verify & Login</button>

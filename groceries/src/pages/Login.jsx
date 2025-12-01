@@ -10,6 +10,16 @@ import { useDispatch } from 'react-redux'
 import { setUserDetails } from '../store/userSlice'
 import ReCaptcha from '../components/ReCaptcha'
 
+// Generate unique device ID
+const getDeviceId = () => {
+  let deviceId = localStorage.getItem('deviceId')
+  if (!deviceId) {
+    deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+    localStorage.setItem('deviceId', deviceId)
+  }
+  return deviceId
+}
+
 function Login() {
     const [ data, setData ] = useState({
         email: '',
@@ -44,9 +54,10 @@ function Login() {
         }
 
         try {
+            const deviceId = getDeviceId()
             const response = await Axios({
                 ...SummaryApi.login,
-                data : { ...data, recaptchaToken }
+                data : { ...data, recaptchaToken, deviceId }
             })
 
             if(response.data.error){
@@ -56,7 +67,7 @@ function Login() {
                 if(response.data.requiresTwoFactor){
                     toast.success(response.data.message)
                     navigate('/login-otp-verification', {
-                        state: { email: data.email, redirect: redirectTo }
+                        state: { email: data.email, redirect: redirectTo, deviceId }
                     })
                     setData({
                         email: '',

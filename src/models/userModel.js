@@ -86,6 +86,13 @@ const userSchema = new mongoose.Schema({
     enum: ["ADMIN", "USER"],
     default: "USER"
   },
+
+  trusted_devices: [{
+    device_id: { type: String, required: true },
+    device_name: { type: String, default: 'Unknown Device' },
+    trusted_at: { type: Date, default: Date.now },
+    last_used: { type: Date, default: Date.now }
+  }],
 }, {
   timestamps: true
 });

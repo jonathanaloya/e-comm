@@ -129,7 +129,7 @@ export async function verifyRegistrationOtp(req, res) {
 // Login user
 export async function loginUser(req, res) {
   try {
-    const { email, password, recaptchaToken, otp } = req.body
+    const { email, password, recaptchaToken, otp, deviceId, trustDevice } = req.body
 
     // Input validation - email is always required
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -197,7 +197,54 @@ export async function loginUser(req, res) {
         })
       }
 
-      // Generate and send OTP immediately
+      // Check if device is trusted
+      const isTrustedDevice = deviceId && user.trusted_devices.some(device => device.device_id === deviceId);
+      
+      if (isTrustedDevice) {
+        // Skip OTP for trusted device, proceed with login
+        const accesstoken = await generateAccessToken(user._id)
+        const refreshToken = await generateRefreshToken(user._id)
+
+        // Update last used time for the trusted device
+        const deviceIndex = user.trusted_devices.findIndex(device => device.device_id === deviceId);
+        if (deviceIndex !== -1) {
+          user.trusted_devices[deviceIndex].last_used = new Date();
+        }
+
+        await User.findByIdAndUpdate(user._id, {
+          last_login_date: Date.now(),
+          refresh_token: refreshToken,
+          trusted_devices: user.trusted_devices
+        })
+
+        const cookiesOption = {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+          maxAge: 24 * 60 * 60 * 1000
+        }
+
+        res.cookie('accessToken', accesstoken, cookiesOption)
+        res.cookie('refreshToken', refreshToken, cookiesOption)
+
+        return res.json({
+          message: "Login Successfully",
+          error: false,
+          success: true,
+          data: {
+            accesstoken,
+            refreshToken,
+            user: {
+              _id: user._id,
+              name: user.name,
+              email: user.email,
+              avatar: user.avatar
+            }
+          }
+        })
+      }
+
+      // Generate and send OTP for new/untrusted device
       const loginOtp = generateOtp();
       const loginOtpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
@@ -278,15 +325,28 @@ export async function loginUser(req, res) {
       // Clear OTP fields after successful verification
       user.login_otp = '';
       user.login_otp_expiry = null;
+      
+      // Add device to trusted devices if requested
+      if (trustDevice && deviceId) {
+        const existingDeviceIndex = user.trusted_devices.findIndex(device => device.device_id === deviceId);
+        if (existingDeviceIndex === -1) {
+          user.trusted_devices.push({
+            device_id: deviceId,
+            device_name: req.headers['user-agent'] || 'Unknown Device',
+            trusted_at: new Date(),
+            last_used: new Date()
+          });
+        }
+      }
+      
       await user.save();
-
 
       const accesstoken = await generateAccessToken(user._id)
       const refreshToken = await generateRefreshToken(user._id)
 
       const updateUserDetails = await User.findByIdAndUpdate(user?._id , {
         last_login_date : Date.now(),
-        refresh_token: refreshToken // Store refresh token in user model
+        refresh_token: refreshToken
       })
 
       const cookiesOption = {
