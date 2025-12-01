@@ -167,10 +167,10 @@ const ProductListPage = () => {
                       >
                         <img
                           src={
-                            cat.Image && String(cat.Image).startsWith("http")
-                              ? cat.Image
-                              : cat.Image
-                              ? `${baseURL}${cat.Image}`
+                            cat.image && String(cat.image).startsWith("http")
+                              ? cat.image
+                              : cat.image
+                              ? `${baseURL}${cat.image}`
                               : noDataImage
                           }
                           alt={cat.name}
@@ -217,10 +217,10 @@ const ProductListPage = () => {
                     >
                       <img
                         src={
-                          cat.Image && String(cat.Image).startsWith("http")
-                            ? cat.Image
-                            : cat.Image
-                            ? `${baseURL}${cat.Image}`
+                          cat.image && String(cat.image).startsWith("http")
+                            ? cat.image
+                            : cat.image
+                            ? `${baseURL}${cat.image}`
                             : noDataImage
                         }
                         alt={cat.name}
@@ -244,11 +244,11 @@ const ProductListPage = () => {
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
               <img
                 src={
-                  categoryInfo.Image &&
-                  String(categoryInfo.Image).startsWith("http")
-                    ? categoryInfo.Image
-                    : categoryInfo.Image
-                    ? `${baseURL}${categoryInfo.Image}`
+                  categoryInfo.image &&
+                  String(categoryInfo.image).startsWith("http")
+                    ? categoryInfo.image
+                    : categoryInfo.image
+                    ? `${baseURL}${categoryInfo.image}`
                     : noDataImage
                 }
                 alt={categoryInfo.name}
