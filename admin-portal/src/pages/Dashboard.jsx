@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { FaShoppingCart, FaUsers, FaBox, FaDollarSign } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
 import { adminAPI } from '../utils/api'
 import toast from 'react-hot-toast'
 
 const Dashboard = () => {
+  const navigate = useNavigate()
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalUsers: 0,
@@ -131,7 +133,10 @@ const Dashboard = () => {
       <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 border border-gray-100">
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-gray-800">Recent Orders</h2>
-          <button className="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium">
+          <button 
+            onClick={() => navigate('/orders')}
+            className="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+          >
             View All Orders
           </button>
         </div>

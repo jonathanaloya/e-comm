@@ -204,6 +204,7 @@ const CheckoutPage = () => {
         localStorage.removeItem("cart");
         localStorage.removeItem("cartItems");
         localStorage.removeItem("cartData");
+        sessionStorage.setItem('orderCompleted', 'true');
         console.log('Cart completely cleared after successful online payment verification');
 
         if (fetchCartItem) {
@@ -280,6 +281,7 @@ const CheckoutPage = () => {
         localStorage.removeItem("cart");
         localStorage.removeItem("cartItems");
         localStorage.removeItem("cartData");
+        sessionStorage.setItem('orderCompleted', 'true');
         console.log('Cart completely cleared after successful COD order placement');
 
 

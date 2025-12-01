@@ -137,12 +137,12 @@ const ProductDisplayPage = () => {
                     <p className='font-semibold text-lg lg:text-xl'>{DisplayPriceInShillings(pricewithDiscount(data.price,data.discount))}</p>
                 </div>
                 {
-                  data.discount && (
+                  data.discount > 0 && (
                     <p className='line-through'>{DisplayPriceInShillings(data.price)}</p>
                   )
                 }
                 {
-                  data.discount && (
+                  data.discount > 0 && (
                     <p className="font-bold text-green-600 lg:text-2xl">{data.discount}% <span className='text-base text-neutral-500'>Discount</span></p>
                   )
                 }

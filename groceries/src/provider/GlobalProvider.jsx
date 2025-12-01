@@ -164,7 +164,15 @@ const GlobalProvider = ({ children }) => {
 
   useEffect(() => {
     if (user?._id) {
-      fetchCartItem();
+      // Check if we just completed an order (success page visited)
+      const orderCompleted = sessionStorage.getItem('orderCompleted');
+      if (orderCompleted) {
+        console.log('Order completed detected - ensuring cart is empty');
+        dispatch(handleAddItemCart([]));
+        sessionStorage.removeItem('orderCompleted');
+      } else {
+        fetchCartItem();
+      }
       fetchAddress();
     }
   }, [user]);
