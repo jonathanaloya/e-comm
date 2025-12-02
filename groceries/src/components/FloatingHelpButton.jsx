@@ -89,7 +89,7 @@ const FloatingHelpButton = () => {
                 </div>
                 <div>
                   <p className="font-medium text-sm text-gray-800">WhatsApp</p>
-                  <p className="text-xs text-gray-500">Chat with us instantly</p>
+                  <p className="text-xs text-gray-500">+256 778 149 796</p>
                 </div>
               </button>
 

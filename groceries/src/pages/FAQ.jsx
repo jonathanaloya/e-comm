@@ -319,7 +319,7 @@ const FAQ = () => {
                 <button
                   onClick={() => {
                     const message = encodeURIComponent("Hi! I have a question that wasn't covered in the FAQ.")
-                    window.open(`https://wa.me/256785733366?text=${message}`, '_blank')
+                    window.open(`https://wa.me/256778149796?text=${message}`, '_blank')
                   }}
                   className="px-6 py-3 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-600 hover:text-white transition-colors font-medium"
                 >

@@ -19,7 +19,7 @@ function Footer() {
                     </div>
                 </div>
                 <div className='flex items-center gap-4 justify-center text-2xl'>
-                    <a href='https://facebook.com/freshkatale' target='_blank' rel='noopener noreferrer' className='text-gray-600 hover:text-blue-600 transition-colors duration-300'>
+                    <a href='https://www.facebook.com/profile.php?id=61584727250840' target='_blank' rel='noopener noreferrer' className='text-gray-600 hover:text-blue-600 transition-colors duration-300'>
                         <FaFacebook className='mx-2' />
                     </a>
                     <a href='https://instagram.com/freshkatale' target='_blank' rel='noopener noreferrer' className='text-gray-600 hover:text-pink-500 transition-colors duration-300'>
