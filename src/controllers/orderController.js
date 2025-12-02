@@ -1058,3 +1058,87 @@ export async function calculateDeliveryFeeController(request, response) {
     });
   }
 }
+
+// Admin endpoint to send order notification email
+export async function sendOrderNotificationController(request, response) {
+  try {
+    const { orderId } = request.body;
+
+    if (!orderId) {
+      return response.status(400).json({
+        message: "Order ID is required",
+        error: true,
+        success: false,
+      });
+    }
+
+    // Find the order
+    const order = await Order.findOne({ 
+      $or: [{ orderId }, { mainOrderId: orderId }] 
+    }).populate('delivery_address');
+
+    if (!order) {
+      return response.status(404).json({
+        message: "Order not found",
+        error: true,
+        success: false,
+      });
+    }
+
+    // Get user details
+    const user = await User.findById(order.userId);
+    if (!user || !user.email) {
+      return response.status(404).json({
+        message: "User not found or no email address",
+        error: true,
+        success: false,
+      });
+    }
+
+    // Get all orders with same mainOrderId or orderId for grouped orders
+    const allOrders = await Order.find({
+      $or: [
+        { mainOrderId: order.mainOrderId || order.orderId },
+        { orderId: order.mainOrderId || order.orderId }
+      ]
+    });
+
+    // Format order data for email
+    const orderData = {
+      mainOrderId: order.mainOrderId || order.orderId,
+      orderId: order.mainOrderId || order.orderId,
+      createdAt: order.createdAt,
+      payment_status: order.payment_status,
+      order_status: order.order_status || 'confirmed',
+      totalAmount: allOrders.reduce((sum, o) => sum + (o.totalAmt || 0), 0),
+      deliveryFee: order.deliveryFee || 0,
+      items: allOrders.map(o => ({
+        product_details: o.product_details,
+        quantity: o.quantity || 1,
+        totalAmt: o.totalAmt,
+        name: o.product_details?.name,
+        price: o.totalAmt / (o.quantity || 1)
+      }))
+    };
+
+    // Send order confirmation email
+    await sendOrderConfirmationEmail(orderData, user, order.delivery_address);
+
+    return response.json({
+      message: "Order notification email sent successfully",
+      error: false,
+      success: true,
+      data: {
+        orderId: orderData.orderId,
+        userEmail: user.email,
+        userName: user.name
+      }
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || "Failed to send order notification",
+      error: true,
+      success: false,
+    });
+  }
+}

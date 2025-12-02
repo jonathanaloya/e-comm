@@ -10,7 +10,8 @@ import {
     verifyPaymentController,
     webhookFlutterwaveController, // <<< NEW: Import the Flutterwave webhook controller
     verifyFlutterwaveWebhook, // <<< NEW: Import the verification utility
-    calculateDeliveryFeeController // <<< NEW: Import delivery fee controller
+    calculateDeliveryFeeController, // <<< NEW: Import delivery fee controller
+    sendOrderNotificationController // <<< NEW: Import admin email notification controller
 } from '../controllers/orderController.js' // All from the same controller file now
 
 const orderRouter = Router()
@@ -68,5 +69,8 @@ orderRouter.get("/tracking/:orderId", authMiddleware, async (req, res) => {
         });
     }
 })
+
+// Admin endpoint to send order notification email
+orderRouter.post("/admin/send-notification", sendOrderNotificationController)
 
 export default orderRouter
