@@ -88,6 +88,75 @@ adminRouter.get('/orders', async (req, res) => {
   }
 })
 
+// Alternative endpoint for all-orders
+adminRouter.get('/all-orders', async (req, res) => {
+  try {
+    const orders = await Order.find({})
+      .populate('userId', 'name email mobile')
+      .populate('delivery_address')
+      .sort({ createdAt: -1 })
+      .limit(100)
+
+    res.json({
+      message: 'Orders fetched successfully',
+      success: true,
+      data: orders
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+      error: true,
+      success: false
+    })
+  }
+})
+
+// Get all users for admin
+adminRouter.get('/all-users', async (req, res) => {
+  try {
+    const users = await User.find({})
+      .select('-password -refresh_token')
+      .sort({ createdAt: -1 })
+      .limit(100)
+
+    res.json({
+      message: 'Users fetched successfully',
+      success: true,
+      data: users
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+      error: true,
+      success: false
+    })
+  }
+})
+
+// Get all products for admin
+adminRouter.get('/all-products', async (req, res) => {
+  try {
+    const Product = (await import('../models/productModel.js')).default
+    const products = await Product.find({})
+      .populate('category')
+      .populate('subCategory')
+      .sort({ createdAt: -1 })
+      .limit(100)
+
+    res.json({
+      message: 'Products fetched successfully',
+      success: true,
+      data: products
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+      error: true,
+      success: false
+    })
+  }
+})
+
 // Get notifications for admin (with category filter)
 adminRouter.get('/notifications', async (req, res) => {
   try {
@@ -120,7 +189,7 @@ adminRouter.get('/notifications', async (req, res) => {
       message: 'Notifications fetched successfully',
       success: true,
       data: {
-        notifications,
+        notifications: notifications || [],
         categories: categoryCounts,
         total: notifications.length
       }
