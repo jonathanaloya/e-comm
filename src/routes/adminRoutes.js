@@ -188,11 +188,9 @@ adminRouter.get('/notifications', async (req, res) => {
     res.json({
       message: 'Notifications fetched successfully',
       success: true,
-      data: {
-        notifications: notifications || [],
-        categories: categoryCounts,
-        total: notifications.length
-      }
+      data: notifications || [],
+      categories: categoryCounts,
+      total: notifications.length
     })
   } catch (error) {
     res.status(500).json({

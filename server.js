@@ -72,6 +72,7 @@ app.use('/api/address',addressRouter)
 app.use('/api/order',orderRouter)
 app.use('/api/support',supportRouter)
 app.use('/api/admin',adminRouter)
+app.use('/api/user/admin',adminRouter)
 
 // Error handling middleware
 app.use(notFoundHandler)
