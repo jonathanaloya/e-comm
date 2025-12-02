@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 const notificationSchema = new mongoose.Schema({
     type: {
         type: String,
-        enum: ['support', 'order', 'user', 'system'],
+        enum: ['signup', 'order', 'support', 'user', 'system'],
         required: true
     },
     title: {

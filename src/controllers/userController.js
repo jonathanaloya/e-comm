@@ -155,6 +155,26 @@ export async function verifyRegistrationOtp(req, res) {
     user.login_otp_expiry = null;
     await user.save();
 
+    // Create admin notification for new user signup
+    try {
+      const Notification = (await import('../models/notificationModel.js')).default;
+      const notification = new Notification({
+        type: 'signup',
+        title: `New User Registration`,
+        message: `${user.name} (${user.email}) has successfully registered and verified their account.`,
+        priority: 'medium',
+        data: {
+          userId: user._id,
+          userName: user.name,
+          userEmail: user.email,
+          userMobile: user.mobile
+        }
+      });
+      await notification.save();
+    } catch (notificationError) {
+      console.error('Failed to create signup notification:', notificationError);
+    }
+
     return res.json({
       message: 'Email verified successfully. You can now log in.',
       error: false,
