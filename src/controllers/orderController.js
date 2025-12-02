@@ -163,6 +163,27 @@ export async function CashOnDeliveryOrderController(request, response) {
     );
     console.log("Cash on Delivery: User shopping_cart cleared");
 
+    // Create admin notification for COD order
+    try {
+      const user = await User.findById(userId);
+      const Notification = (await import("../models/notificationModel.js")).default;
+      const notification = new Notification({
+        type: 'order',
+        title: `New COD Order: ${generatedOrder.orderId}`,
+        message: `${user?.name || 'Customer'} placed a Cash on Delivery order worth UGX ${finalTotalAmt.toLocaleString()}.`,
+        priority: 'high',
+        data: {
+          orderId: generatedOrder.orderId,
+          userId: userId,
+          totalAmount: finalTotalAmt,
+          paymentMethod: 'Cash on Delivery'
+        }
+      });
+      await notification.save();
+    } catch (notificationError) {
+      console.error('Failed to create COD order notification:', notificationError);
+    }
+
     if (removeCartItems.deletedCount === 0 && updateInUser.modifiedCount === 0) {
         return response.json({
             message: "Order successfully, but cart was not cleared.",
