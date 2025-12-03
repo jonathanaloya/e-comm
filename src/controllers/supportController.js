@@ -128,7 +128,7 @@ export const replyToSupportTicket = async (request, response) => {
 
         // Send email to user
         try {
-            await sendSupportTicketEmail(ticket, 'reply')
+            await sendSupportTicketReplyEmail(ticket, newResponse)
         } catch (emailError) {
             console.error('Failed to send reply email:', emailError)
         }
