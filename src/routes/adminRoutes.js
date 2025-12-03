@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import Order from '../models/orderModel.js'
 import User from '../models/userModel.js'
+import { sendOrderStatusUpdateEmail, sendAdminOrderResponseEmail } from '../services/emailService.js'
+import authMiddleware from '../middleware/authMiddleware.js'
+import { admin } from '../middleware/admin.js'
 
 const adminRouter = Router()
 
@@ -158,7 +161,7 @@ adminRouter.get('/all-products', async (req, res) => {
 })
 
 // Get notifications for admin (with category filter)
-adminRouter.get('/notifications', async (req, res) => {
+adminRouter.get('/notifications', authMiddleware, admin, async (req, res) => {
   try {
     const { type, limit = 50 } = req.query
     const Notification = (await import('../models/notificationModel.js')).default
@@ -202,21 +205,40 @@ adminRouter.get('/notifications', async (req, res) => {
 })
 
 // Mark notification as read
-adminRouter.patch('/notifications/:id/read', async (req, res) => {
+adminRouter.patch('/notifications/:id/read', authMiddleware, admin, async (req, res) => {
   try {
+    const { id } = req.params
+    
+    if (!id) {
+      return res.status(400).json({
+        message: 'Notification ID is required',
+        error: true,
+        success: false
+      })
+    }
+
     const Notification = (await import('../models/notificationModel.js')).default
-    await Notification.findByIdAndUpdate(req.params.id, { 
+    const notification = await Notification.findByIdAndUpdate(id, { 
       read: true, 
       readAt: new Date() 
-    })
+    }, { new: true })
+
+    if (!notification) {
+      return res.status(404).json({
+        message: 'Notification not found',
+        error: true,
+        success: false
+      })
+    }
 
     res.json({
       message: 'Notification marked as read',
-      success: true
+      success: true,
+      data: notification
     })
   } catch (error) {
     res.status(500).json({
-      message: error.message,
+      message: error.message || 'Failed to mark notification as read',
       error: true,
       success: false
     })
@@ -224,7 +246,7 @@ adminRouter.patch('/notifications/:id/read', async (req, res) => {
 })
 
 // Mark all notifications as read for a category
-adminRouter.patch('/notifications/mark-all-read', async (req, res) => {
+adminRouter.patch('/notifications/mark-all-read', authMiddleware, admin, async (req, res) => {
   try {
     const { type } = req.body
     const Notification = (await import('../models/notificationModel.js')).default
@@ -238,6 +260,188 @@ adminRouter.patch('/notifications/mark-all-read', async (req, res) => {
     res.json({
       message: `All ${type || ''} notifications marked as read`,
       success: true
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+      error: true,
+      success: false
+    })
+  }
+})
+
+// Update order status and send email notification
+adminRouter.patch('/orders/:orderId/status', authMiddleware, admin, async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const { status, adminMessage } = req.body
+
+    if (!status) {
+      return res.status(400).json({
+        message: 'Status is required',
+        error: true,
+        success: false
+      })
+    }
+
+    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        message: 'Invalid status',
+        error: true,
+        success: false
+      })
+    }
+
+    const order = await Order.findById(orderId)
+      .populate('userId', 'name email')
+      .populate('delivery_address')
+
+    if (!order) {
+      return res.status(404).json({
+        message: 'Order not found',
+        error: true,
+        success: false
+      })
+    }
+
+    // Update order status
+    order.order_status = status
+    await order.save()
+
+    // Send email notification to user
+    if (order.userId && order.userId.email) {
+      try {
+        await sendOrderStatusUpdateEmail(order, order.userId, status)
+      } catch (emailError) {
+        console.error('Failed to send status update email:', emailError)
+      }
+    }
+
+    // Add admin message if provided
+    if (adminMessage) {
+      const adminUser = await User.findById(req.userId || req.user?.userId)
+      order.admin_responses.push({
+        adminId: adminUser?._id,
+        adminName: adminUser?.name || 'Admin',
+        message: adminMessage
+      })
+      await order.save()
+    }
+
+    res.json({
+      message: 'Order status updated successfully',
+      success: true,
+      data: {
+        orderId: order._id,
+        status: order.order_status,
+        adminMessage: adminMessage || null
+      }
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+      error: true,
+      success: false
+    })
+  }
+})
+
+// Add admin response to order
+adminRouter.post('/orders/:orderId/response', authMiddleware, admin, async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const { message } = req.body
+
+    if (!message || message.trim().length === 0) {
+      return res.status(400).json({
+        message: 'Response message is required',
+        error: true,
+        success: false
+      })
+    }
+
+    const order = await Order.findById(orderId)
+      .populate('userId', 'name email')
+      .populate('delivery_address')
+
+    if (!order) {
+      return res.status(404).json({
+        message: 'Order not found',
+        error: true,
+        success: false
+      })
+    }
+
+    // Get admin user info
+    const adminUser = await User.findById(req.userId || req.user?.userId)
+    if (!adminUser || adminUser.role !== 'ADMIN') {
+      return res.status(403).json({
+        message: 'Admin access required',
+        error: true,
+        success: false
+      })
+    }
+
+    // Add admin response
+    const response = {
+      adminId: adminUser._id,
+      adminName: adminUser.name,
+      message: message.trim(),
+      createdAt: new Date()
+    }
+
+    order.admin_responses.push(response)
+    await order.save()
+
+    // Send email notification to user
+    if (order.userId && order.userId.email) {
+      try {
+        await sendAdminOrderResponseEmail(order, order.userId, response)
+      } catch (emailError) {
+        console.error('Failed to send response email:', emailError)
+      }
+    }
+
+    res.json({
+      message: 'Response added successfully',
+      success: true,
+      data: {
+        orderId: order._id,
+        response: response
+      }
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+      error: true,
+      success: false
+    })
+  }
+})
+
+// Get order details with responses
+adminRouter.get('/orders/:orderId', authMiddleware, admin, async (req, res) => {
+  try {
+    const { orderId } = req.params
+
+    const order = await Order.findById(orderId)
+      .populate('userId', 'name email mobile')
+      .populate('delivery_address')
+      .populate('admin_responses.adminId', 'name email')
+
+    if (!order) {
+      return res.status(404).json({
+        message: 'Order not found',
+        error: true,
+        success: false
+      })
+    }
+
+    res.json({
+      message: 'Order details fetched successfully',
+      success: true,
+      data: order
     })
   } catch (error) {
     res.status(500).json({

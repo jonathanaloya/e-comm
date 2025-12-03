@@ -18,7 +18,10 @@ const createTransporter = () => {
 const getOrderConfirmationTemplate = (order, user, deliveryAddress) => {
   const itemsHtml = order.items?.map(item => `
     <tr>
-      <td style="padding: 10px; border: 1px solid #ddd;">${item.product_details.name}</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">
+        <strong>${item.product_details.name}</strong><br>
+        <small style="color: #666;">ID: ${item.productId || 'N/A'}</small>
+      </td>
       <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${item.quantity}</td>
       <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">UGX ${item.totalAmt.toLocaleString()}</td>
     </tr>
@@ -130,7 +133,10 @@ const getOrderStatusUpdateTemplate = (order, user, newStatus) => {
 
   const itemsHtml = order.items?.map(item => `
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd;">${item.product_details.name}</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">
+        <strong>${item.product_details.name}</strong><br>
+        <small style="color: #666;">ID: ${item.productId || 'N/A'}</small>
+      </td>
       <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.quantity}</td>
       <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">UGX ${item.totalAmt.toLocaleString()}</td>
     </tr>
@@ -225,6 +231,87 @@ export const sendOrderConfirmationEmail = async (order, user, deliveryAddress) =
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error('Error sending order confirmation email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Send admin order response email
+export const sendAdminOrderResponseEmail = async (order, user, adminResponse) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email service not configured. Skipping email notification.');
+      return { success: false, message: 'Email service not configured' };
+    }
+
+    const responseTemplate = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; }
+            .order-details { background: #f9f9f9; padding: 15px; margin: 20px 0; border-radius: 8px; }
+            .response-box { background: #e8f5e8; border-left: 4px solid #4CAF50; padding: 20px; margin: 20px 0; border-radius: 8px; }
+            .footer { background: #f1f1f1; padding: 20px; text-align: center; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📝 Order Update</h1>
+            </div>
+            
+            <div class="content">
+              <p>Dear ${user.name},</p>
+              
+              <p>We have an update regarding your order:</p>
+              
+              <div class="order-details">
+                <h3>Order Information:</h3>
+                <p><strong>Order ID:</strong> ${order.mainOrderId || order.orderId}</p>
+                <p><strong>Current Status:</strong> ${order.order_status}</p>
+                <p><strong>Update Time:</strong> ${new Date(adminResponse.createdAt).toLocaleString()}</p>
+              </div>
+              
+              <div class="response-box">
+                <h3>Message from ${adminResponse.adminName}:</h3>
+                <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 5px;">
+                  ${adminResponse.message.replace(/\n/g, '<br>')}
+                </div>
+              </div>
+              
+              <p>If you have any questions about your order, please don't hesitate to contact our support team.</p>
+              
+              <p>Thank you for choosing Fresh Katale!</p>
+              
+              <p>Best regards,<br>Fresh Katale Team</p>
+            </div>
+            
+            <div class="footer">
+              <p>&copy; 2024 Fresh Katale. All rights reserved.</p>
+              <p>This is an automated message regarding your order</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: `"Fresh Katale" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `Order Update - ${order.mainOrderId || order.orderId}`,
+      html: responseTemplate
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Admin order response email sent:', result.messageId);
+    
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending admin order response email:', error);
     return { success: false, error: error.message };
   }
 };
@@ -536,7 +623,10 @@ export const sendAdminOrderNotification = async (order, user, deliveryAddress) =
     const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
     const itemsHtml = order.items?.map(item => `
       <tr>
-        <td style="padding: 10px; border: 1px solid #ddd;">${item.product_details.name}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">
+          <strong>${item.product_details.name}</strong><br>
+          <small style="color: #666;">ID: ${item.productId || 'N/A'}</small>
+        </td>
         <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${item.quantity}</td>
         <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">UGX ${item.totalAmt.toLocaleString()}</td>
       </tr>

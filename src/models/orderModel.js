@@ -99,6 +99,27 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    admin_responses: [
+      {
+        adminId: {
+          type: mongoose.Schema.ObjectId,
+          ref: "User",
+        },
+        adminName: {
+          type: String,
+          required: true,
+        },
+        message: {
+          type: String,
+          required: true,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
