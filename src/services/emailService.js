@@ -319,6 +319,13 @@ export const sendAdminOrderResponseEmail = async (order, user, adminResponse) =>
 // Send order status update email
 export const sendOrderStatusUpdateEmail = async (order, user, newStatus) => {
   try {
+    console.log('Attempting to send order status update email:', {
+      orderId: order.mainOrderId || order.orderId,
+      userEmail: user.email,
+      newStatus: newStatus,
+      hasEmailConfig: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS)
+    });
+
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.log('Email service not configured. Skipping email notification.');
       return { success: false, message: 'Email service not configured' };
@@ -837,6 +844,13 @@ export const sendSupportTicketConfirmationEmail = async (ticket) => {
 // Send support ticket reply to user
 export const sendSupportTicketReplyEmail = async (ticket, response) => {
   try {
+    console.log('Attempting to send support ticket reply email:', {
+      ticketId: ticket.ticketId,
+      userEmail: ticket.email,
+      adminName: response.adminName,
+      hasEmailConfig: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS)
+    });
+
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.log('Email service not configured. Skipping support ticket reply email.');
       return { success: false, message: 'Email service not configured' };

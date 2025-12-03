@@ -296,6 +296,7 @@ adminRouter.patch('/orders/:orderId/status', authMiddleware, admin, async (req, 
     const order = await Order.findById(orderId)
       .populate('userId', 'name email')
       .populate('delivery_address')
+      .populate('items.productId', 'name price')
 
     if (!order) {
       return res.status(404).json({
@@ -312,10 +313,14 @@ adminRouter.patch('/orders/:orderId/status', authMiddleware, admin, async (req, 
     // Send email notification to user
     if (order.userId && order.userId.email) {
       try {
-        await sendOrderStatusUpdateEmail(order, order.userId, status)
+        console.log('Sending status update email for order:', order._id)
+        const emailResult = await sendOrderStatusUpdateEmail(order, order.userId, status)
+        console.log('Email result:', emailResult)
       } catch (emailError) {
         console.error('Failed to send status update email:', emailError)
       }
+    } else {
+      console.log('No user email found for order:', order._id)
     }
 
     // Add admin message if provided
@@ -448,6 +453,67 @@ adminRouter.get('/orders/:orderId', authMiddleware, admin, async (req, res) => {
       message: error.message,
       error: true,
       success: false
+    })
+  }
+})
+
+// Test email configuration
+adminRouter.post('/test-email', authMiddleware, admin, async (req, res) => {
+  try {
+    const { testEmailService } = await import('../services/emailService.js')
+    const { email = process.env.EMAIL_USER } = req.body
+
+    console.log('Testing email configuration:', {
+      EMAIL_USER: process.env.EMAIL_USER ? 'Set' : 'Not set',
+      EMAIL_PASS: process.env.EMAIL_PASS ? 'Set' : 'Not set',
+      testEmail: email
+    })
+
+    const nodemailer = await import('nodemailer')
+    const transporter = nodemailer.default.createTransporter({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    })
+
+    // Test connection
+    await transporter.verify()
+    console.log('SMTP connection verified successfully')
+
+    // Send test email
+    const testResult = await transporter.sendMail({
+      from: `"Fresh Katale Test" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Email Configuration Test - Fresh Katale',
+      html: `
+        <h2>Email Test Successful!</h2>
+        <p>This is a test email to verify that the email configuration is working correctly.</p>
+        <p>Sent at: ${new Date().toLocaleString()}</p>
+        <p>From: Fresh Katale Admin System</p>
+      `
+    })
+
+    res.json({
+      message: 'Test email sent successfully',
+      success: true,
+      data: {
+        messageId: testResult.messageId,
+        testEmail: email
+      }
+    })
+  } catch (error) {
+    console.error('Email test failed:', error)
+    res.status(500).json({
+      message: 'Email test failed: ' + error.message,
+      error: true,
+      success: false,
+      details: {
+        errorType: error.name,
+        errorCode: error.code,
+        command: error.command
+      }
     })
   }
 })
