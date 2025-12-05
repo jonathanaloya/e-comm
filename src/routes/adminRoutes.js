@@ -13,6 +13,7 @@ const adminRouter = Router()
 adminRouter.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
+    console.log('Admin login attempt:', { email, hasPassword: !!password })
 
     if (!email || !password) {
       return res.status(400).json({
@@ -23,6 +24,8 @@ adminRouter.post('/login', async (req, res) => {
     }
 
     const user = await User.findOne({ email })
+    console.log('User found:', { exists: !!user, role: user?.role })
+    
     if (!user || user.role !== 'ADMIN') {
       return res.status(401).json({
         message: 'Invalid admin credentials',
@@ -32,6 +35,8 @@ adminRouter.post('/login', async (req, res) => {
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password)
+    console.log('Password valid:', isValidPassword)
+    
     if (!isValidPassword) {
       return res.status(401).json({
         message: 'Invalid admin credentials',
@@ -40,11 +45,16 @@ adminRouter.post('/login', async (req, res) => {
       })
     }
 
+    const tokenPayload = { id: user._id.toString(), role: user.role }
+    console.log('Token payload:', tokenPayload)
+    
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      tokenPayload,
       process.env.SECRET_KEY_ACCESS_TOKEN,
       { expiresIn: '24h' }
     )
+    
+    console.log('Token created:', { tokenLength: token.length, hasSecret: !!process.env.SECRET_KEY_ACCESS_TOKEN })
 
     res.json({
       message: 'Admin login successful',
@@ -60,6 +70,7 @@ adminRouter.post('/login', async (req, res) => {
       }
     })
   } catch (error) {
+    console.error('Admin login error:', error)
     res.status(500).json({
       message: error.message,
       error: true,
@@ -447,6 +458,32 @@ adminRouter.get('/orders/:orderId', authMiddleware, admin, async (req, res) => {
       message: 'Order details fetched successfully',
       success: true,
       data: order
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+      error: true,
+      success: false
+    })
+  }
+})
+
+// Verify token endpoint
+adminRouter.get('/verify-token', authMiddleware, admin, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId)
+    res.json({
+      message: 'Token is valid',
+      success: true,
+      data: {
+        userId: req.userId,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
+      }
     })
   } catch (error) {
     res.status(500).json({
