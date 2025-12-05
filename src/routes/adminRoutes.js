@@ -13,7 +13,6 @@ const adminRouter = Router()
 adminRouter.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
-    console.log('Admin login attempt:', { email, hasPassword: !!password })
 
     if (!email || !password) {
       return res.status(400).json({
@@ -24,7 +23,6 @@ adminRouter.post('/login', async (req, res) => {
     }
 
     const user = await User.findOne({ email })
-    console.log('User found:', { exists: !!user, role: user?.role })
     
     if (!user || user.role !== 'ADMIN') {
       return res.status(401).json({
@@ -35,7 +33,6 @@ adminRouter.post('/login', async (req, res) => {
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password)
-    console.log('Password valid:', isValidPassword)
     
     if (!isValidPassword) {
       return res.status(401).json({
@@ -45,16 +42,11 @@ adminRouter.post('/login', async (req, res) => {
       })
     }
 
-    const tokenPayload = { id: user._id.toString(), role: user.role }
-    console.log('Token payload:', tokenPayload)
-    
     const token = jwt.sign(
-      tokenPayload,
+      { id: user._id.toString(), role: user.role },
       process.env.SECRET_KEY_ACCESS_TOKEN,
       { expiresIn: '24h' }
     )
-    
-    console.log('Token created:', { tokenLength: token.length, hasSecret: !!process.env.SECRET_KEY_ACCESS_TOKEN })
 
     // Set cookie for additional auth support
     res.cookie('accessToken', token, {
@@ -78,7 +70,6 @@ adminRouter.post('/login', async (req, res) => {
       }
     })
   } catch (error) {
-    console.error('Admin login error:', error)
     res.status(500).json({
       message: error.message,
       error: true,
@@ -88,7 +79,7 @@ adminRouter.post('/login', async (req, res) => {
 })
 
 // Get all orders for admin
-adminRouter.get('/orders', async (req, res) => {
+adminRouter.get('/orders', authMiddleware, admin, async (req, res) => {
   try {
     const orders = await Order.find({})
       .populate('userId', 'name email mobile')
@@ -111,7 +102,7 @@ adminRouter.get('/orders', async (req, res) => {
 })
 
 // Alternative endpoint for all-orders
-adminRouter.get('/all-orders', async (req, res) => {
+adminRouter.get('/all-orders', authMiddleware, admin, async (req, res) => {
   try {
     const orders = await Order.find({})
       .populate('userId', 'name email mobile')
@@ -134,7 +125,7 @@ adminRouter.get('/all-orders', async (req, res) => {
 })
 
 // Get all users for admin
-adminRouter.get('/all-users', async (req, res) => {
+adminRouter.get('/all-users', authMiddleware, admin, async (req, res) => {
   try {
     const users = await User.find({})
       .select('-password -refresh_token')
@@ -156,7 +147,7 @@ adminRouter.get('/all-users', async (req, res) => {
 })
 
 // Get all products for admin
-adminRouter.get('/all-products', async (req, res) => {
+adminRouter.get('/all-products', authMiddleware, admin, async (req, res) => {
   try {
     const Product = (await import('../models/productModel.js')).default
     const products = await Product.find({})
