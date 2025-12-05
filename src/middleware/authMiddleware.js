@@ -4,8 +4,14 @@ import crypto from 'crypto'
 const authMiddleware = (req, res, next) => {
   try {
     const token = req.cookies.accessToken || req?.headers?.authorization?.split(' ')[1]
+    console.log('Auth middleware - Token check:', { 
+      hasToken: !!token, 
+      tokenSource: req.cookies.accessToken ? 'cookie' : 'header',
+      url: req.url 
+    })
     
     if(!token){
+      console.log('Auth middleware - No token found')
       return res.status(401).json({
         message : 'Unauthorized. Please login',
         error: true,
@@ -13,10 +19,11 @@ const authMiddleware = (req, res, next) => {
       })
     }
 
-    // Constant-time comparison to prevent timing attacks
     const decoded = jwt.verify(token, process.env.SECRET_KEY_ACCESS_TOKEN)
+    console.log('Auth middleware - Token decoded:', { id: decoded.id, role: decoded.role })
 
     if(!decoded){ 
+      console.log('Auth middleware - Token decode failed')
       return res.status(401).json({
         message : 'Unauthorized. Invalid access token',
         error : true,
@@ -26,6 +33,7 @@ const authMiddleware = (req, res, next) => {
 
     // Validate token structure
     if (!decoded.id || typeof decoded.id !== 'string') {
+      console.log('Auth middleware - Invalid token structure:', decoded)
       return res.status(401).json({
         message: 'Invalid token structure',
         error: true,
@@ -34,10 +42,11 @@ const authMiddleware = (req, res, next) => {
     }
 
     req.userId = decoded.id
+    console.log('Auth middleware - Success, userId set:', req.userId)
     next()
 
   } catch (error) {
-    // Check if it's a token expiration error
+    console.log('Auth middleware - Error:', error.message)
     const isTokenExpired = error.name === 'TokenExpiredError' ||
                           error.message?.includes('expired') ||
                           error.message?.includes('jwt expired');
