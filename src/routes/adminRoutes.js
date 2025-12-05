@@ -468,6 +468,15 @@ adminRouter.get('/orders/:orderId', authMiddleware, admin, async (req, res) => {
   }
 })
 
+// Simple test endpoint without auth
+adminRouter.get('/test', (req, res) => {
+  res.json({
+    message: 'Admin routes working',
+    success: true,
+    timestamp: new Date().toISOString()
+  })
+})
+
 // Verify token endpoint
 adminRouter.get('/verify-token', authMiddleware, admin, async (req, res) => {
   try {
