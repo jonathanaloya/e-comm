@@ -56,6 +56,14 @@ adminRouter.post('/login', async (req, res) => {
     
     console.log('Token created:', { tokenLength: token.length, hasSecret: !!process.env.SECRET_KEY_ACCESS_TOKEN })
 
+    // Set cookie for additional auth support
+    res.cookie('accessToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    })
+
     res.json({
       message: 'Admin login successful',
       success: true,
