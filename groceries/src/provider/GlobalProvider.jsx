@@ -44,6 +44,65 @@ const GlobalProvider = ({ children }) => {
     }
   };
 
+  const migrateGuestCartToUser = async () => {
+    const savedGuestCart = localStorage.getItem('guestCart');
+    if (!savedGuestCart) return;
+    
+    try {
+      const guestItems = JSON.parse(savedGuestCart);
+      console.log('Migrating guest cart items:', guestItems);
+      
+      // Add each guest cart item to user's cart
+      for (const item of guestItems) {
+        try {
+          await Axios({
+            ...SummaryApi.addTocart,
+            data: {
+              productId: item._id
+            }
+          });
+          
+          // If quantity > 1, update the quantity
+          if (item.quantity > 1) {
+            // Get the cart item ID after adding
+            const cartResponse = await Axios({
+              ...SummaryApi.getCartItem,
+            });
+            
+            if (cartResponse.data.success) {
+              const userCartItem = cartResponse.data.data.find(cartItem => 
+                cartItem.productId._id === item._id
+              );
+              
+              if (userCartItem) {
+                await Axios({
+                  ...SummaryApi.updateCartItemQty,
+                  data: {
+                    _id: userCartItem._id,
+                    qty: item.quantity
+                  }
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.log('Error migrating item:', item._id, error);
+        }
+      }
+      
+      // Clear guest cart after migration
+      localStorage.removeItem('guestCart');
+      setGuestCartItems([]);
+      
+      // Fetch updated cart
+      fetchCartItem();
+      
+      toast.success('Cart items transferred successfully!');
+    } catch (error) {
+      console.error('Error migrating guest cart:', error);
+    }
+  };
+
   const updateCartItem = async (id, qty) => {
     try {
       const response = await Axios({
@@ -88,11 +147,8 @@ const GlobalProvider = ({ children }) => {
   useEffect(() => {
     if (!user?._id) {
       const savedCart = localStorage.getItem('guestCart');
-      console.log('Loading guest cart from localStorage:', savedCart);
       if (savedCart) {
-        const parsedCart = JSON.parse(savedCart);
-        console.log('Parsed guest cart:', parsedCart);
-        setGuestCartItems(parsedCart);
+        setGuestCartItems(JSON.parse(savedCart));
       }
     } else {
       // Clear guest cart when user logs in
@@ -104,7 +160,6 @@ const GlobalProvider = ({ children }) => {
   useEffect(() => {
     const savedCart = localStorage.getItem('guestCart');
     if (savedCart && !user?._id) {
-      console.log('Initial guest cart load:', savedCart);
       setGuestCartItems(JSON.parse(savedCart));
     }
   }, []);
@@ -210,7 +265,13 @@ const GlobalProvider = ({ children }) => {
         dispatch(handleAddItemCart([]));
         sessionStorage.removeItem('orderCompleted');
       } else {
-        fetchCartItem();
+        // Check if there are guest cart items to migrate
+        const savedGuestCart = localStorage.getItem('guestCart');
+        if (savedGuestCart && JSON.parse(savedGuestCart).length > 0) {
+          migrateGuestCartToUser();
+        } else {
+          fetchCartItem();
+        }
       }
       fetchAddress();
     }
@@ -230,6 +291,7 @@ const GlobalProvider = ({ children }) => {
         handleLogoutOut,
         guestCartItems,
         setGuestCartItems,
+        migrateGuestCartToUser,
       }}
     >
       {children}
