@@ -5,9 +5,9 @@ import { csrfProtection } from "../middleware/csrfProtection.js"
 
 const cartRouter = Router()
 
-cartRouter.post('/create', addToCartItemController)
-cartRouter.get("/get",getCartItemController)
-cartRouter.put('/update-qty', updateCartItemQtyController)
-cartRouter.delete('/delete-cart-item', deleteCartItemQtyController)
+cartRouter.post('/create', authMiddleware, addToCartItemController)
+cartRouter.get("/get", authMiddleware, getCartItemController)
+cartRouter.put('/update-qty', authMiddleware, updateCartItemQtyController)
+cartRouter.delete('/delete-cart-item', authMiddleware, deleteCartItemQtyController)
 
 export default cartRouter
