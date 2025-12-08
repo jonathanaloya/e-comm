@@ -25,17 +25,22 @@ const GlobalProvider = ({ children }) => {
 
   const fetchCartItem = async () => {
     try {
+      console.log('Fetching cart items...');
       const response = await Axios({
         ...SummaryApi.getCartItem,
       });
       const { data: responseData } = response;
+      console.log('Cart fetch response:', responseData);
 
       if (responseData.success) {
+        console.log('Updating Redux store with cart items:', responseData.data);
         dispatch(handleAddItemCart(responseData.data || []));
       } else {
+        console.log('Cart fetch failed, clearing cart');
         dispatch(handleAddItemCart([]));
       }
     } catch (error) {
+      console.error('Error fetching cart:', error);
       if (error.response?.status === 401 && error.response?.data?.sessionExpired) {
         dispatch(logout());
         dispatch(setOrder([]));
@@ -104,11 +109,15 @@ const GlobalProvider = ({ children }) => {
       localStorage.removeItem('guestCart');
       setGuestCartItems([]);
       
-      // Wait a bit then fetch updated cart
+      // Immediately fetch updated cart
+      console.log('Fetching updated cart after migration');
+      await fetchCartItem();
+      
+      // Force a second fetch after a delay to ensure UI updates
       setTimeout(() => {
-        console.log('Fetching updated cart after migration');
+        console.log('Second cart fetch for UI update');
         fetchCartItem();
-      }, 500);
+      }, 200);
       
       toast.success('Cart items transferred successfully!');
     } catch (error) {
@@ -180,6 +189,12 @@ const GlobalProvider = ({ children }) => {
   // Calculate totals for both authenticated and guest users
   useEffect(() => {
     const currentCart = user?._id ? cartItem : guestCartItems;
+    console.log('Calculating totals for cart:', {
+      userId: user?._id,
+      cartItem,
+      guestCartItems,
+      currentCart
+    });
     
     const qty = currentCart.reduce((preve, curr) => {
       return preve + curr.quantity;
@@ -202,6 +217,8 @@ const GlobalProvider = ({ children }) => {
       return preve + productData?.price * curr.quantity;
     }, 0);
     setNotDiscountTotalPrice(notDiscountPrice);
+    
+    console.log('Updated totals:', { qty, tPrice, notDiscountPrice });
   }, [cartItem, guestCartItems, user]);
 
   const handleLogoutOut = async () => {
