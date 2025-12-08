@@ -30,9 +30,9 @@ const DisplayCartItem = ({close}) => {
         <div className='bg-white w-full max-w-sm min-h-screen max-h-screen overflow-hidden flex flex-col'>
             <div className='flex items-center p-4 shadow-md gap-3 justify-between'>
                 <h2 className='font-semibold'>Cart</h2>
-                <Link to={"/"} className='lg:hidden'>
+                <button onClick={close} className='lg:hidden'>
                     <IoClose size={25}/>
-                </Link>
+                </button>
                 <button onClick={close} className='hidden lg:block'>
                     <IoClose size={25}/>
                 </button>

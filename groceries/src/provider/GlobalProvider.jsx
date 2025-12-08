@@ -86,7 +86,7 @@ const GlobalProvider = ({ children }) => {
             }
           }
         } catch (error) {
-          console.log('Error migrating item:', item._id, error);
+          // Silently handle migration errors for individual items
         }
       }
       
