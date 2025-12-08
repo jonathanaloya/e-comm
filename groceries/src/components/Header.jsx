@@ -22,8 +22,11 @@ const Header = () => {
   const cartItem = useSelector((state) => state.cartItem.cart);
   // const [totalPrice, setTotalPrice] = useState(0);
   // const [totalQty, setTotalQty] = useState(0);
-  const{totalPrice, totalQty} = useGlobalContext();
+  const{totalPrice, totalQty, guestCartItems} = useGlobalContext();
   const[openCartSection, setOpenCartSection] = useState(false);
+  
+  // Use guest cart items if user is not logged in
+  const currentCartItems = user?._id ? cartItem : guestCartItems;
 
   const handleCloseUserMenu = () => {
     setOpenUserMenu(false);
@@ -134,7 +137,7 @@ const Header = () => {
                 <div className="animate-bounce">
                   <BsCart4 size={28} />
                 </div>
-                {cartItem[0] ? (
+                {currentCartItems[0] ? (
                   <div>
                     <p>{totalQty} Items</p>
                     <p>{DisplayPriceInShillings(totalPrice)}</p>

@@ -7,13 +7,17 @@ import { FaCaretRight } from "react-icons/fa";
 import { useSelector } from 'react-redux'
 
 const CartMobileLink = () => {
-    const { totalPrice, totalQty } = useGlobalContext()
+    const { totalPrice, totalQty, guestCartItems } = useGlobalContext()
     const cartItem = useSelector(state => state.cartItem.cart)
+    const user = useSelector(state => state.user)
+    
+    // Use guest cart items if user is not logged in
+    const currentCartItems = user?._id ? cartItem : guestCartItems
 
   return (
     <>
         {
-            cartItem[0] && (
+            currentCartItems[0] && (
             <div className='fixed bottom-4 left-4 right-4 p-2 z-40 pb-safe'>
             <div className='bg-green-600 px-4 py-3 rounded-lg text-neutral-100 text-sm flex items-center justify-between gap-3 lg:hidden shadow-lg mb-2'>
                     <div className='flex items-center gap-2'>
