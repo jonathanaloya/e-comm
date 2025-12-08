@@ -21,6 +21,7 @@ const GlobalProvider = ({ children }) => {
   const [totalQty, setTotalQty] = useState(0);
   const cartItem = useSelector((state) => state.cartItem.cart);
   const user = useSelector((state) => state?.user);
+  const [guestCartItems, setGuestCartItems] = useState([]);
 
   const fetchCartItem = async () => {
     try {
@@ -83,27 +84,42 @@ const GlobalProvider = ({ children }) => {
     }
   };
 
+  // Load guest cart from localStorage
   useEffect(() => {
-    const qty = cartItem.reduce((preve, curr) => {
+    if (!user?._id) {
+      const savedCart = localStorage.getItem('guestCart');
+      if (savedCart) {
+        setGuestCartItems(JSON.parse(savedCart));
+      }
+    }
+  }, [user]);
+
+  // Calculate totals for both authenticated and guest users
+  useEffect(() => {
+    const currentCart = user?._id ? cartItem : guestCartItems;
+    
+    const qty = currentCart.reduce((preve, curr) => {
       return preve + curr.quantity;
     }, 0);
     setTotalQty(qty);
 
-    const tPrice = cartItem.reduce((preve, curr) => {
+    const tPrice = currentCart.reduce((preve, curr) => {
+      const productData = user?._id ? curr?.productId : curr;
       const priceAfterDiscount = pricewithDiscount(
-        curr?.productId?.price,
-        curr?.productId?.discount
+        productData?.price,
+        productData?.discount
       );
 
       return preve + priceAfterDiscount * curr.quantity;
     }, 0);
     setTotalPrice(tPrice);
 
-    const notDiscountPrice = cartItem.reduce((preve, curr) => {
-      return preve + curr?.productId?.price * curr.quantity;
+    const notDiscountPrice = currentCart.reduce((preve, curr) => {
+      const productData = user?._id ? curr?.productId : curr;
+      return preve + productData?.price * curr.quantity;
     }, 0);
     setNotDiscountTotalPrice(notDiscountPrice);
-  }, [cartItem]);
+  }, [cartItem, guestCartItems, user]);
 
   const handleLogoutOut = async () => {
     try {
@@ -197,6 +213,8 @@ const GlobalProvider = ({ children }) => {
         notDiscountTotalPrice,
         fetchOrder,
         handleLogoutOut,
+        guestCartItems,
+        setGuestCartItems,
       }}
     >
       {children}

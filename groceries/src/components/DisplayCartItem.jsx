@@ -11,10 +11,13 @@ import imageEmpty from '../assets/empty_cart.jpeg'
 import toast from 'react-hot-toast'
 
 const DisplayCartItem = ({close}) => {
-    const { notDiscountTotalPrice, totalPrice ,totalQty} = useGlobalContext()
+    const { notDiscountTotalPrice, totalPrice ,totalQty, guestCartItems} = useGlobalContext()
     const cartItem  = useSelector(state => state.cartItem.cart)
     const user = useSelector(state => state.user)
     const navigate = useNavigate()
+    
+    // Use guest cart items if user is not logged in
+    const currentCartItems = user?._id ? cartItem : guestCartItems
 
     const redirectToCheckoutPage = ()=>{
         if(close){
@@ -38,7 +41,7 @@ const DisplayCartItem = ({close}) => {
             <div className='flex-1 bg-blue-50 p-2 flex flex-col gap-4 overflow-y-auto'>
                 {/***display items */}
                 {
-                    cartItem[0] ? (
+                    currentCartItems[0] ? (
                         <>
                             <div className='flex items-center justify-between px-4 py-2 bg-blue-100 text-blue-500 rounded-full'>
                                     <p>Your total savings</p>
@@ -46,23 +49,24 @@ const DisplayCartItem = ({close}) => {
                             </div>
                             <div className='bg-white rounded-lg p-4 grid gap-5 flex-1 overflow-y-auto'>
                                     {
-                                        cartItem[0] && (
-                                            cartItem.map((item,index)=>{
+                                        currentCartItems[0] && (
+                                            currentCartItems.map((item,index)=>{
+                                                const productData = user?._id ? item?.productId : item;
                                                 return(
-                                                    <div key={item?._id+"cartItemDisplay"} className='flex  w-full gap-4'>
+                                                    <div key={(item?._id || item?.id || index)+"cartItemDisplay"} className='flex  w-full gap-4'>
                                                         <div className='w-16 h-16 min-h-16 min-w-16 border rounded'>
                                                             <img
-                                                                src={item?.productId?.image[0]}
+                                                                src={productData?.image[0]}
                                                                 className='object-scale-down'
                                                             />
                                                         </div>
                                                         <div className='w-full max-w-sm text-xs'>
-                                                            <p className='text-xs text-ellipsis line-clamp-2'>{item?.productId?.name}</p>
-                                                            <p className='text-neutral-400'>{item?.productId?.unit}</p>
-                                                            <p className='font-semibold'>{DisplayPriceInShillings(pricewithDiscount(item?.productId?.price,item?.productId?.discount))}</p>
+                                                            <p className='text-xs text-ellipsis line-clamp-2'>{productData?.name}</p>
+                                                            <p className='text-neutral-400'>{productData?.unit}</p>
+                                                            <p className='font-semibold'>{DisplayPriceInShillings(pricewithDiscount(productData?.price,productData?.discount))}</p>
                                                         </div>
                                                         <div>
-                                                            <AddToCartButton data={item?.productId}/>
+                                                            <AddToCartButton data={productData}/>
                                                         </div>
                                                     </div>
                                                 )
@@ -105,7 +109,7 @@ const DisplayCartItem = ({close}) => {
             </div>
 
             {
-                cartItem[0] && (
+                currentCartItems[0] && (
                     <div className='p-2 border-t bg-white pb-safe'>
                         <Link to="/cart" onClick={close} className='block bg-gray-100 text-gray-700 px-4 py-2 rounded text-center mb-2 hover:bg-gray-200 transition-colors'>
                             View Cart

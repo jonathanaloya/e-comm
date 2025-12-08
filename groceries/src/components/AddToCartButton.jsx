@@ -9,16 +9,35 @@ import { useSelector } from 'react-redux'
 import { FaMinus, FaPlus } from "react-icons/fa6";
 
 const AddToCartButton = ({ data }) => {
-    const { fetchCartItem, updateCartItem, deleteCartItem } = useGlobalContext()
+    const { fetchCartItem, updateCartItem, deleteCartItem, guestCartItems, setGuestCartItems } = useGlobalContext()
     const [loading, setLoading] = useState(false)
     const cartItem = useSelector(state => state.cartItem.cart)
+    const user = useSelector(state => state.user)
     const [isAvailableCart, setIsAvailableCart] = useState(false)
     const [qty, setQty] = useState(0)
     const [cartItemDetails,setCartItemsDetails] = useState()
+    
+    const currentCartItems = user?._id ? cartItem : guestCartItems
 
     const handleADDTocart = async (e) => {
         e.preventDefault()
         e.stopPropagation()
+
+        if (!user?._id) {
+            // Guest user - add to localStorage
+            const existingItem = guestCartItems.find(item => item._id === data._id)
+            if (existingItem) {
+                toast.error("Item already in cart")
+                return
+            }
+            
+            const newCartItem = { ...data, quantity: 1 }
+            const updatedCart = [...guestCartItems, newCartItem]
+            setGuestCartItems(updatedCart)
+            localStorage.setItem('guestCart', JSON.stringify(updatedCart))
+            toast.success("Item added to cart")
+            return
+        }
 
         try {
             setLoading(true)
@@ -48,18 +67,36 @@ const AddToCartButton = ({ data }) => {
 
     //checking this item in cart or not
     useEffect(() => {
-        const checkingitem = cartItem.some(item => item.productId._id === data._id)
-        setIsAvailableCart(checkingitem)
-
-        const product = cartItem.find(item => item.productId._id === data._id)
-        setQty(product?.quantity)
-        setCartItemsDetails(product)
-    }, [data, cartItem])
+        if (user?._id) {
+            const checkingitem = cartItem.some(item => item.productId._id === data._id)
+            setIsAvailableCart(checkingitem)
+            const product = cartItem.find(item => item.productId._id === data._id)
+            setQty(product?.quantity)
+            setCartItemsDetails(product)
+        } else {
+            const checkingitem = guestCartItems.some(item => item._id === data._id)
+            setIsAvailableCart(checkingitem)
+            const product = guestCartItems.find(item => item._id === data._id)
+            setQty(product?.quantity)
+            setCartItemsDetails(product)
+        }
+    }, [data, cartItem, guestCartItems, user])
 
 
     const increaseQty = async(e) => {
         e.preventDefault()
         e.stopPropagation()
+        
+        if (!user?._id) {
+            // Guest user - update localStorage
+            const updatedCart = guestCartItems.map(item => 
+                item._id === data._id ? { ...item, quantity: item.quantity + 1 } : item
+            )
+            setGuestCartItems(updatedCart)
+            localStorage.setItem('guestCart', JSON.stringify(updatedCart))
+            toast.success("Item added")
+            return
+        }
     
        const response = await  updateCartItem(cartItemDetails?._id,qty+1)
         
@@ -71,6 +108,25 @@ const AddToCartButton = ({ data }) => {
     const decreaseQty = async(e) => {
         e.preventDefault()
         e.stopPropagation()
+        
+        if (!user?._id) {
+            // Guest user - update localStorage
+            if(qty === 1){
+                const updatedCart = guestCartItems.filter(item => item._id !== data._id)
+                setGuestCartItems(updatedCart)
+                localStorage.setItem('guestCart', JSON.stringify(updatedCart))
+                toast.success("Item removed")
+            } else {
+                const updatedCart = guestCartItems.map(item => 
+                    item._id === data._id ? { ...item, quantity: item.quantity - 1 } : item
+                )
+                setGuestCartItems(updatedCart)
+                localStorage.setItem('guestCart', JSON.stringify(updatedCart))
+                toast.success("Item removed")
+            }
+            return
+        }
+        
         if(qty === 1){
             deleteCartItem(cartItemDetails?._id)
         }else{
