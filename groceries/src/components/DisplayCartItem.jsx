@@ -107,6 +107,9 @@ const DisplayCartItem = ({close}) => {
             {
                 cartItem[0] && (
                     <div className='p-2 border-t bg-white pb-safe'>
+                        <Link to="/cart" onClick={close} className='block bg-gray-100 text-gray-700 px-4 py-2 rounded text-center mb-2 hover:bg-gray-200 transition-colors'>
+                            View Cart
+                        </Link>
                         <div className='bg-green-700 text-neutral-100 px-4 font-bold text-base py-4 rounded flex items-center gap-4 justify-between mb-2'>
                             <div>
                                 {DisplayPriceInShillings(totalPrice)}
