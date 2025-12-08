@@ -549,8 +549,8 @@ const CheckoutPage = () => {
               </div>
             ) : (
               <>
-                {/* Online Payment Button */}
-                <button
+                {/* TEMPORARILY DISABLED - Online Payment Button */}
+                {/* <button
                   className={`py-2 px-4 font-semibold text-white rounded flex items-center justify-center gap-2 ${
                     isProcessing && paymentMethod === "ONLINE"
                       ? "bg-gray-400 cursor-not-allowed"
@@ -577,7 +577,7 @@ const CheckoutPage = () => {
                   ) : (
                     "Pay Online"
                   )}
-                </button>
+                </button> */}
                 {/* Cash on Delivery Button */}
                 <button
                   className={`py-2 px-4 border-2 font-semibold rounded flex items-center justify-center gap-2 ${

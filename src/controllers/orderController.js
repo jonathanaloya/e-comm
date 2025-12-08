@@ -414,7 +414,9 @@ function formatUgandaPhoneNumber(phoneNumber) {
   return "256700000000";
 }
 
-export async function paymentController(request, response) {
+// TEMPORARILY DISABLED - Online payment functionality
+// export async function paymentController(request, response) {
+/*
   try {
     // Check if Flutterwave is properly initialized
     if (!flw) {
@@ -623,8 +625,11 @@ export async function paymentController(request, response) {
     });
   }
 }
+*/
 
-export async function verifyPaymentController(request, response) {
+// TEMPORARILY DISABLED - Payment verification functionality
+// export async function verifyPaymentController(request, response) {
+/*
   try {
     // transaction_id is from Flutterwave redirect (query param usually)
     // tx_ref is also from Flutterwave redirect (query param usually)
@@ -849,6 +854,7 @@ export async function verifyPaymentController(request, response) {
     });
   }
 }
+*/
 
 // <<< NEW: Exporting this helper function so the webhook handler can use it
 export const getOrderProductItems = async ({
@@ -894,7 +900,9 @@ export const getOrderProductItems = async ({
 
 // <<< REMOVED: The old webhookStripe function is removed.
 // <<< NEW: This is the combined Flutterwave webhook handler function.
-export async function webhookFlutterwaveController(request, response) {
+// TEMPORARILY DISABLED - Webhook functionality
+// export async function webhookFlutterwaveController(request, response) {
+/*
   try {
     // Verify request signature
     const hash = crypto
@@ -961,6 +969,7 @@ export async function webhookFlutterwaveController(request, response) {
     return response.status(500).json({ message: "Webhook processing failed" });
   }
 }
+*/
 
 export async function getOrderDetailsController(request, response) {
   try {
