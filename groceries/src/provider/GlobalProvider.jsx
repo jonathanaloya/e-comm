@@ -50,31 +50,41 @@ const GlobalProvider = ({ children }) => {
     
     try {
       const guestItems = JSON.parse(savedGuestCart);
-      console.log('Migrating guest cart items:', guestItems);
+      console.log('Starting migration for items:', guestItems);
       
       // Add each guest cart item to user's cart
       for (const item of guestItems) {
         try {
-          await Axios({
+          console.log('Adding item to cart:', item._id);
+          const addResponse = await Axios({
             ...SummaryApi.addTocart,
             data: {
               productId: item._id
             }
           });
           
+          console.log('Add response:', addResponse.data);
+          
           // If quantity > 1, update the quantity
-          if (item.quantity > 1) {
+          if (item.quantity > 1 && addResponse.data.success && !addResponse.data.guest) {
+            console.log('Updating quantity for item:', item._id, 'to:', item.quantity);
+            // Small delay to ensure item is added
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             // Get the cart item ID after adding
             const cartResponse = await Axios({
               ...SummaryApi.getCartItem,
             });
             
-            if (cartResponse.data.success) {
+            console.log('Cart response:', cartResponse.data);
+            
+            if (cartResponse.data.success && !cartResponse.data.guest) {
               const userCartItem = cartResponse.data.data.find(cartItem => 
                 cartItem.productId._id === item._id
               );
               
               if (userCartItem) {
+                console.log('Found cart item, updating quantity:', userCartItem._id);
                 await Axios({
                   ...SummaryApi.updateCartItemQty,
                   data: {
@@ -94,8 +104,11 @@ const GlobalProvider = ({ children }) => {
       localStorage.removeItem('guestCart');
       setGuestCartItems([]);
       
-      // Fetch updated cart
-      fetchCartItem();
+      // Wait a bit then fetch updated cart
+      setTimeout(() => {
+        console.log('Fetching updated cart after migration');
+        fetchCartItem();
+      }, 500);
       
       toast.success('Cart items transferred successfully!');
     } catch (error) {
