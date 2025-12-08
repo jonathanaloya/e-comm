@@ -3,7 +3,7 @@ import User from "../models/userModel.js";
 
 export const addToCartItemController = async(req,res)=>{
     try {
-        const userId = req.userId
+        const userId = req.userId // May be undefined for guest users
         const { productId } = req.body
         
         if(!productId){
@@ -14,6 +14,17 @@ export const addToCartItemController = async(req,res)=>{
             })
         }
 
+        // For guest users, return success (frontend will handle localStorage)
+        if(!userId){
+            return res.json({
+                message : "Item added to cart (guest mode)",
+                error : false,
+                success : true,
+                guest : true
+            })
+        }
+
+        // For authenticated users, save to database
         const checkItemCart = await Cart.findOne({
             userId : userId,
             productId : productId
@@ -59,6 +70,16 @@ export const getCartItemController = async(req,res)=>{
     try {
         const userId = req.userId
 
+        // For guest users, return empty cart (frontend handles localStorage)
+        if(!userId){
+            return res.json({
+                data : [],
+                error : false,
+                success : true,
+                guest : true
+            })
+        }
+
         const cartItem =  await Cart.find({
             userId : userId
         }).populate('productId')
@@ -86,6 +107,16 @@ export const updateCartItemQtyController = async(req,res)=>{
         if(!_id ||  !qty){
             return res.status(400).json({
                 message : "Provide Cart id and quantity",
+            })
+        }
+
+        // For guest users, return success (frontend handles localStorage)
+        if(!userId){
+            return res.json({
+                message : "Cart updated successfully (guest mode)",
+                success : true,
+                error : false,
+                guest : true
             })
         }
 
@@ -122,6 +153,16 @@ export const deleteCartItemQtyController = async(req,res)=>{
             message : "Provide Cart id",
             error : true,
             success : false
+        })
+      }
+
+      // For guest users, return success (frontend handles localStorage)
+      if(!userId){
+        return res.json({
+          message : "Cart item deleted successfully (guest mode)",
+          error : false,
+          success : true,
+          guest : true
         })
       }
 
