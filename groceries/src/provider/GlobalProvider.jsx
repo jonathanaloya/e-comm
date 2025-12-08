@@ -113,6 +113,16 @@ const GlobalProvider = ({ children }) => {
       console.log('Fetching updated cart after migration');
       await fetchCartItem();
       
+      // Direct check of what's in the database
+      try {
+        const directCartCheck = await Axios({
+          ...SummaryApi.getCartItem,
+        });
+        console.log('Direct cart check after migration:', directCartCheck.data);
+      } catch (error) {
+        console.error('Direct cart check failed:', error);
+      }
+      
       // Force a second fetch after a delay to ensure UI updates
       setTimeout(() => {
         console.log('Second cart fetch for UI update');
@@ -297,9 +307,12 @@ const GlobalProvider = ({ children }) => {
       } else {
         // Check if there are guest cart items to migrate
         const savedGuestCart = localStorage.getItem('guestCart');
+        console.log('Checking for guest cart migration:', savedGuestCart);
         if (savedGuestCart && JSON.parse(savedGuestCart).length > 0) {
+          console.log('Starting migration process');
           migrateGuestCartToUser();
         } else {
+          console.log('No guest cart found, fetching user cart');
           fetchCartItem();
         }
       }
@@ -322,6 +335,21 @@ const GlobalProvider = ({ children }) => {
         guestCartItems,
         setGuestCartItems,
         migrateGuestCartToUser,
+        testAddToCart: async (productId) => {
+          console.log('Testing add to cart for product:', productId);
+          try {
+            const response = await Axios({
+              ...SummaryApi.addTocart,
+              data: { productId }
+            });
+            console.log('Test add response:', response.data);
+            if (response.data.success) {
+              fetchCartItem();
+            }
+          } catch (error) {
+            console.error('Test add error:', error);
+          }
+        },
       }}
     >
       {children}
