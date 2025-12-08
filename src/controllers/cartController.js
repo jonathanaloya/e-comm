@@ -3,7 +3,7 @@ import User from "../models/userModel.js";
 
 export const addToCartItemController = async(req,res)=>{
     try {
-        const userId = req.userId // May be undefined for guest users
+        const userId = req.userId
         const { productId } = req.body
         
         if(!productId){
@@ -14,17 +14,16 @@ export const addToCartItemController = async(req,res)=>{
             })
         }
 
-        // For guest users, return success (frontend will handle localStorage)
+        // For guest users, return success (frontend handles localStorage)
         if(!userId){
             return res.json({
-                message : "Item added to cart (guest mode)",
+                message : "Item added to cart",
                 error : false,
                 success : true,
                 guest : true
             })
         }
 
-        // For authenticated users, save to database
         const checkItemCart = await Cart.findOne({
             userId : userId,
             productId : productId
@@ -113,7 +112,7 @@ export const updateCartItemQtyController = async(req,res)=>{
         // For guest users, return success (frontend handles localStorage)
         if(!userId){
             return res.json({
-                message : "Cart updated successfully (guest mode)",
+                message : "Cart updated successfully",
                 success : true,
                 error : false,
                 guest : true
@@ -145,7 +144,7 @@ export const updateCartItemQtyController = async(req,res)=>{
 
 export const deleteCartItemQtyController = async(req,res)=>{
     try {
-      const userId = req.userId // middleware
+      const userId = req.userId
       const { _id } = req.body 
       
       if(!_id){
@@ -159,7 +158,7 @@ export const deleteCartItemQtyController = async(req,res)=>{
       // For guest users, return success (frontend handles localStorage)
       if(!userId){
         return res.json({
-          message : "Cart item deleted successfully (guest mode)",
+          message : "Cart item deleted successfully",
           error : false,
           success : true,
           guest : true
