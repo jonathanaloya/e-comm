@@ -25,22 +25,17 @@ const GlobalProvider = ({ children }) => {
 
   const fetchCartItem = async () => {
     try {
-      console.log('Fetching cart items...');
       const response = await Axios({
         ...SummaryApi.getCartItem,
       });
       const { data: responseData } = response;
-      console.log('Cart fetch response:', responseData);
 
       if (responseData.success) {
-        console.log('Updating Redux store with cart items:', responseData.data);
         dispatch(handleAddItemCart(responseData.data || []));
       } else {
-        console.log('Cart fetch failed, clearing cart');
         dispatch(handleAddItemCart([]));
       }
     } catch (error) {
-      console.error('Error fetching cart:', error);
       if (error.response?.status === 401 && error.response?.data?.sessionExpired) {
         dispatch(logout());
         dispatch(setOrder([]));
@@ -55,12 +50,10 @@ const GlobalProvider = ({ children }) => {
     
     try {
       const guestItems = JSON.parse(savedGuestCart);
-      console.log('Starting migration for items:', guestItems);
       
       // Add each guest cart item to user's cart
       for (const item of guestItems) {
         try {
-          console.log('Adding item to cart:', item._id);
           const addResponse = await Axios({
             ...SummaryApi.addTocart,
             data: {
@@ -68,28 +61,20 @@ const GlobalProvider = ({ children }) => {
             }
           });
           
-          console.log('Add response:', addResponse.data);
-          
           // If quantity > 1, update the quantity
-          if (item.quantity > 1 && addResponse.data.success && !addResponse.data.guest) {
-            console.log('Updating quantity for item:', item._id, 'to:', item.quantity);
-            // Small delay to ensure item is added
+          if (item.quantity > 1 && addResponse.data.success) {
             await new Promise(resolve => setTimeout(resolve, 100));
             
-            // Get the cart item ID after adding
             const cartResponse = await Axios({
               ...SummaryApi.getCartItem,
             });
             
-            console.log('Cart response:', cartResponse.data);
-            
-            if (cartResponse.data.success && !cartResponse.data.guest) {
+            if (cartResponse.data.success) {
               const userCartItem = cartResponse.data.data.find(cartItem => 
                 cartItem.productId._id === item._id
               );
               
               if (userCartItem) {
-                console.log('Found cart item, updating quantity:', userCartItem._id);
                 await Axios({
                   ...SummaryApi.updateCartItemQty,
                   data: {
@@ -109,23 +94,10 @@ const GlobalProvider = ({ children }) => {
       localStorage.removeItem('guestCart');
       setGuestCartItems([]);
       
-      // Immediately fetch updated cart
-      console.log('Fetching updated cart after migration');
+      // Fetch updated cart after migration
       await fetchCartItem();
       
-      // Direct check of what's in the database
-      try {
-        const directCartCheck = await Axios({
-          ...SummaryApi.getCartItem,
-        });
-        console.log('Direct cart check after migration:', directCartCheck.data);
-      } catch (error) {
-        console.error('Direct cart check failed:', error);
-      }
-      
-      // Force a second fetch after a delay to ensure UI updates
       setTimeout(() => {
-        console.log('Second cart fetch for UI update');
         fetchCartItem();
       }, 200);
       
@@ -199,12 +171,6 @@ const GlobalProvider = ({ children }) => {
   // Calculate totals for both authenticated and guest users
   useEffect(() => {
     const currentCart = user?._id ? cartItem : guestCartItems;
-    console.log('Calculating totals for cart:', {
-      userId: user?._id,
-      cartItem,
-      guestCartItems,
-      currentCart
-    });
     
     const qty = currentCart.reduce((preve, curr) => {
       return preve + curr.quantity;
@@ -227,8 +193,6 @@ const GlobalProvider = ({ children }) => {
       return preve + productData?.price * curr.quantity;
     }, 0);
     setNotDiscountTotalPrice(notDiscountPrice);
-    
-    console.log('Updated totals:', { qty, tPrice, notDiscountPrice });
   }, [cartItem, guestCartItems, user]);
 
   const handleLogoutOut = async () => {
@@ -307,12 +271,9 @@ const GlobalProvider = ({ children }) => {
       } else {
         // Check if there are guest cart items to migrate
         const savedGuestCart = localStorage.getItem('guestCart');
-        console.log('Checking for guest cart migration:', savedGuestCart);
         if (savedGuestCart && JSON.parse(savedGuestCart).length > 0) {
-          console.log('Starting migration process');
           migrateGuestCartToUser();
         } else {
-          console.log('No guest cart found, fetching user cart');
           fetchCartItem();
         }
       }
@@ -335,21 +296,7 @@ const GlobalProvider = ({ children }) => {
         guestCartItems,
         setGuestCartItems,
         migrateGuestCartToUser,
-        testAddToCart: async (productId) => {
-          console.log('Testing add to cart for product:', productId);
-          try {
-            const response = await Axios({
-              ...SummaryApi.addTocart,
-              data: { productId }
-            });
-            console.log('Test add response:', response.data);
-            if (response.data.success) {
-              fetchCartItem();
-            }
-          } catch (error) {
-            console.error('Test add error:', error);
-          }
-        },
+
       }}
     >
       {children}
