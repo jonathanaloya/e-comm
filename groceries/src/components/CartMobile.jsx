@@ -13,6 +13,15 @@ const CartMobileLink = () => {
     
     // Use guest cart items if user is not logged in
     const currentCartItems = user?._id ? cartItem : guestCartItems
+    
+    // Debug logging
+    console.log('CartMobile Debug:', {
+        userId: user?._id,
+        guestCartItems,
+        currentCartItems,
+        totalQty,
+        totalPrice
+    })
 
   return (
     <>

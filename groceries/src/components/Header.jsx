@@ -37,7 +37,7 @@ const Header = () => {
   };
 
   const handleMobileMenu = () => {
-    if (!user._id) {
+    if (!user?._id) {
       navigate("/login");
       return;
     }
@@ -92,9 +92,19 @@ const Header = () => {
           {/** Login and my Cart */}
           <div>
             {/**User Icons display in mobile */}
-            <button className="text-neutral-600 lg:hidden">
-              <FaRegCircleUser size={26} onClick={handleMobileMenu} />
-            </button>
+            <div className="lg:hidden flex items-center gap-3">
+              <button onClick={() => setOpenCartSection(true)} className="relative">
+                <BsCart4 size={24} className="text-neutral-600" />
+                {currentCartItems[0] && (
+                  <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {totalQty}
+                  </span>
+                )}
+              </button>
+              <button className="text-neutral-600">
+                <FaRegCircleUser size={26} onClick={handleMobileMenu} />
+              </button>
+            </div>
 
             {/**User Icons display in desktop */}
             <div className="hidden lg:flex items-center gap-10">

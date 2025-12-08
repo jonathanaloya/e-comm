@@ -88,11 +88,26 @@ const GlobalProvider = ({ children }) => {
   useEffect(() => {
     if (!user?._id) {
       const savedCart = localStorage.getItem('guestCart');
+      console.log('Loading guest cart from localStorage:', savedCart);
       if (savedCart) {
-        setGuestCartItems(JSON.parse(savedCart));
+        const parsedCart = JSON.parse(savedCart);
+        console.log('Parsed guest cart:', parsedCart);
+        setGuestCartItems(parsedCart);
       }
+    } else {
+      // Clear guest cart when user logs in
+      setGuestCartItems([]);
     }
   }, [user]);
+  
+  // Initial load of guest cart
+  useEffect(() => {
+    const savedCart = localStorage.getItem('guestCart');
+    if (savedCart && !user?._id) {
+      console.log('Initial guest cart load:', savedCart);
+      setGuestCartItems(JSON.parse(savedCart));
+    }
+  }, []);
 
   // Calculate totals for both authenticated and guest users
   useEffect(() => {
