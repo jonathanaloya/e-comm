@@ -22,14 +22,17 @@ const UserMenu = ({ close }) => {
 
   const fetchUnreadCount = async () => {
     try {
+      console.log('Fetching unread count for user:', user?._id);
       const response = await Axios({
         ...SummaryApi.getUnreadRepliesCount
       });
+      console.log('Unread count response:', response.data);
       if (response.data.success) {
         setUnreadCount(response.data.data.unreadCount);
+        console.log('Set unread count to:', response.data.data.unreadCount);
       }
     } catch (error) {
-      // Silently handle error
+      console.error('Error fetching unread count:', error);
     }
   };
   const handleLogout = async () => {

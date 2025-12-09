@@ -456,13 +456,24 @@ export const markTicketRepliesAsRead = async (request, response) => {
 export const getUnreadRepliesCount = async (request, response) => {
     try {
         const userId = request.userId
+        console.log('Getting unread count for userId:', userId);
+
+        if (!userId) {
+            return response.status(401).json({
+                message: "Authentication required",
+                error: true,
+                success: false
+            })
+        }
 
         const totalUnreadReplies = await SupportTicket.aggregate([
             { $match: { userId: userId } },
             { $group: { _id: null, totalUnread: { $sum: "$unreadRepliesCount" } } }
         ])
 
+        console.log('Aggregation result:', totalUnreadReplies);
         const count = totalUnreadReplies.length > 0 ? totalUnreadReplies[0].totalUnread : 0
+        console.log('Final unread count:', count);
 
         return response.json({
             message: "Unread replies count retrieved successfully",
