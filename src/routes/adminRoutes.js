@@ -214,8 +214,8 @@ adminRouter.get('/notifications', authMiddleware, admin, async (req, res) => {
   }
 })
 
-// Mark notification as read
-adminRouter.patch('/notifications/:id/read', authMiddleware, admin, async (req, res) => {
+// Mark notification as read (both PATCH and PUT for compatibility)
+const markNotificationAsRead = async (req, res) => {
   try {
     const { id } = req.params
     console.log('Attempting to mark notification as read:', id)
@@ -278,7 +278,10 @@ adminRouter.patch('/notifications/:id/read', authMiddleware, admin, async (req, 
       success: false
     })
   }
-})
+}
+
+adminRouter.patch('/notifications/:id/read', authMiddleware, admin, markNotificationAsRead)
+adminRouter.put('/notifications/:id/read', authMiddleware, admin, markNotificationAsRead)
 
 // Mark all notifications as read for a category
 adminRouter.patch('/notifications/mark-all-read', authMiddleware, admin, async (req, res) => {
