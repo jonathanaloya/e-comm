@@ -283,6 +283,58 @@ const markNotificationAsRead = async (req, res) => {
 adminRouter.patch('/notifications/:id/read', authMiddleware, admin, markNotificationAsRead)
 adminRouter.put('/notifications/:id/read', authMiddleware, admin, markNotificationAsRead)
 
+// Delete notification
+const deleteNotification = async (req, res) => {
+  try {
+    const { id } = req.params
+    
+    if (!id) {
+      return res.status(400).json({
+        message: 'Notification ID is required',
+        error: true,
+        success: false
+      })
+    }
+
+    // Validate ObjectId
+    const mongoose = await import('mongoose')
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: 'Invalid notification ID format',
+        error: true,
+        success: false
+      })
+    }
+
+    const Notification = (await import('../models/notificationModel.js')).default
+    const notification = await Notification.findByIdAndDelete(id)
+
+    if (!notification) {
+      return res.status(404).json({
+        message: 'Notification not found',
+        error: true,
+        success: false
+      })
+    }
+
+    res.json({
+      message: 'Notification deleted successfully',
+      success: true,
+      data: notification
+    })
+  } catch (error) {
+    console.error('Delete notification error:', error)
+    res.status(500).json({
+      message: error.message || 'Failed to delete notification',
+      error: true,
+      success: false
+    })
+  }
+}
+
+adminRouter.delete('/notifications/:id', authMiddleware, admin, deleteNotification)
+adminRouter.post('/notifications/:id/delete', authMiddleware, admin, deleteNotification)
+
 // Mark all notifications as read for a category
 adminRouter.patch('/notifications/mark-all-read', authMiddleware, admin, async (req, res) => {
   try {
@@ -309,10 +361,33 @@ adminRouter.patch('/notifications/mark-all-read', authMiddleware, admin, async (
 })
 
 // Update order status and send email notification
-adminRouter.patch('/orders/:orderId/status', authMiddleware, admin, async (req, res) => {
+// Update order status (both PATCH and PUT for compatibility)
+const updateOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params
     const { status, adminMessage } = req.body
+
+    console.log('Updating order status:', { orderId, status, adminMessage })
+    console.log('Request user ID:', req.userId)
+
+    if (!orderId) {
+      return res.status(400).json({
+        message: 'Order ID is required',
+        error: true,
+        success: false
+      })
+    }
+
+    // Validate ObjectId
+    const mongoose = await import('mongoose')
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      console.log('Invalid ObjectId format:', orderId)
+      return res.status(400).json({
+        message: 'Invalid order ID format',
+        error: true,
+        success: false
+      })
+    }
 
     if (!status) {
       return res.status(400).json({
@@ -331,11 +406,13 @@ adminRouter.patch('/orders/:orderId/status', authMiddleware, admin, async (req, 
       })
     }
 
+    console.log('Looking for order with ID:', orderId)
     const order = await Order.findById(orderId)
       .populate('userId', 'name email')
       .populate('delivery_address')
       .populate('items.productId', 'name price')
 
+    console.log('Order found:', order ? 'Yes' : 'No')
     if (!order) {
       return res.status(404).json({
         message: 'Order not found',
@@ -345,8 +422,10 @@ adminRouter.patch('/orders/:orderId/status', authMiddleware, admin, async (req, 
     }
 
     // Update order status
+    console.log('Updating order status from', order.order_status, 'to', status)
     order.order_status = status
     await order.save()
+    console.log('Order status updated successfully')
 
     // Send email notification to user
     if (order.userId && order.userId.email) {
@@ -363,13 +442,22 @@ adminRouter.patch('/orders/:orderId/status', authMiddleware, admin, async (req, 
 
     // Add admin message if provided
     if (adminMessage) {
+      console.log('Adding admin message:', adminMessage)
       const adminUser = await User.findById(req.userId || req.user?.userId)
+      console.log('Admin user found:', adminUser ? adminUser.name : 'Not found')
+      
+      if (!order.admin_responses) {
+        order.admin_responses = []
+      }
+      
       order.admin_responses.push({
         adminId: adminUser?._id,
         adminName: adminUser?.name || 'Admin',
-        message: adminMessage
+        message: adminMessage,
+        createdAt: new Date()
       })
       await order.save()
+      console.log('Admin message added successfully')
     }
 
     res.json({
@@ -382,13 +470,18 @@ adminRouter.patch('/orders/:orderId/status', authMiddleware, admin, async (req, 
       }
     })
   } catch (error) {
+    console.error('Order status update error:', error)
+    console.error('Error stack:', error.stack)
     res.status(500).json({
-      message: error.message,
+      message: error.message || 'Failed to update order status',
       error: true,
       success: false
     })
   }
-})
+}
+
+adminRouter.patch('/orders/:orderId/status', authMiddleware, admin, updateOrderStatus)
+adminRouter.put('/orders/:orderId/status', authMiddleware, admin, updateOrderStatus)
 
 // Add admin response to order
 adminRouter.post('/orders/:orderId/response', authMiddleware, admin, async (req, res) => {
