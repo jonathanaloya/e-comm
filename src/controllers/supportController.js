@@ -6,7 +6,7 @@ import { sendSupportTicketEmail, sendSupportTicketReplyEmail } from '../services
 export const createSupportTicket = async (request, response) => {
     try {
         const { name, email, subject, message, priority = 'medium' } = request.body
-        const userId = request.userId || null
+        const userId = request.userId ? request.userId : null
 
         if (!name || !email || !subject || !message) {
             return response.status(400).json({
@@ -18,6 +18,8 @@ export const createSupportTicket = async (request, response) => {
 
         const ticketId = `TKT-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`
 
+        console.log('Creating ticket with userId:', userId);
+        
         const ticket = new SupportTicket({
             ticketId,
             userId,
@@ -29,6 +31,7 @@ export const createSupportTicket = async (request, response) => {
         })
 
         const savedTicket = await ticket.save()
+        console.log('Saved ticket:', savedTicket.ticketId, 'for user:', savedTicket.userId);
 
         // Create notification for admin
         try {
@@ -335,20 +338,32 @@ export const getUserSupportTickets = async (request, response) => {
         const userId = request.userId
         const { page = 1, limit = 10, status } = request.query
 
-        const query = { userId }
+        if (!userId) {
+            return response.status(401).json({
+                message: "Authentication required",
+                error: true,
+                success: false
+            })
+        }
+
+        const query = { userId: userId }
         if (status) {
             query.status = status
         }
 
         const skip = (page - 1) * limit
 
+        console.log('Fetching tickets for userId:', userId, 'with query:', query);
+        
         const tickets = await SupportTicket.find(query)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
-            .select('ticketId subject status priority createdAt updatedAt responses')
+            .select('ticketId subject status priority createdAt updatedAt responses unreadRepliesCount')
 
         const total = await SupportTicket.countDocuments(query)
+        
+        console.log('Found tickets:', tickets.length, 'total:', total);
 
         return response.json({
             message: "User support tickets retrieved successfully",

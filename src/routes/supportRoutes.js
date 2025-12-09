@@ -11,12 +11,13 @@ import {
     getUnreadRepliesCount
 } from '../controllers/supportController.js'
 import authMiddleware from '../middleware/authMiddleware.js'
+import optionalAuthMiddleware from '../middleware/optionalAuthMiddleware.js'
 import { admin } from '../middleware/admin.js'
 
 const supportRouter = Router()
 
-// Public routes
-supportRouter.post('/create-ticket', createSupportTicket)
+// Public routes (with optional auth to associate with user if logged in)
+supportRouter.post('/create-ticket', optionalAuthMiddleware, createSupportTicket)
 
 // User routes
 supportRouter.get('/my-tickets', authMiddleware, getUserSupportTickets)
