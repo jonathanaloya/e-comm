@@ -674,12 +674,7 @@ adminRouter.post('/test-email', authMiddleware, admin, async (req, res) => {
     res.status(500).json({
       message: 'Email test failed: ' + error.message,
       error: true,
-      success: false,
-      details: {
-        errorType: error.name,
-        errorCode: error.code,
-        command: error.command
-      }
+      success: false
     })
   }
 })

@@ -56,7 +56,7 @@ export const adminAPI = {
   
   // Orders
   getAllOrders: () => api.get('/api/admin/all-orders'),
-  updateOrderStatus: (data) => api.put('/api/admin/update-status', data),
+  updateOrderStatus: (data) => api.patch(`/api/admin/orders/${data.orderId}/status`, { status: data.status, adminMessage: data.adminMessage }),
   
   // Users
   getAllUsers: () => api.get('/api/user/admin/all-users'),
