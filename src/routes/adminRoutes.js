@@ -227,6 +227,16 @@ adminRouter.patch('/notifications/:id/read', authMiddleware, admin, async (req, 
       })
     }
 
+    // Validate ObjectId
+    const mongoose = await import('mongoose')
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: 'Invalid notification ID format',
+        error: true,
+        success: false
+      })
+    }
+
     const Notification = (await import('../models/notificationModel.js')).default
     const notification = await Notification.findByIdAndUpdate(id, { 
       read: true, 
@@ -247,6 +257,7 @@ adminRouter.patch('/notifications/:id/read', authMiddleware, admin, async (req, 
       data: notification
     })
   } catch (error) {
+    console.error('Mark notification as read error:', error)
     res.status(500).json({
       message: error.message || 'Failed to mark notification as read',
       error: true,
