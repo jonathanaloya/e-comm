@@ -53,8 +53,16 @@ const supportTicketSchema = new mongoose.Schema({
         createdAt: {
             type: Date,
             default: Date.now
+        },
+        readByUser: {
+            type: Boolean,
+            default: false
         }
-    }]
+    }],
+    unreadRepliesCount: {
+        type: Number,
+        default: 0
+    }
 }, {
     timestamps: true
 })

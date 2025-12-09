@@ -10,10 +10,12 @@ const SupportTickets = () => {
   const [loading, setLoading] = useState(true)
   const [selectedTicket, setSelectedTicket] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const user = useSelector(state => state.user)
 
   useEffect(() => {
     fetchSupportTickets()
+    fetchUnreadCount()
 
     // Check for highlighted ticket from URL params
     const urlParams = new URLSearchParams(window.location.search)
@@ -49,6 +51,34 @@ const SupportTickets = () => {
     }
   }
 
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await Axios({
+        ...SummaryApi.getUnreadRepliesCount
+      })
+
+      if (response.data.success) {
+        setUnreadCount(response.data.data.unreadCount)
+      }
+    } catch (error) {
+      console.error('Failed to load unread count')
+    }
+  }
+
+  const markTicketAsRead = async (ticketId) => {
+    try {
+      await Axios({
+        ...SummaryApi.markTicketRepliesAsRead,
+        url: `${SummaryApi.markTicketRepliesAsRead.url}/${ticketId}/mark-read`
+      })
+      // Refresh unread count after marking as read
+      fetchUnreadCount()
+      fetchSupportTickets()
+    } catch (error) {
+      console.error('Failed to mark ticket as read')
+    }
+  }
+
   const fetchTicketDetails = async (ticketId) => {
     try {
       const response = await Axios({
@@ -59,6 +89,10 @@ const SupportTickets = () => {
       if (response.data.success) {
         setSelectedTicket(response.data.data)
         setShowModal(true)
+        // Mark ticket as read when viewed
+        if (response.data.data.unreadRepliesCount > 0) {
+          markTicketAsRead(ticketId)
+        }
       }
     } catch (error) {
       toast.error('Failed to load ticket details')
@@ -144,6 +178,11 @@ const SupportTickets = () => {
           <div className="flex items-center mb-6">
             <FaTicketAlt className="text-blue-600 text-2xl mr-3" />
             <h1 className="text-3xl font-bold text-gray-800">My Support Tickets</h1>
+            {unreadCount > 0 && (
+              <span className="ml-3 bg-red-500 text-white text-sm font-bold px-2 py-1 rounded-full">
+                {unreadCount} new {unreadCount === 1 ? 'reply' : 'replies'}
+              </span>
+            )}
           </div>
 
           {tickets.length === 0 ? (
@@ -193,6 +232,11 @@ const SupportTickets = () => {
                           {ticket.responses && ticket.responses.length > 0 && (
                             <span className="text-blue-600 font-medium">
                               {ticket.responses.length} response{ticket.responses.length > 1 ? 's' : ''}
+                              {ticket.unreadRepliesCount > 0 && (
+                                <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                  {ticket.unreadRepliesCount} new
+                                </span>
+                              )}
                             </span>
                           )}
                         </div>

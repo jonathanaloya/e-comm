@@ -169,11 +169,19 @@ const SummaryApi = {
         method : 'post'
     },
     getUserSupportTickets : {
-        url : '/user/support-tickets',
+        url : '/support/my-tickets',
         method : 'get'
     },
     getUserSupportTicketDetails : {
-        url : '/user/support-tickets',
+        url : '/support/my-tickets',
+        method : 'get'
+    },
+    markTicketRepliesAsRead : {
+        url : '/support/my-tickets',
+        method : 'put'
+    },
+    getUnreadRepliesCount : {
+        url : '/support/unread-count',
         method : 'get'
     },
 

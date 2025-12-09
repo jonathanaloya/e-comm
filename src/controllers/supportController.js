@@ -120,11 +120,32 @@ export const replyToSupportTicket = async (request, response) => {
             adminId: admin._id,
             adminName: admin.name,
             message: message,
-            createdAt: new Date()
+            createdAt: new Date(),
+            readByUser: false
         }
 
         ticket.responses.push(newResponse)
+        ticket.unreadRepliesCount = (ticket.unreadRepliesCount || 0) + 1
         await ticket.save()
+
+        // Create notification for user if they have an account
+        if (ticket.userId) {
+            try {
+                const notification = new Notification({
+                    userId: ticket.userId,
+                    type: 'support_reply',
+                    title: `Reply to Support Ticket #${ticket.ticketId}`,
+                    message: `Admin ${admin.name} replied to your support ticket: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`,
+                    data: {
+                        ticketId: ticket.ticketId,
+                        adminName: admin.name
+                    }
+                })
+                await notification.save()
+            } catch (notificationError) {
+                console.error('Failed to create user notification:', notificationError)
+            }
+        }
 
         // Send email to user
         try {
@@ -376,6 +397,70 @@ export const getUserSupportTicketDetails = async (request, response) => {
             error: false,
             success: true,
             data: ticket
+        })
+
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
+}
+
+// Mark ticket replies as read
+export const markTicketRepliesAsRead = async (request, response) => {
+    try {
+        const userId = request.userId
+        const { ticketId } = request.params
+
+        const ticket = await SupportTicket.findOne({ ticketId, userId })
+        if (!ticket) {
+            return response.status(404).json({
+                message: "Support ticket not found",
+                error: true,
+                success: false
+            })
+        }
+
+        ticket.responses.forEach(response => {
+            response.readByUser = true
+        })
+        ticket.unreadRepliesCount = 0
+        await ticket.save()
+
+        return response.json({
+            message: "Ticket replies marked as read",
+            error: false,
+            success: true
+        })
+
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
+}
+
+// Get unread replies count for user
+export const getUnreadRepliesCount = async (request, response) => {
+    try {
+        const userId = request.userId
+
+        const totalUnreadReplies = await SupportTicket.aggregate([
+            { $match: { userId: userId } },
+            { $group: { _id: null, totalUnread: { $sum: "$unreadRepliesCount" } } }
+        ])
+
+        const count = totalUnreadReplies.length > 0 ? totalUnreadReplies[0].totalUnread : 0
+
+        return response.json({
+            message: "Unread replies count retrieved successfully",
+            error: false,
+            success: true,
+            data: { unreadCount: count }
         })
 
     } catch (error) {
