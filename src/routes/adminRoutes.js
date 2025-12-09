@@ -218,8 +218,11 @@ adminRouter.get('/notifications', authMiddleware, admin, async (req, res) => {
 adminRouter.patch('/notifications/:id/read', authMiddleware, admin, async (req, res) => {
   try {
     const { id } = req.params
+    console.log('Attempting to mark notification as read:', id)
+    console.log('Request user ID:', req.userId)
     
     if (!id) {
+      console.log('No notification ID provided')
       return res.status(400).json({
         message: 'Notification ID is required',
         error: true,
@@ -230,6 +233,7 @@ adminRouter.patch('/notifications/:id/read', authMiddleware, admin, async (req, 
     // Validate ObjectId
     const mongoose = await import('mongoose')
     if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('Invalid ObjectId format:', id)
       return res.status(400).json({
         message: 'Invalid notification ID format',
         error: true,
@@ -238,18 +242,27 @@ adminRouter.patch('/notifications/:id/read', authMiddleware, admin, async (req, 
     }
 
     const Notification = (await import('../models/notificationModel.js')).default
-    const notification = await Notification.findByIdAndUpdate(id, { 
-      read: true, 
-      readAt: new Date() 
-    }, { new: true })
-
-    if (!notification) {
+    console.log('Looking for notification with ID:', id)
+    
+    // First check if notification exists
+    const existingNotification = await Notification.findById(id)
+    console.log('Existing notification:', existingNotification ? 'Found' : 'Not found')
+    
+    if (!existingNotification) {
+      console.log('Notification not found in database')
       return res.status(404).json({
         message: 'Notification not found',
         error: true,
         success: false
       })
     }
+    
+    const notification = await Notification.findByIdAndUpdate(id, { 
+      read: true, 
+      readAt: new Date() 
+    }, { new: true })
+
+    console.log('Updated notification:', notification ? 'Success' : 'Failed')
 
     res.json({
       message: 'Notification marked as read',
@@ -258,6 +271,7 @@ adminRouter.patch('/notifications/:id/read', authMiddleware, admin, async (req, 
     })
   } catch (error) {
     console.error('Mark notification as read error:', error)
+    console.error('Error stack:', error.stack)
     res.status(500).json({
       message: error.message || 'Failed to mark notification as read',
       error: true,
