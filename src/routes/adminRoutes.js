@@ -646,8 +646,6 @@ adminRouter.post('/test-email', authMiddleware, admin, async (req, res) => {
 
     // Test connection
     await transporter.verify()
-    console.log('SMTP connection verified successfully')
-
     // Send test email
     const testResult = await transporter.sendMail({
       from: `"Fresh Katale Test" <${process.env.EMAIL_USER}>`,
@@ -670,7 +668,6 @@ adminRouter.post('/test-email', authMiddleware, admin, async (req, res) => {
       }
     })
   } catch (error) {
-    console.error('Email test failed:', error)
     res.status(500).json({
       message: 'Email test failed: ' + error.message,
       error: true,

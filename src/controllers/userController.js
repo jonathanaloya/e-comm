@@ -16,9 +16,54 @@ import loginOtpTemplate from '../utilities/loginOtpTemplate.js'
 export async function registerUser(req, res) {
   try {
     const { name, email, mobile, password, recaptchaToken } = req.body;
-    if (!name || !email || !mobile || !password) {
+    
+    // Detailed field validation
+    const missingFields = []
+    if (!name || name.trim().length === 0) missingFields.push('Name')
+    if (!email || email.trim().length === 0) missingFields.push('Email')
+    if (!mobile || mobile.toString().trim().length === 0) missingFields.push('Mobile number')
+    if (!password || password.trim().length === 0) missingFields.push('Password')
+    
+    if (missingFields.length > 0) {
       return res.status(400).json({
-        message: 'All fields are required',
+        message: `Please provide: ${missingFields.join(', ')}`,
+        error: true,
+        success: false
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        message: 'Please enter a valid email address',
+        error: true,
+        success: false
+      });
+    }
+
+    // Validate mobile number (remove any non-digits and check length)
+    const cleanMobile = mobile.toString().replace(/\D/g, '')
+    if (cleanMobile.length < 9 || cleanMobile.length > 15) {
+      return res.status(400).json({
+        message: 'Please enter a valid mobile number (9-15 digits)',
+        error: true,
+        success: false
+      });
+    }
+
+    // Validate password
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: 'Password must be at least 6 characters long',
+        error: true,
+        success: false
+      });
+    }
+    
+    if (password.length > 128) {
+      return res.status(400).json({
+        message: 'Password is too long (maximum 128 characters)',
         error: true,
         success: false
       });
@@ -43,7 +88,7 @@ export async function registerUser(req, res) {
       });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
 
     if(existingUser){
       return res.status(400).json({
@@ -61,9 +106,9 @@ export async function registerUser(req, res) {
     const loginOtpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     const payload = {
-      name,
-      email,
-      mobile,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      mobile: parseInt(cleanMobile), // Store as number without formatting
       password: hashedPassword,
       verify_email: false, // Will be verified after OTP
       login_otp: loginOtp,
